@@ -86,7 +86,7 @@ interface Order {
    * wizard (2026-09-28) - previously this tab showed one static paragraph
    * with no actual list, because nothing was ever saved onto the order
    * record for it to read (see NewPostpaidWizard's onSubmit, which now
-   * builds this array from the same values.caf/qidScans/discountProofDocument
+   * builds this array from the same values.caf/qidScans
    * data the wizard already collected). Not every order type populates
    * this yet - other journeys' onSubmit are unchanged - so it stays optional.
    */

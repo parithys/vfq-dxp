@@ -1,8 +1,7 @@
 import { Icon } from '../../components/primitives/Icon';
 
 // Registry-sourced identity facts, shown as read-only content rather than disabled form controls: nothing here
-// can be typed into, so nothing looks like it can. Each fact is a label above its value beside a small icon tile;
-// the "View only" pill says why it cannot be changed.
+// can be typed into, so nothing looks like it can. Each fact is a label above its value beside a small icon tile.
 
 const IC = {
   user: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
@@ -50,12 +49,9 @@ export function IdentityDetailsCard({ facts, status }: { facts: Fact[]; status?:
   for (let i = 0; i < facts.length; i += 3) rows.push(facts.slice(i, i + 3));
   return (
     <section aria-label="Identity Details" className="@container">
-      {/* Same heading as "Contact & Notification" (plain, flush left, no icon); only the read-only pill sits beside it. */}
+      {/* Same heading as "Contact & Notification" (plain, flush left, no icon). */}
       <div className={`flex items-center justify-between gap-4 ${status ? 'mb-0' : 'mb-3'}`}>
         <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Identity Details</h3>
-        <span className="rounded-[var(--radius-pill)] bg-[var(--tint-blue-bg)] text-[var(--tint-blue-fg)] px-3 py-1 text-[length:var(--fs-caption)] font-medium shrink-0">
-          View only
-        </span>
       </div>
       {status && (
         <p className="-mt-1 mb-3 text-success font-medium text-[length:var(--fs-caption)]">{status}</p>

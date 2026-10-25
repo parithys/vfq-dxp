@@ -6,6 +6,7 @@ import * as mockDataEngine from '../../engines/mockDataEngine';
 import { useActedForCustomer } from './useActedForCustomer';
 import { useEnterToSubmit } from '../../hooks/useEnterToSubmit';
 import type { NationalAddress, NewCustomerMoi } from './idLookupModel';
+import { pickHrnDemoNas, type DemoNasRecord } from './idLookupModel';
 import { MAX_SCAN_ATTEMPTS, LEGACY_MAX_SCAN_ATTEMPTS, SCANNABLE_ID_TYPES, captureModeOf, NEW_CUSTOMER_ID_TYPES, buildNewCustomerPatch, misread, misreadDate, isoToDmy, selectScanCandidates } from './idLookupModel';
 import type { DuplicateCandidate, IdLookupValue } from './idLookupModel';
 import { isIdExpired } from '../../engines/eligibilityEngine';
@@ -195,6 +196,21 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
       cancelled = true;
     };
   }, [cardCustomerId, idType]);
+
+  // New Customer journey (no customer on screen): the card drawn in the reader is the HRN demo person's, so the card's printed name, date of
+  // birth and nationality are the ones MOI will return for the number the reader then reads. Reconciliation compares them.
+  useEffect(() => {
+    if (!asNewCustomer || cardCustomerId) return;
+    let cancelled = false;
+    void mockDataEngine.list<DemoNasRecord>('nas-records').then((nas) => {
+      if (cancelled) return;
+      const p = pickHrnDemoNas(nas, idType);
+      setContextIdentity(p ? { name: p.name, idNo: p.documentNumber, nationality: p.nationality, dob: isoToDmy(p.dob), expiry: p.expiryDate ? isoToDmy(p.expiryDate) : '' } : undefined);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [asNewCustomer, cardCustomerId, idType]);
 
   // ---- Failure handling ------------------------------------------------------
   // A lookup that cannot complete is UNRESOLVED: it never becomes "not found",
@@ -638,6 +654,14 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
     const ownDocs = cardCustomerId
       ? docs.filter((d) => (d as { customerId?: string }).customerId === cardCustomerId)
       : undefined;
+    // New Customer journey: the reader returns the HRN demo person (a NAS identity), for the first detectable type that has one.
+    if (asNewCustomer && !cardCustomerId) {
+      const nas = await mockDataEngine.list<DemoNasRecord>('nas-records');
+      for (const t of detectable) {
+        const p = pickHrnDemoNas(nas, t);
+        if (p) return { documentType: p.documentType as QidType, documentNumber: p.documentNumber, expiryDate: p.expiryDate };
+      }
+    }
     const candidates = selectScanCandidates({ docs, ownDocs, chosenType, detectable });
     // Prefers an UNEXPIRED document rather than simply the first match.
     //

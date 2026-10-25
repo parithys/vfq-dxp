@@ -106,14 +106,12 @@ export async function submitNewConnectionOrder(
 
       // Attachments (2026-09-28) - built from data this wizard already
       // collected but, until now, discarded at submission: the CAF
-      // signature, any agent-defined Additional Documents, the MADA/
-      // B2B2C proof document, and the QID scans from Contact. Each entry
-      // only appears when the fact it names is actually true - an order
-      // with no discount proof document gets no row claiming one exists.
+      // signature, any agent-defined Additional Documents, and the QID scans
+      // from Contact. Each entry only appears when the fact it names is
+      // actually true.
       const caf = values.caf as
         | { cafType?: CafType; signatureDataUrl?: string; additionalDocuments?: AdditionalDocument[] }
         | undefined;
-      const discountProofDocument = values.discountProofDocument as { fileName: string } | undefined;
       const attachments = [
         ...idScanAttachments(contact.idType, contact.qidScans),
         ...(customerType?.officeId?.frontScanned && customerType.officeId.backScanned
@@ -125,9 +123,6 @@ export async function submitNewConnectionOrder(
             ]
           : []),
         ...(caf?.signatureDataUrl ? [{ label: 'Signed CAF', detail: `${caf.cafType ?? 'Digital'} signature`, previewUrl: caf.signatureDataUrl }] : []),
-        ...(discountProofDocument
-          ? [{ label: `${discount?.addonType ?? 'Discount'} supporting document`, detail: discountProofDocument.fileName }]
-          : []),
         ...(caf?.additionalDocuments ?? []).map((d) => ({ label: d.label, detail: d.fileName })),
       ];
 

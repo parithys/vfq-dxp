@@ -110,5 +110,27 @@
       "area": "Al Sadd",
       "city": "Doha"
     }
+  },
+  {
+    "_note": "Demo seed (2026-10-25). An HRN-nationality (Pakistani) person who is NOT yet a Vodafone customer. The New Customer journey's demo scan resolves to the first HRN record here (see pickHrnDemoNas), so a demo New Customer is always HRN-category: HRN advance, default credit limit and fee rules apply.",
+    "nasRecordId": "NAS-7006",
+    "documentType": "QID",
+    "documentNumber": "29303051200106",
+    "expiryDate": "2030-10-31",
+    "name": "Farhan Aslam Javed Chaudhry",
+    "firstName": "Farhan",
+    "middleName": "Aslam Javed",
+    "lastName": "Chaudhry",
+    "dob": "1993-03-05",
+    "nationality": "Pakistani",
+    "gender": "Male",
+    "email": "farhan.chaudhry@example.qa",
+    "nationalAddress": {
+      "zone": "56",
+      "streetNo": "410",
+      "buildingNo": "18",
+      "area": "Al Sadd",
+      "city": "Doha"
+    }
   }
 ]

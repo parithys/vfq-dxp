@@ -90,21 +90,13 @@ export interface AddonProduct {
 }
 
 /**
- * Discount types that require a supporting ID AND a proof document here
- * (2026-09-28 request supersedes the original "document uploaded later at
- * the CAF step" note below - the proof itself now moves to this step,
- * required before finalisation; CAF still gets a signed-paperwork upload of
- * its own, which is a different artefact). Exported so NewPostpaidWizard's
+ * Discount types that require a supporting ID here, before finalisation (no proof document is collected at this step; CAF has a
+ * signed-paperwork upload of its own, which is a different artefact). Exported so NewPostpaidWizard's
  * pendingApproval computation reads the SAME set rather than duplicating the
  * two literal strings.
  */
 export const SUPPORTING_ID_DISCOUNT_TYPES = new Set(['MADA Discount', 'B2B2C Discount']);
 
-export const PROOF_DOCUMENT_MAX_BYTES = 5 * 1024 * 1024;
-
-export const PROOF_DOCUMENT_ACCEPT = '.pdf,.jpg,.jpeg,.png';
-
-export { formatBytes as formatDocSize } from '../../lib/format';
 
 /**
  * The three offer groups, renamed 2026-09-28 to "Today's Special Promotions",
@@ -135,11 +127,31 @@ export const PLAN_GROUPS: { key: PlanGroupKey; label: string }[] = [
   { key: 'standard', label: 'Standard BAU Catalogue' },
 ];
 
-export const SPECIAL_DISCOUNT_TYPE: Record<'mada' | 'b2b2c' | 'retired', { addonType: string; label: string }> = {
-  mada: { addonType: 'MADA Discount', label: 'MADA' },
-  b2b2c: { addonType: 'B2B2C Discount', label: 'B2B2C' },
-  retired: { addonType: 'Retired Discount', label: 'Retired' },
+/** The one name of the special-discount tab, whichever of the three types the customer holds (the type itself is not shown). */
+export const SPECIAL_OFFERS_TAB_LABEL = 'Special Offers';
+
+export const SPECIAL_DISCOUNT_TYPE: Record<'mada' | 'b2b2c' | 'retired', { addonType: string }> = {
+  mada: { addonType: 'MADA Discount' },
+  b2b2c: { addonType: 'B2B2C Discount' },
+  retired: { addonType: 'Retired Discount' },
 };
+
+/** The addon types that are a Special Discount (MADA / B2B2C / Retired): one is held by the customer, chosen at Customer Identification. */
+export const SPECIAL_DISCOUNT_ADDON_TYPES: ReadonlySet<string> = new Set(Object.values(SPECIAL_DISCOUNT_TYPE).map((t) => t.addonType));
+
+/** The label every Special Discount card carries on the plan step: the customer's own type is not shown, only that they hold one. */
+export const SPECIAL_DISCOUNT_CARD_TITLE = 'Special Discount';
+
+/**
+ * The discounts to offer once the Special Discount chosen at Customer Identification is known: of the three special types only that one
+ * stays (a customer holds one), and every other discount (Loyalty, ...) is untouched. `chosen` undefined = nothing chosen / not known here:
+ * the list is returned as it is.
+ */
+export function discountsForSpecialType<T extends { addonType: string }>(discounts: T[], chosen: keyof typeof SPECIAL_DISCOUNT_TYPE | undefined): T[] {
+  if (!chosen) return discounts;
+  const keep = SPECIAL_DISCOUNT_TYPE[chosen].addonType;
+  return discounts.filter((d) => !SPECIAL_DISCOUNT_ADDON_TYPES.has(d.addonType) || d.addonType === keep);
+}
 
 export function planGroupOf(p: { popular?: boolean; offer?: boolean; commitmentMonths?: number }): PlanGroupKey {
   if (p.popular || p.offer) return 'specials';

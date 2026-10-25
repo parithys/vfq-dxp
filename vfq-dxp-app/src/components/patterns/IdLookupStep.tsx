@@ -8,7 +8,6 @@ import { useIdLookup } from './useIdLookup';
 import { IdLookupStatus } from './IdLookupStatus';
 import { MoiResultPanel } from './MoiResultPanel';
 import { NewCustomerForm } from './NewCustomerForm';
-import { IdReconciliationPanel } from './IdReconciliationPanel';
 import { RestrictedCustomerNotice } from './RestrictedCustomerNotice';
 import { mismatchMessage } from './idReconciliation';
 import { idTypeLabel } from '../../data/idTypes';
@@ -371,10 +370,6 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
 
       {/* A protected-segment customer this role may not see: the access restriction is all that is shown (it blocks Continue: nothing is identified). */}
       {accessRestricted && <RestrictedCustomerNotice compact />}
-
-      {/* ID reconciliation: shown only when a captured attribute does not match MOI (the identity is held back). A clean match shows nothing; the
-          per-attribute result is still kept on the value and the order. */}
-      {verifyThenFetch && reconciliation && <IdReconciliationPanel result={reconciliation} />}
 
       {/* ---- Validation status. Each state looks different (see ValidationStatus):
           technical failure = amber and unresolved, business result = red, pending

@@ -48,18 +48,14 @@ export function IdScannerPanel({
 }) {
   return (
     <div className="space-y-2">
-      {/* Neutral until the reader has identified the document. Naming a
-          type here ("Scan Qatar ID (QID)") before anything has been read
-          asserts the answer to the question the scan exists to answer -
-          and would be simply wrong for the Diplomatic ID the same reader
-          detects. Once a scan has resolved, it names what was found -
-          "Document detected: X" (2026-09-28), moved up from inside
-          QidImageUpload's card to replace this heading rather than
-          duplicate it. Same wording QidImageUpload used to show: "Qatar
-          ID" for QID, the type itself for the other three. */}
-      <p className="text-[length:var(--fs-label)] text-fg-2">
-        {value.idNumber && !verifyThenFetch ? `Document detected: ${idType === 'QID' ? 'Qatar ID' : idType}` : 'Scan identity document'}
-      </p>
+      {/* The scanner card carries its own "Scan Identity Document" heading, so nothing is repeated
+          above it before a read. Once a scan has resolved, name what was found ("Document detected: X"; "Qatar
+          ID" for QID, the type itself for the other three). Never name a type before the reader has identified it. */}
+      {value.idNumber && !verifyThenFetch && (
+        <p className="text-[length:var(--fs-label)] text-fg-2">
+          {`Document detected: ${idType === 'QID' ? 'Qatar ID' : idType}`}
+        </p>
+      )}
       {contextNoDocument ? (
         <div role="status" className="card card-surface p-6 text-center space-y-1">
           <p className="text-fg font-semibold">

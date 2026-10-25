@@ -49,11 +49,6 @@ interface PostpaidPlanAddonsStepProps {
   customerBenefits?: CustomerBenefit[];
   /** Who the customer is, for deciding which add-ons they are eligible for. */
   customerContext?: { nationality?: string; customerType?: string; idType?: string };
-  /** The proof document a MADA/B2B2C discount requires before finalisation
-   * (2026-09-28) - a single file, distinct from the CAF step's own signed-
-   * paperwork upload. Undefined until one is attached. */
-  discountProofDocument: { fileName: string; sizeBytes: number } | undefined;
-  onDiscountProofDocumentChange: (doc: { fileName: string; sizeBytes: number } | undefined) => void;
   /** A plan not offered: the line's current plan, when the journey changes it. */
   hiddenProductId?: string;
 }
@@ -89,8 +84,6 @@ export function PostpaidPlanAddonsStep({
   specialDiscountType,
   customerBenefits,
   customerContext,
-  discountProofDocument,
-  onDiscountProofDocumentChange,
   hiddenProductId,
 }: PostpaidPlanAddonsStepProps) {
   const personaId = usePersonaStore((s) => s.activePersonaId);
@@ -104,8 +97,6 @@ export function PostpaidPlanAddonsStep({
     searchOpen,
     setSearchOpen,
     searchRef,
-    proofDocError,
-    proofDocRef,
     activeTab,
     setActiveTab,
     planGroupTabs,
@@ -121,7 +112,6 @@ export function PostpaidPlanAddonsStep({
     retryDiscounts,
     selectedDiscount,
     requiresSupportingId,
-    handleProofDocFile,
     charges,
   } = usePostpaidPlanAddons({
     selectedProductId,
@@ -135,8 +125,6 @@ export function PostpaidPlanAddonsStep({
     customerBenefit,
     specialDiscountType,
     customerBenefits,
-    discountProofDocument,
-    onDiscountProofDocumentChange,
     hiddenProductId,
   });
 
@@ -337,11 +325,6 @@ export function PostpaidPlanAddonsStep({
                     requiresSupportingId={requiresSupportingId}
                     discountSupportingId={discountSupportingId}
                     onDiscountSupportingIdChange={onDiscountSupportingIdChange}
-                    discountProofDocument={discountProofDocument}
-                    onDiscountProofDocumentChange={onDiscountProofDocumentChange}
-                    proofDocRef={proofDocRef}
-                    proofDocError={proofDocError}
-                    handleProofDocFile={handleProofDocFile}
                     discountsState={discountsState}
                     onRetryDiscounts={retryDiscounts}
                   />

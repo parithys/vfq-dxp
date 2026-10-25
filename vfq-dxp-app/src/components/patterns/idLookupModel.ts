@@ -1,5 +1,7 @@
 import type { QidImageUploadValue } from '../domain/qidImageUploadModel';
 import type { QidType } from '../domain/QidInput';
+import { isHrn } from '../../engines/hrnConfiguration';
+import { isIdExpired } from '../../engines/eligibilityEngine';
 
 /** A customer record that shares the scanned ID with others - offered to the agent to choose from. */
 export interface DuplicateCandidate {
@@ -170,6 +172,26 @@ export function selectScanCandidates<D extends { documentType: string }>({
   if (!ownDocs) return docs.filter((d) => detectable.includes(d.documentType));
   if (chosenType) return ownDocs.filter((d) => d.documentType === chosenType);
   return [...ownDocs].sort((a, b) => Number(b.documentType === 'QID') - Number(a.documentType === 'QID'));
+}
+
+/** A NAS identity record as the demo scan needs it. */
+export interface DemoNasRecord {
+  documentType: string;
+  documentNumber: string;
+  expiryDate?: string;
+  name: string;
+  dob: string;
+  nationality: string;
+}
+
+/**
+ * The person the demo reader returns in the New Customer journey (every ID there is treated as a new customer, so the card is a NAS
+ * identity, never a Siebel customer): the first unexpired NAS record of the given document type whose nationality is HRN. Demo scope,
+ * stated plainly - a real reader returns whatever card is in it. The same record drives the card drawn in the reader, the number the
+ * reader reads and what MOI returns, so the scan reconciles. Undefined when the type has no HRN record (the reader then behaves as before).
+ */
+export function pickHrnDemoNas<R extends DemoNasRecord>(records: readonly R[], documentType: string, now: Date = new Date()): R | undefined {
+  return records.find((r) => r.documentType === documentType && isHrn(r.nationality) && !(r.expiryDate && isIdExpired(r.expiryDate, now)));
 }
 
 /**

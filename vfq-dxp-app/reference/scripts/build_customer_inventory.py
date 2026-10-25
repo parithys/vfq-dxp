@@ -168,6 +168,7 @@ NAMES = {
     "NAS-7002": ("Yousef", "Khalifa Hamad", "Al-Khulaifi"),
     "NAS-7003": ("Anil", "Ramesh", "Sharma"),
     "NAS-7004": ("Mustafa", "Salem Ali", "Al-Baker"),
+    "NAS-7006": ("Farhan", "Aslam Javed", "Chaudhry"),
 }
 # Non-customer-table people that are still customer-side contacts. Keyed by
 # (file, old full name) -> (first, middle, last).
@@ -408,6 +409,9 @@ PROPOSED += [
     P("CUST-3103", "Sheikha Al-Naimi", "Qatari", "Qatari", "QID", "28203033400103", "2031-03-31", "1982-03-03", "Female", "Royal", "Arabic", 0, 0, "11 Restricted segments",
       "Qatari in the Royal segment. A protected customer, with its own grant independent of Safwa and Safwa+.", "None", "-", "Customer Search; Customer 360; Customer Identification in any journey",
       "Premium (granted Royal) sees the customer and continues; every other role is blocked with the access-restriction message and sees no customer information.", jk=C360, req="Restricted segment: Royal"),
+    P("NAS-7006", "Farhan Chaudhry", "Pakistani", "Expat (QID)", "QID", "29303051200106", "2030-10-31", "1993-03-05", "Male", "Consumer", "English", 0, 0, "4 New customer / MNP",
+      "NEW HRN customer (NAS only, Pakistani). The New Customer journey's demo scan always returns this person, so a demo New Customer is HRN-category.", "None", "-", "New Postpaid; New Prepaid",
+      "Resolves via NAS, no customerId. HRN: QAR 100 advance, QAR 50 default credit limit, no limit choice (hrnConfiguration). The scanned card, the number read and the MOI result are this one person, so ID reconciliation passes.", status="New (NAS record only)", jk=PP, req="New HRN customer (demo scan)"),
 ]
 
 # Scenario rewrites forced by the nationality rule (the nationalities originally
@@ -1276,7 +1280,7 @@ cov = [
     ("B2B2C type discount", "Requested", ["CUST-1002"] + reqmap["B2B2C type discount"]),
     ("Both MADA and B2B2C eligible", "Requested", reqmap["MADA + B2B2C both eligible"]),
     ("B2B2C with pre-existing Special Management", "Added", reqmap["B2B2C + Special Management"]),
-    ("New customer (not in Siebel)", "Requested", ["NAS-7001", "NAS-7002", "NAS-7003", "NAS-7004"]),
+    ("New customer (not in Siebel)", "Requested", ["NAS-7001", "NAS-7002", "NAS-7003", "NAS-7004", "NAS-7006"]),
     ("Mobile Number Portability - new customer", "Requested", ["NAS-7001", "NAS-7002", "NAS-7003"]),
     ("MNP - existing customer / conditional accept", "Added", ["CUST-1004 (seeded MNP-11002)"] + reqmap["Existing customer MNP / conditional accept"]),
     ("MNP - rejection (name mismatch)", "Added", reqmap["MNP rejection"]),

@@ -1,8 +1,6 @@
-import type { RefObject } from 'react';
 import { Button } from '../primitives/Button';
 import { Input } from '../primitives/Input';
-import { formatDocSize, PROOF_DOCUMENT_ACCEPT } from './postpaidPlanModel';
-import type { Discount } from './postpaidPlanModel';
+import { SPECIAL_DISCOUNT_ADDON_TYPES, SPECIAL_DISCOUNT_CARD_TITLE, type Discount } from './postpaidPlanModel';
 import { DiscountCard } from './DiscountCard';
 
 interface PostpaidDiscountsPanelProps {
@@ -15,11 +13,6 @@ interface PostpaidDiscountsPanelProps {
   requiresSupportingId: boolean;
   discountSupportingId: string | undefined;
   onDiscountSupportingIdChange: (id: string) => void;
-  discountProofDocument: { fileName: string; sizeBytes: number } | undefined;
-  onDiscountProofDocumentChange: (doc: { fileName: string; sizeBytes: number } | undefined) => void;
-  proofDocRef: RefObject<HTMLInputElement | null>;
-  proofDocError: string | null;
-  handleProofDocFile: (file: File | undefined) => void;
   /** Where the plan's discounts are in loading; on error the agent can retry or continue without one. */
   discountsState?: 'loading' | 'error' | 'ready';
   onRetryDiscounts?: () => void;
@@ -35,11 +28,6 @@ export function PostpaidDiscountsPanel({
   requiresSupportingId,
   discountSupportingId,
   onDiscountSupportingIdChange,
-  discountProofDocument,
-  onDiscountProofDocumentChange,
-  proofDocRef,
-  proofDocError,
-  handleProofDocFile,
   discountsState = 'ready',
   onRetryDiscounts,
 }: PostpaidDiscountsPanelProps) {
@@ -92,7 +80,7 @@ export function PostpaidDiscountsPanel({
             {discounts.map((d) => (
               <DiscountCard
                 key={d.addonDiscountId}
-                title={d.name}
+                title={SPECIAL_DISCOUNT_ADDON_TYPES.has(d.addonType) ? SPECIAL_DISCOUNT_CARD_TITLE : d.name}
                 description={d.description}
                 value={`${Math.round(d.price * 100)}%`}
                 selected={discountId === d.addonDiscountId}
@@ -101,12 +89,8 @@ export function PostpaidDiscountsPanel({
             ))}
           </div>
           )}
-          {/* MADA/B2B2C discounts need a supporting ID AND a proof
-              document here (2026-09-28 direction, superseding the
-              original "uploaded later at CAF" plan) - required before
-              the order can be finalised; NewPostpaidWizard routes the
-              order to pending approval regardless, per that same
-              request ("approval workflow remains pending"). */}
+          {/* MADA/B2B2C discounts need a supporting ID, required before the order can be finalised (no proof document is
+              collected here); NewPostpaidWizard routes the order to pending approval regardless. */}
           {requiresSupportingId && (
             <div className="space-y-2">
               <Input
@@ -119,36 +103,8 @@ export function PostpaidDiscountsPanel({
                 }
                 value={discountSupportingId ?? ''}
                 onChange={(e) => onDiscountSupportingIdChange(e.target.value)}
-                helperText="Required, along with a proof document below, before this order can be finalised."
+                helperText="Required before this order can be finalised."
               />
-              <div>
-                <p className="text-[length:var(--fs-label)] text-fg-2 mb-1">Proof document</p>
-                {discountProofDocument ? (
-                  <div className="flex items-center justify-between gap-3 card px-3 py-2">
-                    <span className="min-w-0 text-[length:var(--fs-body)] text-fg truncate">
-                      {discountProofDocument.fileName}
-                      <span className="text-muted"> · {formatDocSize(discountProofDocument.sizeBytes)}</span>
-                    </span>
-                    <Button variant="tertiary" compact className="shrink-0" onClick={() => onDiscountProofDocumentChange(undefined)}>
-                      Remove
-                    </Button>
-                  </div>
-                ) : (
-                  <>
-                    <input
-                      ref={proofDocRef}
-                      type="file"
-                      accept={PROOF_DOCUMENT_ACCEPT}
-                      className="sr-only"
-                      onChange={(e) => handleProofDocFile(e.target.files?.[0])}
-                    />
-                    <Button variant="secondary" onClick={() => proofDocRef.current?.click()}>
-                      Browse…
-                    </Button>
-                  </>
-                )}
-                {proofDocError && <p className="text-danger text-[length:var(--fs-caption)] mt-1">{proofDocError}</p>}
-              </div>
             </div>
           )}
         </div>

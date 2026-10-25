@@ -74,7 +74,7 @@ export function CustomerTypeStep({
 
   return (
     <div className="space-y-5">
-      <div role="group" aria-label="Additional discounts" className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(min(100%,11rem),1fr))]">
+      <div role="group" aria-label="Additional discounts" className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(min(100%,17rem),1fr))]">
         {OPTION_CARDS(value, onChange, derivedCompany)}
       </div>
 
@@ -112,7 +112,6 @@ export function CustomerTypeStep({
         <div className="space-y-5">
           {/* One card for the office ID: scanned, or uploaded from the same card's own "Upload document". */}
           <div className="flex flex-col gap-2 min-w-0">
-          <p className="text-fg font-semibold text-[length:var(--fs-body)]">Scan Document{type === 'b2b2c' ? ' (optional)' : ''}</p>
           <div className={EQUAL_CARD}>
           <QidImageUpload
             documentType="Office ID"

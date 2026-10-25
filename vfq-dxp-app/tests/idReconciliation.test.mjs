@@ -97,7 +97,10 @@ test('the identity lookup reconciles before it accepts MOI, keeps the result on 
   assert.match(hook, /reconcileIdentity\(/);
   assert.match(hook, /!reconciliationPasses\(result\)/);
   assert.match(hook, /idReconciliation: result/);
-  assert.match(fs.readFileSync('src/components/patterns/IdLookupStep.tsx', 'utf8'), /<IdReconciliationPanel/);
+  // A mismatch is one inline error under the ID number naming the field(s) that differ - no reconciliation table.
+  const step = fs.readFileSync('src/components/patterns/IdLookupStep.tsx', 'utf8');
+  assert.match(step, /mismatchMessage\(reconciliation\)/);
+  assert.doesNotMatch(step, /IdReconciliationPanel/);
   assert.match(fs.readFileSync('src/modules/new-connection/submitNewConnectionOrder.ts', 'utf8'), /idReconciliation: contact\.moiResult \? contact\.idReconciliation : undefined/);
 });
 

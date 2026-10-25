@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { SCAN_DOCUMENT_TITLE } from './scanDocumentLabels';
 import { Button } from '../primitives/Button';
 import { Icon } from '../primitives/Icon';
 import { Spinner } from '../primitives/Spinner';
@@ -153,7 +154,7 @@ export function QidImageUpload({
           <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
             <div className="flex items-center gap-3 min-w-0">
               <Icon path={SCAN_CORNERS} className="w-6 h-6 text-accent shrink-0" />
-              <span className="text-fg font-bold uppercase tracking-wide text-[length:var(--fs-body)] truncate">ID card optical scanner surface</span>
+              <span className="text-fg font-bold uppercase tracking-wide text-[length:var(--fs-body)] truncate">{SCAN_DOCUMENT_TITLE}</span>
             </div>
             {/* The two ways in, always available whatever has been done so far, in this order: the reader, then upload. An upload stands as a
                 completed scan (no reader pass, so no attempt is charged). */}
@@ -322,12 +323,10 @@ export function QidImageUpload({
               <Icon path={SCAN_CORNERS} className="w-12 h-12 text-border" />
             </div>
             <div className="space-y-1.5 max-w-xl">
-              <h4 className="text-fg font-bold text-[length:var(--fs-h5)]">
-                {canScan ? 'Place the document on the scanner surface' : 'Card could not be read'}
-              </h4>
+              {!canScan && <h4 className="text-fg font-bold text-[length:var(--fs-h5)]">Card could not be read</h4>}
               {canScan && (
                 <p className="text-fg-2 text-[length:var(--fs-body)]">
-                  The scanner will automatically scan both front and back sides and extract the details for verification to MOI.
+                  {`Both sides of the ${documentType} are required for verification`}
                 </p>
               )}
             </div>

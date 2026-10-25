@@ -265,6 +265,16 @@ select:not([multiple]):not([size]):not(.appearance-none) {
    with the Button / call site. Same look as .breadcrumb-back above, kept as its own class so the two can be restyled
    independently. In @layer components so a call site's own utility (e.g. a custom bg) still overrides it. */
 @layer components {
+  /* Sign-in fields keep their dark fill when the browser autofills them. Chrome paints autofill pale blue, which left the white
+     show/hide-password eye (and the text) unreadable on it - so the toggle looked like it disappeared once a password was filled in. */
+  .login-field:-webkit-autofill,
+  .login-field:-webkit-autofill:hover,
+  .login-field:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--on-dark);
+    caret-color: var(--on-dark);
+    box-shadow: 0 0 0 1000px var(--charcoal-panel) inset;
+    transition: background-color 9999s ease-out 0s;
+  }
   /* The card shell, defined once: radius, 1px card border and the page-card fill. Spacing and any one-off colour stay on the
      element (utilities outrank this layer). .card-surface swaps the fill for the quieter --surface. */
   .card {

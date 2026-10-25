@@ -90,8 +90,6 @@ function renderPlanStep(
           }}
           requiresHrnAdvance={Boolean(eligibility?.requiresHrnAdvance)}
           nationality={eligibility?.nationality}
-          discountProofDocument={values.discountProofDocument as { fileName: string; sizeBytes: number } | undefined}
-          onDiscountProofDocumentChange={(doc) => setValue('discountProofDocument', doc)}
           hiddenProductId={hiddenProductId?.(values)}
         />
         </>

@@ -13,6 +13,7 @@ import { ToastContainer } from './capabilities';
 import { LoginPage } from './auth/LoginPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { MAIN_ID, useRouteAnnouncer } from './navigation/useRouteAnnouncer';
+import { useRouteScroll } from './navigation/useRouteScroll';
 
 // The application, front to back, in three parts so a host other than the Vite entry (the Next.js spike) can reuse every piece:
 // AppBootstrap (boot, theme, language, error and login gates), Shell (sidebar, header, announcer, toasts around the page) and the
@@ -86,7 +87,8 @@ function AuthenticatedApp() {
 
 /** The signed-in frame: skip link, sidebar, top bar, breadcrumbs and toasts around `children` (the routed page). */
 export function Shell({ children }: { children: ReactNode }) {
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
+  useRouteScroll(pathname, hash);
   const routeAnnouncement = useRouteAnnouncer(pathname);
   return (
     <>

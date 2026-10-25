@@ -165,7 +165,7 @@ export function LoginPage() {
                 value={staffId}
                 onChange={(e) => setStaffId(e.target.value)}
                 placeholder="e.g. VFQ-12345"
-                className="w-full rounded-[var(--field-radius)] border border-on-dark-line-3 bg-on-dark-fill-1 px-4 py-3.5 text-on-dark text-[length:var(--fs-body)] placeholder:text-on-dark-3 hover:border-on-dark-3 focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]"
+                className="login-field w-full rounded-[var(--field-radius)] border border-on-dark-line-3 bg-on-dark-fill-1 px-4 py-3.5 text-on-dark text-[length:var(--fs-body)] placeholder:text-on-dark-3 hover:border-on-dark-3 focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]"
               />
             </div>
 
@@ -178,7 +178,7 @@ export function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="w-full rounded-[var(--field-radius)] border border-on-dark-line-3 bg-on-dark-fill-1 px-4 py-3.5 pr-12 text-on-dark text-[length:var(--fs-body)] placeholder:text-on-dark-3 hover:border-on-dark-3 focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]"
+                  className="login-field w-full rounded-[var(--field-radius)] border border-on-dark-line-3 bg-on-dark-fill-1 px-4 py-3.5 pr-12 text-on-dark text-[length:var(--fs-body)] placeholder:text-on-dark-3 hover:border-on-dark-3 focus:outline-none focus-visible:border-[var(--field-focus-border)] focus-visible:shadow-[var(--field-focus-ring)]"
                 />
                 <Tooltip content={showPassword ? 'Hide password' : 'Show password'} placement="top">
                   <button

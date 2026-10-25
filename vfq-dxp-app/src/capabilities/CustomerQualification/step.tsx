@@ -161,7 +161,6 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
                 setValue('customerType', { type: 'none', rejected: true });
                 setValue('discountId', undefined);
                 setValue('discountSupportingId', undefined);
-                setValue('discountProofDocument', undefined);
               }}
               derivedCompany={
                 contact.isB2B2C

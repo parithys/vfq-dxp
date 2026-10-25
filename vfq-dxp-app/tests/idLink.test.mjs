@@ -31,6 +31,7 @@ const EXPECTED = {
   'NAS-7003': { kind: 'none' }, // linked Passport S7712345 is on file for nobody
   'NAS-7004': { kind: 'none' },
   'NAS-7005': { kind: 'linked', customerId: 'CUST-1002', via: 'passport' }, // Passport P0998812
+  'NAS-7006': { kind: 'none' }, // the HRN demo person (Pakistani): a plain new person
 };
 
 test('SCENARIO 1: QID -> mapped Passport -> no Passport customer: the person is new (and the unmatched link is not mistaken for a customer)', () => {
