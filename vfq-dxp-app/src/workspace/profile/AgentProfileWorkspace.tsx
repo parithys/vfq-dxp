@@ -199,25 +199,25 @@ export function AgentProfileWorkspace() {
       {canEditProfile ? (
         <>
           <div className="card p-5">
-            <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Change password</h2>
+            <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Change Password</h2>
             <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
               Requires your current password and a verification code. (Demo code: {DEMO_VERIFICATION_CODE} - pending VFQ Security's
               real Authcode/OTP method.)
             </p>
             <div className="space-y-3">
-              <Input label="Current password" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
-              <Input label="New password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
-              <Input label="Confirm new password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
-              <Input id="password-verification-code" label="Verification code" value={verificationCode} onChange={(e) => setVerificationCode(e.target.value)} />
+              <Input label="Current Password" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+              <Input label="New Password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+              <Input label="Confirm New Password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+              <Input id="password-verification-code" label="Verification Code" value={verificationCode} onChange={(e) => setVerificationCode(e.target.value)} />
               {error && <p className="text-danger text-[length:var(--fs-caption)]">{error}</p>}
-              {saved && <Badge variant="success">Password updated</Badge>}
+              {saved && <Badge variant="success">Password Updated</Badge>}
               <div className="pt-1">
                 <Button
                   variant="primary"
                   onClick={submitPasswordChange}
                   disabled={!currentPassword || !newPassword || !confirmPassword || !verificationCode}
                 >
-                  Save password
+                  Save Password
                 </Button>
               </div>
             </div>
@@ -225,7 +225,7 @@ export function AgentProfileWorkspace() {
 
           <div className="card p-5 mt-6">
             <div className="flex items-center justify-between mb-1">
-              <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg">Multi-factor authentication</h2>
+              <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg">Multi-Factor Authentication</h2>
               <Badge variant={profile?.mfaEnabled ? 'success' : 'filled-neutral'}>{profile?.mfaEnabled ? 'Enabled' : 'Disabled'}</Badge>
             </div>
             {profile?.mfaEnabled && (
@@ -239,7 +239,7 @@ export function AgentProfileWorkspace() {
             {mfaEditing && (
               <div className="space-y-3 mt-2">
                 <Select
-                  label="Authenticator method"
+                  label="Authenticator Method"
                   value={mfaMethod}
                   onChange={(e) => setMfaMethod(e.target.value as 'Authenticator App' | 'SMS OTP')}
                   options={[
@@ -247,14 +247,14 @@ export function AgentProfileWorkspace() {
                     { value: 'SMS OTP', label: 'SMS OTP' },
                   ]}
                 />
-                <Input id="mfa-verification-code" label="Verification code" value={mfaCode} onChange={(e) => setMfaCode(e.target.value)} />
+                <Input id="mfa-verification-code" label="Verification Code" value={mfaCode} onChange={(e) => setMfaCode(e.target.value)} />
                 {mfaError && <p className="text-danger text-[length:var(--fs-caption)]">{mfaError}</p>}
                 <div className="flex gap-2 pt-1">
                   <Button variant="secondary" onClick={() => { setMfaEditing(false); setMfaCode(''); setMfaError(null); }}>
                     Cancel
                   </Button>
                   <Button variant="primary" onClick={submitMfaEnable} disabled={!mfaCode}>
-                    Save MFA settings
+                    Save MFA Settings
                   </Button>
                 </div>
               </div>
@@ -263,7 +263,7 @@ export function AgentProfileWorkspace() {
         </>
       ) : (
         <div className="card p-5">
-          <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Change password &amp; MFA</h2>
+          <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Change Password &amp; MFA</h2>
           <p className="text-fg-2 text-[length:var(--fs-caption)]">
             Profile editing (password, MFA) is available to internal Vodafone agent roles. This persona is an external or
             system-type contact (Agent 360 APM-01/05/08) and does not have edit access here.
@@ -288,7 +288,7 @@ export function AgentProfileWorkspace() {
       </div>
 
       <div className="card p-5 mt-6">
-        <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Export your data</h2>
+        <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Export Your Data</h2>
         <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
           Download a CSV of every visible record for an entity type. Which of these you can export depends on your role's access rights.
         </p>
@@ -298,7 +298,7 @@ export function AgentProfileWorkspace() {
           <div className="flex items-end gap-3">
             <div className="flex-1">
               <Select
-                label="Entity type"
+                label="Entity Type"
                 value={exportEntity}
                 onChange={(e) => setExportEntity(e.target.value as (typeof EXPORTABLE_ENTITIES)[number]['value'])}
                 options={eligibleEntities.map(({ value, label }) => ({ value, label }))}

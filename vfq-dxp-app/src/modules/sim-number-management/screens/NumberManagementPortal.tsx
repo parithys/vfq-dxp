@@ -16,7 +16,7 @@ import { ReserveNumberWizard, type ReservedNumber } from './ReserveNumberWizard'
 // Reservation Step) already built for the activation wizards. Presented here
 // as its own standalone portal rather than a wizard step.
 //
-// Choosing a number only selects it. "Reserve Number" then takes the agent to Customer Identification, and the number is reserved
+// Choosing a number only selects it. "Reserve Number" then takes the agent to Customer Verification, and the number is reserved
 // against the identified customer at the end of that journey.
 export function NumberManagementPortal() {
   const [selected, setSelected] = useState<string | undefined>();

@@ -190,7 +190,7 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality, hideFib
     <section className={CARD}>
       <div>
         <h3 className={CARD_TITLE}>
-          Service Information <span className="font-normal">(If available)</span>
+          Service Information <span className="font-normal">(Optional)</span>
         </h3>
         <p className="text-fg-2 text-[length:var(--fs-body)]">These details are used for service activation.</p>
       </div>

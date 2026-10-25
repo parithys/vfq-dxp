@@ -99,7 +99,7 @@ export function CheckoutDefaultLayout({
             the Alternate phone # (the service-notification contact, labelled
             to match the Contact step exactly) identify the customer here. */}
         <Row label="Customer Name" value={customerName ?? '-'} />
-        <Row label="Alternate phone #" value={altPhone ?? '-'} />
+        <Row label="Alternate Phone #" value={altPhone ?? '-'} />
         {/* Plan and Discount are separate line items (2026-09-28), each
             carrying its own validity period as a detail line rather than
             leaving lock-in/duration to a separate recap box. */}
@@ -125,7 +125,7 @@ export function CheckoutDefaultLayout({
             nothing visibly changes today, but an add-on that does carry one
             reads it back here rather than only its price. */}
         <Row
-          label="Add-ons"
+          label="Add-Ons"
           value={
             addons.length
               ? addons
@@ -138,14 +138,14 @@ export function CheckoutDefaultLayout({
             (Free/Star), its own value, its own discount, and its own
             lock-in - see numberDetail above. */}
         <Row label="Number" value={msisdn ? `${msisdn} - ${isStarNumber ? 'Star' : 'Free'}` : '-'} detail={numberDetail} />
-        {creditLimitQar !== undefined && <Row label="Credit limit" value={`QAR ${creditLimitQar}`} />}
+        {creditLimitQar !== undefined && <Row label="Credit Limit" value={`QAR ${creditLimitQar}`} />}
         {/* Bill limit (2026-09-28): the agent's own figure from Plan &
             Add-ons' BillLimitEditor once they have set one, falling back to
             the plan's own figure (what Plan & Add-ons shows by default), then the credit-limit cap - never a made-up
             number, and never silently absent. */}
         {creditLimitQar !== undefined && (
           <Row
-            label="Bill limit"
+            label="Bill Limit"
             value={billLimit !== undefined || plan?.mrcQAR !== undefined ? `QAR ${billLimit ?? plan?.mrcQAR}` : `Up to QAR ${creditLimitQar}`}
             detail={`Capped at the QAR ${creditLimitQar} credit limit`}
           />
@@ -163,7 +163,7 @@ export function CheckoutDefaultLayout({
             surfaced here (rather than a separate customer-input placeholder)
             because there is nothing for either party to fill in: this is the
             consequence of that classification, not a form field. */}
-        {hrnAdvance > 0 && <Row label="HRN advance payment" value={`QAR ${hrnAdvance}`} />}
+        {hrnAdvance > 0 && <Row label="HRN Advance Payment" value={`QAR ${hrnAdvance}`} />}
       </dl>
 
       <div className="rounded-[var(--radius-card)] border border-accent-border bg-surface-warm p-4 space-y-1">
@@ -173,7 +173,7 @@ export function CheckoutDefaultLayout({
             absent when it contributes nothing - a QAR 0 row would answer a
             question nobody asked. */}
         <div className="flex justify-between text-fg font-semibold">
-          <span>Due today</span>
+          <span>Due Today</span>
           <span>QAR {dueTodayQar}</span>
         </div>
         {isStarNumber && (
@@ -225,7 +225,7 @@ export function CheckoutDefaultLayout({
             itemisation is invented here the way the rows above never invent
             one either. */}
         <div className="rounded-[var(--radius-sm)] border border-dashed border-border-soft p-3 mt-1">
-          <p className="text-fg-2 text-[length:var(--fs-caption)] font-medium">Full second-bill breakdown</p>
+          <p className="text-fg-2 text-[length:var(--fs-caption)] font-medium">Full Second-Bill Breakdown</p>
           <p className="text-muted text-[length:var(--fs-caption)]">Reserved - detailed content not yet designed.</p>
         </div>
       </div>

@@ -33,7 +33,7 @@ export function TicketOverviewCard({ ticket }: Props) {
           <Badge variant="outlined-red">{ticket.queue}</Badge>
         </div>
         <div className="flex items-center justify-between gap-2">
-          <span className="text-muted">Assigned to</span>
+          <span className="text-muted">Assigned To</span>
           <span className={ticket.assignedTo ? 'text-fg' : 'text-muted italic'}>{ticket.assignedTo ?? 'Unassigned'}</span>
         </div>
         <div className="flex items-center justify-between gap-2">

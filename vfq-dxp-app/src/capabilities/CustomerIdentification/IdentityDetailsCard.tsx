@@ -75,7 +75,7 @@ export function IdentityDetailsCard({ facts, status }: { facts: Fact[]; status?:
   );
 }
 
-/** The identity facts every Customer Identification result shows. */
+/** The identity facts every Customer Verification result shows. */
 export interface IdentityFields {
   firstName?: string;
   middleName?: string;

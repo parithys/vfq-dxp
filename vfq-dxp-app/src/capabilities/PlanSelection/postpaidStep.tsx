@@ -39,7 +39,7 @@ export function postpaidExtrasStep(ctx: PostpaidPlanContext): WizardStep {
     key: 'planExtras',
     summary: planExtrasSummary,
     skip: ctx.skipWhen,
-    label: 'Add-ons',
+    label: 'Add-Ons',
     subheading: 'Personalise the plan with optional services and spending controls.',
     render: ({ values, setValue }) => renderPlanStep('extras', ctx, values, setValue),
     // Bill limit is the only gate; add-ons and discounts never block.
@@ -86,8 +86,6 @@ function renderPlanStep(
             setValue('billLimit', amount);
             setValue('billLimitPass', pass);
           }}
-          requiresHrnAdvance={Boolean(eligibility?.requiresHrnAdvance)}
-          nationality={eligibility?.nationality}
           hiddenProductId={hiddenProductId?.(values)}
         />
         </>

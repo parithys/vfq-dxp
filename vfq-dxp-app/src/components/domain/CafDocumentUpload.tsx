@@ -82,7 +82,7 @@ export function CafDocumentUpload({ documents, onChange }: CafDocumentUploadProp
   return (
     <div className="card p-4 space-y-3">
       <div>
-        <h4 className="text-fg font-medium text-[length:var(--fs-body)]">Signed documents</h4>
+        <h4 className="text-fg font-medium text-[length:var(--fs-body)]">Signed Documents</h4>
         <p className="text-muted text-[length:var(--fs-caption)]">
           Up to {MAX_DOCUMENTS} files, 5 MB each. PDF or image.
         </p>
@@ -113,7 +113,7 @@ export function CafDocumentUpload({ documents, onChange }: CafDocumentUploadProp
         <div className="flex items-end gap-3">
           <div className="flex-1 min-w-0">
             <Select
-              label="Document type"
+              label="Document Type"
               // A type already uploaded is not offered again (as in New Connection).
               options={DOC_TYPES.filter((t) => !documents.some((d) => d.docType === t)).map((t) => ({ value: t, label: t }))}
               placeholder="Select a document type"

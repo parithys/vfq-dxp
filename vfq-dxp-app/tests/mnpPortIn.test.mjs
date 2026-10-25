@@ -272,7 +272,7 @@ test('postpaid port-in uses the shared Plan, Add-ons, Checkout Summary and full 
   assert.equal(prepaidCaf.locksAfter, undefined);
   const [postpaidCheckout] = all.filter((s) => s.key === 'checkout');
   assert.equal(postpaidCheckout.label, 'Checkout');
-  assert.equal(all.find((s) => s.key === 'planExtras').label, 'Add-ons');
+  assert.equal(all.find((s) => s.key === 'planExtras').label, 'Add-Ons');
 });
 
 test('the prepaid port-in checkout is the shared prepaid checkout, gated on the validations and storing what is due as dueTodayQar', () => {

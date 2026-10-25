@@ -80,7 +80,7 @@ export function buildCafSummaryRows({
       label: 'Discount Duration',
       value: discount ? (discount.durationMonths ? `${discount.durationMonths} months` : 'No expiry') : 'N/A',
     },
-    { label: 'Add-ons', value: addons.length ? addons.map((a) => `${a.name} (QAR ${a.mrcQAR}/mo)`).join(', ') : 'None' },
+    { label: 'Add-Ons', value: addons.length ? addons.map((a) => `${a.name} (QAR ${a.mrcQAR}/mo)`).join(', ') : 'None' },
     { label: 'SIM Type', value: simType?.simType ?? '-' },
     {
       label: 'SIM Number / ICCID',
@@ -98,11 +98,11 @@ export function buildCafSummaryRows({
             ? 'eSIM - active after payment and order submission'
             : '-',
     },
-    { label: 'Plan Lock-in', value: plan.commitmentMonths ? `${plan.commitmentMonths} months` : 'No lock-in' },
+    { label: 'Plan Lock-In', value: plan.commitmentMonths ? `${plan.commitmentMonths} months` : 'No lock-in' },
     ...(isStarNumber
       ? [
           {
-            label: 'Star Number Lock-in',
+            label: 'Star Number Lock-In',
             value: starTier ? `${starTier.lockInDurationMonths} months` : 'Not yet banded - confirm before signature',
           },
           {

@@ -116,7 +116,7 @@ export async function submitMnpOrder(
     customerWorkEmail: contact.workEmail,
     // A new customer's National Address as the NAS returned it: kept with the order, unchanged; the address the customer gave is `address`.
     nationalAddress: contact.moiResult?.nationalAddress,
-    // The identity document captured at Customer Identification, as scanned or uploaded.
+    // The identity document captured at Customer Verification, as scanned or uploaded.
     attachments: idScanAttachments(contact.idType, contact.qidScans),
     productId: values.productId,
     msisdn: portInNumber,
@@ -197,10 +197,10 @@ export async function submitMnpOrder(
     heading: needsApproval ? 'Port-in order submitted for approval' : 'Port-in request submitted',
     statusLabel: needsApproval ? 'Submitted for Approval' : 'Pending NPAS Approval',
     extraLines: [
-      ...(record.npasReference ? [{ label: 'NPAS reference', value: record.npasReference }] : []),
+      ...(record.npasReference ? [{ label: 'NPAS Reference', value: record.npasReference }] : []),
       ...(payment?.reference ? [{ label: payment.zeroValue ? 'Zero-value receipt' : 'Receipt', value: payment.reference }] : []),
       ...(attachment?.formNumber ? [{ label: 'MNP Form', value: `${attachment.formNumber} (signed)` }] : []),
-      ...(record.npasDeadline ? [{ label: 'NPAS response due', value: formatDateTime(record.npasDeadline) }] : []),
+      ...(record.npasDeadline ? [{ label: 'NPAS Response Due', value: formatDateTime(record.npasDeadline) }] : []),
     ],
     trackAction: { label: 'Track Port-In Status', to: `${PORT_IN_STATUS_PATH}?id=${requestId}` },
     customerEmail: contact.email,

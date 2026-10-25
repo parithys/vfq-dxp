@@ -19,7 +19,7 @@ test('the chosen plan or pack figure uses the shared selected highlight, not a w
 
 test('Port-in Number is the standard phone field pinned to Qatar, and its stored value is a valid port-in number', async () => {
   const src = fs.readFileSync('src/components/patterns/DonorDetailsStep.tsx', 'utf8');
-  assert.match(src, /<PhoneNumberInput\s+label="Port-in Number"[\s\S]*?fixedIso="QA"[\s\S]*?maxNationalDigits=\{8\}/);
+  assert.match(src, /<PhoneNumberInput\s+label="Port-In Number"[\s\S]*?fixedIso="QA"[\s\S]*?maxNationalDigits=\{8\}/);
   const { portInNumberError, normalizePortInNumber } = await load('/src/data/portInRules.ts');
   assert.equal(portInNumberError('+97466000666'), undefined);
   assert.equal(normalizePortInNumber('+97466000666'), '97466000666');

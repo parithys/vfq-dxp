@@ -46,7 +46,7 @@ export function TicketActionsCard({
           </div>
         )}
         {!ticket.assignedTo && !terminal && !pendingApproval && (
-          <Button variant="secondary" className="w-full justify-center" onClick={assignToMe}>Assign to me</Button>
+          <Button variant="secondary" className="w-full justify-center" onClick={assignToMe}>Assign to Me</Button>
         )}
         {canReassignQueue && !terminal && !pendingApproval && (
           <div className="flex flex-col gap-2">
@@ -83,7 +83,7 @@ export function TicketActionsCard({
             onClick={sendToApproval}
             className={`text-[length:var(--fs-caption)] text-link hover:underline self-center mt-1 ${SYNTHETIC_CLASS}`}
           >
-            Simulate → send to approval (demo)
+            Simulate → Send to Approval (Demo)
           </button>
         )}
         {ticket.status === 'Closed' && (

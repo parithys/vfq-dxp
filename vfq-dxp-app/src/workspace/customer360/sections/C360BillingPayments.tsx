@@ -180,7 +180,7 @@ export function C360BillingPayments({ data, goToTab }: { data: Customer360Data; 
         {/* Left: the billing profiles; picking one scopes the whole page to it (the same master / detail shape as Products & Services). */}
         <Panel icon={IC.bars} title={`Billing Profiles (${profiles.length})`}>
           <ul className="space-y-2">
-            {[{ id: 'all', title: 'All billing profiles', sub: `${profiles.length} profiles`, out: summary.outstanding, status: undefined as string | undefined }, ...profiles.map((r) => ({
+            {[{ id: 'all', title: 'All Billing Profiles', sub: `${profiles.length} profiles`, out: summary.outstanding, status: undefined as string | undefined }, ...profiles.map((r) => ({
               id: String(r.billingProfileId),
               title: str(r.name) ?? DASH,
               sub: str(r.billingProfileId) ?? DASH,

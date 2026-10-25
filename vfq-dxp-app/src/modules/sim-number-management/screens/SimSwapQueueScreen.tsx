@@ -170,7 +170,7 @@ export function SimSwapQueueScreen() {
         <Textarea label="Comments" value={approveComment} onChange={(e) => setApproveComment(e.target.value)} />
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button>
-          <Button variant="primary" onClick={approve}>Approve SIM swap</Button>
+          <Button variant="primary" onClick={approve}>Approve SIM Swap</Button>
         </div>
       </Drawer>
 

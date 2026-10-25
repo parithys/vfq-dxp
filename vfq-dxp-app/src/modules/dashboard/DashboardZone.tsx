@@ -148,7 +148,7 @@ export function DashboardZone({
     if (kind && errors[kind]) {
       return (
         <span className="text-danger text-[length:var(--fs-body)]" title={errors[kind]}>
-          Failed to load
+          Failed to Load
         </span>
       );
     }

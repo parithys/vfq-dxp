@@ -117,9 +117,9 @@ export function OfferDetailsDrawer({
   const rows: { icon: string; label: string; value?: string; pill?: boolean }[] = o
     ? [
         { icon: ICONS.service, label: 'Service', value: serviceLabel },
-        { icon: ICONS.tag, label: 'Offer type', value: o.offerType },
-        { icon: ICONS.card, label: 'Monthly rental', value: `QAR ${o.monthlyRental}${prepaid ? '' : '/mo'}` },
-        { icon: ICONS.card, label: 'Add-on (monthly)', value: o.addOnMonthly ? `QAR ${o.addOnMonthly}/mo` : undefined },
+        { icon: ICONS.tag, label: 'Offer Type', value: o.offerType },
+        { icon: ICONS.card, label: 'Monthly Rental', value: `QAR ${o.monthlyRental}${prepaid ? '' : '/mo'}` },
+        { icon: ICONS.card, label: 'Add-On (Monthly)', value: o.addOnMonthly ? `QAR ${o.addOnMonthly}/mo` : undefined },
         { icon: ICONS.service, label: o.codeLabel ?? 'Campaign code', value: o.campaignCode },
         { icon: ICONS.megaphone, label: 'Promotion', value: o.promotionId },
         { icon: ICONS.sparkles, label: 'Treatment', value: o.treatmentCode },
@@ -152,7 +152,7 @@ export function OfferDetailsDrawer({
     <Drawer
       open={offer !== null}
       onClose={onClose}
-      title="Offer details"
+      title="Offer Details"
       footer={footer}
       bodyClassName="px-6 pb-6 pt-6"
     >
@@ -242,7 +242,7 @@ export function OfferDetailsDrawer({
             </Section>
           ) : (
             <>
-          <Section title="Offer information">
+          <Section title="Offer Information">
             <dl className={`${PANEL} px-4`}>
               {rows.map((r, i) => (
                 <div key={r.label} className="flex items-center gap-4">
@@ -263,7 +263,7 @@ export function OfferDetailsDrawer({
           </Section>
 
           {includedNames.length > 0 && (
-            <Section title="Included plans and add-ons">
+            <Section title="Included Plans and Add-Ons">
               <div className={`${PANEL} p-4 flex items-start gap-4`}>
                 <IconDisc path={ICONS.cube} className="h-14 w-14 bg-surface-warm text-accent" />
                 <div className="space-y-2 pt-1">
@@ -291,7 +291,7 @@ export function OfferDetailsDrawer({
             <div className={`${PANEL} p-4 flex items-center gap-4`}>
               <IconDisc path={ICONS.doc} className="h-14 w-14 bg-surface text-fg-2" />
               <div className="flex-1">
-                <p className="text-fg font-medium text-[length:var(--fs-body)]">Related documents</p>
+                <p className="text-fg font-medium text-[length:var(--fs-body)]">Related Documents</p>
                 <p className="text-fg-2 text-[length:var(--fs-caption)]">Terms, conditions and more</p>
               </div>
               {/* No offer documents exist in the app yet, so this says so instead of going nowhere. */}

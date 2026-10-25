@@ -6,14 +6,14 @@ import { SYNTHETIC_CLASS } from '../../data/synthetic/syntheticMarker';
 
 const KINDS: { value: FaultKind; label: string }[] = [
   { value: 'timeout', label: 'Timeout' },
-  { value: 'unavailable', label: 'Service unavailable' },
-  { value: 'network', label: 'Connectivity failure' },
-  { value: 'api', label: 'API / integration error' },
-  { value: 'partial', label: 'Partial / incomplete response' },
-  { value: 'expired', label: 'Validation expired' },
-  { value: 'interrupted', label: 'Interrupted validation' },
-  { value: 'unexpected', label: 'Unexpected exception' },
-  { value: 'duplicate', label: 'Duplicate customer matches' },
+  { value: 'unavailable', label: 'Service Unavailable' },
+  { value: 'network', label: 'Connectivity Failure' },
+  { value: 'api', label: 'API / Integration Error' },
+  { value: 'partial', label: 'Partial / Incomplete Response' },
+  { value: 'expired', label: 'Validation Expired' },
+  { value: 'interrupted', label: 'Interrupted Validation' },
+  { value: 'unexpected', label: 'Unexpected Exception' },
+  { value: 'duplicate', label: 'Duplicate Customer Matches' },
 ];
 
 /**
@@ -32,7 +32,7 @@ export function DemoFaultPanel() {
   const select = 'rounded-[var(--radius-button)] border border-border bg-bg px-2 py-1 text-[length:var(--fs-caption)]';
   return (
     <div className={`${SYNTHETIC_CLASS} rounded-[var(--radius-card)] border border-dashed border-current p-3 space-y-2`}>
-      <p className="text-[length:var(--fs-micro)] uppercase tracking-wide font-semibold">Demo only - simulate a system failure</p>
+      <p className="text-[length:var(--fs-micro)] uppercase tracking-wide font-semibold">Demo Only - Simulate a System Failure</p>
       <div className="flex flex-wrap items-center gap-2">
         <select aria-label="System" className={select} value={service} onChange={(e) => setService(e.target.value as ServiceName | '')}>
           <option value="">Select System</option>

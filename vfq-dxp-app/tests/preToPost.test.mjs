@@ -16,7 +16,7 @@ after(close);
 
 const ctx = { flow: 'new', existingCustomerId: undefined, guardedContactChange: () => true, products: [], customerBenefits: undefined };
 
-test('the conversion uses Customer Identification, Billing Profile, Offers & Plans, Add-ons, Checkout, the full CAF and Payment', () => {
+test('the conversion uses Customer Verification, Billing Profile, Offers & Plans, Add-ons, Checkout, the full CAF and Payment', () => {
   const all = steps.preToPostSteps(ctx);
   assert.deepEqual(all.map((s) => s.key), ['contact', 'line', 'billingAccount', 'plan', 'planExtras', 'checkout', 'caf', 'payment']);
   assert.equal(typeof all.find((s) => s.key === 'caf').locksAfter, 'function', 'the full CAF locks the journey once signed');

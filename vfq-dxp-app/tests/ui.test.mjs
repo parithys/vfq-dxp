@@ -219,7 +219,7 @@ test('idCaptureOptions: reader on web, upload on tablet, upload when there is no
 
 // Special Discounts Identification is an independent copy of the Mobile Postpaid Special Discounts section: it imports none of the shared
 // identification / customer-type parts or the device rule, and always offers both capture actions.
-test('Special Discounts Identification is decoupled from Customer Identification', async () => {
+test('Special Discounts Identification is decoupled from Customer Verification', async () => {
   const dir = 'src/capabilities/SpecialDiscountsIdentification';
   const shared = /from '(?:\.\.\/)+(?:components\/(?:patterns|domain)\/(?:IdFileUpload|PassportScanSections|QidImageUpload|QidInput|ScannedIdPreview|idUploadModel|qidImageUploadModel|GuidedContactStep|IdLookupStep|useIdLookup|CompanySearchInput)|capabilities\/(?:CustomerIdentification|CustomerType))'|lib\/deviceType/;
   for (const f of fs.readdirSync(dir).filter((n) => /\.tsx?$/.test(n))) assert.ok(!shared.test(fs.readFileSync(path.join(dir, f), 'utf8')), `${f} reaches into a shared part or the device rule`);
@@ -227,7 +227,7 @@ test('Special Discounts Identification is decoupled from Customer Identification
   assert.deepEqual(idCaptureOptions(true), { scan: true, upload: true });
   assert.deepEqual(idCaptureOptions(false), { scan: false, upload: true });
   const m = await load('/src/capabilities/SpecialDiscountsIdentification/specialDiscountsModel.ts');
-  assert.deepEqual(m.TYPE_OPTIONS.map((o) => o.label), ['Standard customer', 'Consumer B2B2C', 'Retiree', 'MADA']);
+  assert.deepEqual(m.TYPE_OPTIONS.map((o) => o.label), ['Standard Customer', 'Consumer B2B2C', 'Retiree', 'MADA']);
 });
 
 test('idCaptureOptions: a step that needs both offers both on any device', async () => {

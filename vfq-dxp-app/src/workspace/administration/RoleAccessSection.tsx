@@ -171,7 +171,7 @@ export function RoleAccessSection() {
       </div>
 
       <div className="mt-8 rounded-[var(--radius-card)] border border-dashed border-[var(--field-card-border)] p-5">
-        <Badge variant="filled-neutral">Not yet built</Badge>
+        <Badge variant="filled-neutral">Not Yet Built</Badge>
         <p className="text-fg-2 text-[length:var(--fs-body)] mt-2">
           User management, system configuration, and audit logging aren't implemented in this build. This directory is
           read-only against the configured role and feature-grant model.

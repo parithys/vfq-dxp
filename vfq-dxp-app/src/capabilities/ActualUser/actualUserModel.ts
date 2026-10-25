@@ -17,7 +17,7 @@ import { ageOn, isIdExpired, MINIMUM_AGE } from '../../engines/eligibilityEngine
  */
 export interface ActualUserValue {
   choice?: 'primary' | 'other';
-  /** The actual user's identification and contact details - the same value Customer Identification produces for the primary. */
+  /** The actual user's identification and contact details - the same value Customer Verification produces for the primary. */
   identity?: GuidedContactValue;
 }
 
@@ -61,12 +61,12 @@ export function supplementaryRows(v: ActualUserValue | undefined): { label: stri
   const i = actualUserIdentity(v);
   if (!i) return [];
   return [
-    { label: 'Actual user', value: i.moiResult?.name ?? '-' },
+    { label: 'Actual User', value: i.moiResult?.name ?? '-' },
     { label: i.idType ? `${i.idType} number` : 'ID number', value: i.idNumber ?? '-' },
     { label: 'Nationality', value: i.moiResult?.nationality ?? '-' },
-    { label: 'Date of birth', value: i.moiResult?.dob ?? '-' },
+    { label: 'Date of Birth', value: i.moiResult?.dob ?? '-' },
     { label: 'Email', value: i.email ?? '-' },
-    ...(i.altPhone ? [{ label: 'Alternate phone', value: i.altPhone }] : []),
+    ...(i.altPhone ? [{ label: 'Alternate Phone', value: i.altPhone }] : []),
   ];
 }
 

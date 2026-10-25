@@ -239,7 +239,7 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
                 }
                 trailingAddon={
                   !verifyThenFetch && emailVerification(value.email, value.moiResult?.email).verified ? (
-                    <VerifiedBadge label="Email address verified" />
+                    <VerifiedBadge label="Email Address Verified" />
                   ) : undefined
                 }
                 onChange={(e) => onChange({ ...value, email: e.target.value })}
@@ -254,7 +254,7 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
                 onChange={(e) => onChange({ ...value, workEmail: e.target.value || undefined })}
               />
               <PhoneNumberInput
-                label="Alternate phone #"
+                label="Alternate Phone #"
                 // Optional in verifyThenFetch (New Connection); still validated when entered.
                 required={!verifyThenFetch}
                 // Optional in verifyThenFetch, so it must not pull the cursor on arrival.

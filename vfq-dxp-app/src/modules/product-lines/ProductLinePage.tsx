@@ -74,7 +74,7 @@ export function ProductLinePage({ lineKey }: { lineKey: ProductLine['key'] }) {
   const line = PRODUCT_LINE_BY_KEY.get(lineKey);
   const persona = getPersona(activePersonaId);
 
-  if (!line) return <NotYetBuiltPanel title="Unknown product line" body="This product line is not in the catalogue." />;
+  if (!line) return <NotYetBuiltPanel title="Unknown Product Line" body="This product line is not in the catalogue." />;
 
   const reachable = reachableCategories(lineKey, (k) => canUseFeature(activePersonaId, k));
 

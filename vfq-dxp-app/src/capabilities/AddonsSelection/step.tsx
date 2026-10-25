@@ -20,12 +20,12 @@ export function addonsSelectionStep(opts: {
 }): WizardStep {
   const source = (values: Values) => opts.source?.(values) ?? 'catalogue';
   const summary: SummaryField[] = [
-    { key: 'addons', label: 'Add-ons', type: 'multi', labelFrom: { kind: 'products', idField: 'productId', labelField: 'name' }, value: (v) => v.addonIds, when: (v) => source(v) === 'catalogue' },
-    { key: 'addons-prepaid', label: 'Add-ons', type: 'multi', labelFrom: { kind: 'addons-discounts', idField: 'addonDiscountId', labelField: 'name' }, value: (v) => v.addonIds, when: (v) => source(v) === 'prepaid' },
+    { key: 'addons', label: 'Add-Ons', type: 'multi', labelFrom: { kind: 'products', idField: 'productId', labelField: 'name' }, value: (v) => v.addonIds, when: (v) => source(v) === 'catalogue' },
+    { key: 'addons-prepaid', label: 'Add-Ons', type: 'multi', labelFrom: { kind: 'addons-discounts', idField: 'addonDiscountId', labelField: 'name' }, value: (v) => v.addonIds, when: (v) => source(v) === 'prepaid' },
   ];
   return {
     key: 'addons',
-    label: 'Add-ons',
+    label: 'Add-Ons',
     subheading: 'Choose the add-ons to add to the line.',
     summary,
     render: ({ values, setValue }) => (

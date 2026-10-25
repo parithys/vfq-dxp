@@ -195,7 +195,7 @@ export function QnomyTicketHistory() {
       </>} />
       <ErrorBanner message={loadError} />
       <RestrictedRowsNotice count={hiddenCount} />
-      <SegmentedTabs items={views} active={view} onChange={setView} label="Ticket period" />
+      <SegmentedTabs items={views} active={view} onChange={setView} label="Ticket Period" />
       <div className="pt-4">
         {view === 'today' ? table(todayRows, 'No tickets handled today yet.') : table(last30Rows, 'No tickets handled in the last 30 days.')}
       </div>

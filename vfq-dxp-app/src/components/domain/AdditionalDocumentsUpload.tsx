@@ -79,7 +79,7 @@ export function AdditionalDocumentsUpload({ documents, onChange, labelOptions, m
   return (
     <div className={`card ${whiteBackground ? '' : 'bg-surface'} p-4 space-y-3`}>
       <div>
-        <h4 className="text-fg font-bold text-[length:var(--fs-body)]">Additional documents</h4>
+        <h4 className="text-fg font-bold text-[length:var(--fs-body)]">Additional Documents</h4>
         <p className="text-muted text-[length:var(--fs-caption)]">
           Optional - label and attach anything else this order needs. No signature required. Up to {maxDocuments} files, 5 MB each.
         </p>
@@ -115,7 +115,7 @@ export function AdditionalDocumentsUpload({ documents, onChange, labelOptions, m
                 // "Choose document type" is the default first option (no type chosen).
                 // A type already uploaded is not offered again.
                 options={[
-                  { value: '', label: 'Choose document type' },
+                  { value: '', label: 'Choose Document Type' },
                   ...labelOptions.filter((o) => !documents.some((d) => d.label === o)).map((o) => ({ value: o, label: o })),
                 ]}
                 value={label}
@@ -126,7 +126,7 @@ export function AdditionalDocumentsUpload({ documents, onChange, labelOptions, m
               />
             ) : (
               <Input
-                label="Document label"
+                label="Document Label"
                 placeholder="e.g. Employer Letter"
                 value={label}
                 onChange={(e) => {

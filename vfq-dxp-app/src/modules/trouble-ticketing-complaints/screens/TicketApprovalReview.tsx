@@ -234,7 +234,7 @@ export function TicketApprovalReview() {
       />
 
       <div className="card p-5 mb-4">
-        <p className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted mb-2">Decision history</p>
+        <p className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted mb-2">Decision History</p>
         {auditRecords.length === 0 && <p className="text-fg-2 text-[length:var(--fs-body)]">No approval actions recorded yet for this ticket.</p>}
         {auditRecords.length > 0 && (
           <div className="divide-y divide-border-soft">
@@ -266,17 +266,17 @@ export function TicketApprovalReview() {
       ) : null}
 
       <Drawer open={modal === 'approve'} onClose={() => setModal(null)} title="Approve Ticket">
-        <Textarea label="Notes (optional)" value={approveNotes} onChange={(e) => setApproveNotes(e.target.value)} />
+        <Textarea label="Notes (Optional)" value={approveNotes} onChange={(e) => setApproveNotes(e.target.value)} />
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button>
-          <Button variant="primary" onClick={approve} disabled={submitting}>Submit approval</Button>
+          <Button variant="primary" onClick={approve} disabled={submitting}>Submit Approval</Button>
         </div>
       </Drawer>
 
       <Drawer open={modal === 'reject'} onClose={() => setModal(null)} title="Reject Ticket">
         <div className="space-y-3">
           <Select label="Reject Reason" value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Select a reason" options={APPROVAL_REJECT_REASONS.map((r) => ({ value: r, label: r }))} />
-          <Textarea label="Notes (required)" value={rejectNotes} onChange={(e) => setRejectNotes(e.target.value)} />
+          <Textarea label="Notes (Required)" value={rejectNotes} onChange={(e) => setRejectNotes(e.target.value)} />
         </div>
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button>
@@ -288,7 +288,7 @@ export function TicketApprovalReview() {
         <div className="space-y-3">
           <p className="text-fg-2 text-[length:var(--fs-body)]">Returning sends this ticket back into the approval queue for further review, rather than rejecting it outright.</p>
           <Select label="Return Reason" value={returnReason} onChange={(e) => setReturnReason(e.target.value)} placeholder="Select a reason" options={APPROVAL_RETURN_REASONS.map((r) => ({ value: r, label: r }))} />
-          <Textarea label="Notes (required)" value={returnNotes} onChange={(e) => setReturnNotes(e.target.value)} />
+          <Textarea label="Notes (Required)" value={returnNotes} onChange={(e) => setReturnNotes(e.target.value)} />
         </div>
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button>

@@ -206,7 +206,7 @@ export function BillingAccountPage() {
             <Field label="Overall" value={limits?.overall !== undefined ? `${limits.overall} QAR` : undefined} />
             <Field label="Default" value={limits ? `${limits.default} QAR` : undefined} />
             <Field label="Credit Control Team" value={limits ? (limits.creditControl === null ? '-' : `${limits.creditControl} QAR`) : undefined} />
-            <Field label="Credit Limit increased due to Deposit" value={limits ? (limits.depositIncrease ? `${limits.depositIncrease} QAR` : '-') : undefined} />
+            <Field label="Credit Limit Increased Due to Deposit" value={limits ? (limits.depositIncrease ? `${limits.depositIncrease} QAR` : '-') : undefined} />
           </div>
         </section>
 

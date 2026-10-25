@@ -28,14 +28,14 @@ export const POSTPAID_MILESTONES: readonly MilestoneDef[] = [
   {
     id: 'identified',
     stepKey: 'contact',
-    label: 'Customer verified',
-    title: 'Customer verified',
+    label: 'Customer Verified',
+    title: 'Customer Verified',
     message: 'Customer identified and eligibility confirmed.',
     // MOI validated the ID but no customer record exists: a new Vodafone customer, not an identified one.
     wording: (values) =>
       (values.eligibility as EligibilityResult | undefined)?.isExistingCustomer === false
         ? { title: 'New Customer', message: 'MOI validated; no existing customer record found.' }
-        : { title: 'Customer verified', message: 'Customer identified and eligibility confirmed.' },
+        : { title: 'Customer Verified', message: 'Customer identified and eligibility confirmed.' },
     // ID captured and MOI-verified, and the eligibility checks passed (a hard or soft stop - blacklist, collections, expired ID - blocks it).
     evidence: ({ values }) => {
       const contact = at<GuidedContactValue>(values, 'contact');
@@ -47,10 +47,10 @@ export const POSTPAID_MILESTONES: readonly MilestoneDef[] = [
   {
     id: 'billing',
     stepKey: 'billingAccount',
-    label: 'Billing profile',
-    title: 'Billing profile ready',
+    label: 'Billing Profile',
+    title: 'Billing Profile Ready',
     message: 'Billing profile created for this customer.',
-    // Resolved quietly after Customer Identification; the toast belongs to Recommended Offers, the page it leads to, and shows nowhere else.
+    // Resolved quietly after Customer Verification; the toast belongs to Recommended Offers, the page it leads to, and shows nowhere else.
     announceAt: 'product',
     // The existing profile selected, or a new one created with its contact and bill cycle.
     evidence: ({ values }) => {
@@ -66,8 +66,8 @@ export const POSTPAID_MILESTONES: readonly MilestoneDef[] = [
   {
     id: 'checkout',
     stepKey: 'checkout',
-    label: 'Cart checked out',
-    title: 'Cart checked out',
+    label: 'Cart Checked Out',
+    title: 'Cart Checked Out',
     message: 'Cart validated and ready for the contract.',
     // The cart is complete (plan, number, SIM, totals) and the agent has confirmed Checkout by moving past it. Going back to look keeps it;
     // changing the cart drops it, and it is reached again when Checkout is confirmed again.
@@ -80,8 +80,8 @@ export const POSTPAID_MILESTONES: readonly MilestoneDef[] = [
   {
     id: 'caf',
     stepKey: 'caf',
-    label: 'CAF signed',
-    title: 'CAF signed',
+    label: 'CAF Signed',
+    title: 'CAF Signed',
     message: 'Customer agreement signed successfully.',
     evidence: ({ values }) => {
       const caf = at<{ cafType?: string; signatureDataUrl?: string }>(values, 'caf');
@@ -90,8 +90,8 @@ export const POSTPAID_MILESTONES: readonly MilestoneDef[] = [
   },
   {
     id: 'submitted',
-    label: 'Order submitted',
-    title: 'Order submitted',
+    label: 'Order Submitted',
+    title: 'Order Submitted',
     message: 'Order submitted successfully.',
     // Reached the moment the order is in, and the page the agent lands on is the Order Submitted page: no toast on top of it.
     noToast: true,

@@ -72,9 +72,9 @@ export interface KioskCustomerFacts {
 //   - 'None'           - a Vodafone customer who genuinely holds nothing.
 //   - 'Not recorded'   - facts never resolved, so nothing is known either way.
 function activeLinesRow(facts: KioskCustomerFacts | undefined): ToastRow {
-  if (!facts) return { label: 'Active lines', value: 'Not recorded' };
-  if (facts.brand.operator === 'other') return { label: 'Active lines', value: 'Not applicable' };
-  if (facts.serviceCount === 0) return { label: 'Active lines', value: 'None' };
+  if (!facts) return { label: 'Active Lines', value: 'Not recorded' };
+  if (facts.brand.operator === 'other') return { label: 'Active Lines', value: 'Not applicable' };
+  if (facts.serviceCount === 0) return { label: 'Active Lines', value: 'None' };
   // Empty value, not a repeat of the count: it is in the label now.
   // The count is SERVICES, not category rows: facts.links.length would have
   // read "Active lines (2)" for a customer holding four services across two
@@ -245,7 +245,7 @@ function ticketToastRows(
   // A protected-segment customer this role may not see: the notification names no one, shows no number or services, and launches nothing.
   if (facts?.restricted) {
     return [
-      { label: 'Customer name', value: 'Restricted customer' },
+      { label: 'Customer Name', value: 'Restricted customer' },
       { label: 'Access', value: 'Access restricted for your role' },
     ];
   }
@@ -256,7 +256,7 @@ function ticketToastRows(
     // first of five equal-weight facts. It keeps its 'id' tone nowhere now,
     // so the cyan value treatment only appears if another row asks for it.
     {
-      label: 'Customer name',
+      label: 'Customer Name',
       value: customerName ?? (facts?.brand.operator === 'other' ? 'Ooredoo Customer' : 'Not on file'),
       // Clicking the name opens Customer 360 (2026-09-27) - same `to`
       // mechanism "Purpose of visit" already uses below, so a customer row
@@ -267,7 +267,7 @@ function ticketToastRows(
       to: customerId ? `/customer/${customerId}` : undefined,
     },
     {
-      label: 'Mobile number',
+      label: 'Mobile Number',
       value: mobile ?? 'Not captured',
       // The relationship on THIS number, in brackets beneath it (2026-09-25).
       // Absent rather than guessed for a competitor's customer and for a
@@ -277,7 +277,7 @@ function ticketToastRows(
     },
     activeLinesRow(facts),
     {
-      label: 'Purpose of visit',
+      label: 'Purpose of Visit',
       // The journey the kiosk code stands for, not the queue the customer is
       // queuing in - refined by the ticket's own taskType when it carries
       // one (2026-09-27), the same derivation the Ticket History page uses,

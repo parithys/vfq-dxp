@@ -4,7 +4,7 @@ import { at } from '../summaryKit';
 export const crossSalesSummary: SummaryField[] = [
   {
     key: 'decision',
-    label: 'Recommended offer',
+    label: 'Recommended Offer',
     type: 'select',
     options: { accepted: 'Accepted', declined: 'Declined', none: 'No offer available' },
     value: (v) => at(v, 'crossSales', 'decision'),

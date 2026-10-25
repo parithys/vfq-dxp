@@ -30,7 +30,7 @@ import {
 } from '../../capabilities';
 import type { ConfirmedOrder } from '../../capabilities';
 
-// New Connection: ONE continuous journey for every new connection. It begins with Customer Identification - ID scan, MOI
+// New Connection: ONE continuous journey for every new connection. It begins with Customer Verification - ID scan, MOI
 // validation, the eligibility checks common to every product, special discounts - and, once the customer is identified, the
 // agent chooses the product by the customer's intent (Product Selection). The journey then continues in this same wizard
 // with that product's steps: the draft, the customer lock and the title never change, and nothing exits or restarts.

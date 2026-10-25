@@ -107,7 +107,7 @@ export function ForgotPasswordFlow({ open, onClose, initialStaffId = '' }: Forgo
             Enter the verification code sent to your registered contact. (Demo code: {DEMO_VERIFICATION_CODE} - pending VFQ
             Security's real Authcode/OTP method.)
           </p>
-          <Input label="Verification code" value={code} onChange={(e) => setCode(e.target.value)} error={codeError ?? undefined} />
+          <Input label="Verification Code" value={code} onChange={(e) => setCode(e.target.value)} error={codeError ?? undefined} />
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="secondary" onClick={() => setStep('identify')}>Back</Button>
             <Button variant="primary" onClick={submitVerify} disabled={!code}>Verify</Button>
@@ -116,9 +116,9 @@ export function ForgotPasswordFlow({ open, onClose, initialStaffId = '' }: Forgo
       )}
       {step === 'reset' && (
         <div className="space-y-3">
-          <Input label="New password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+          <Input label="New Password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
           <Input
-            label="Confirm password"
+            label="Confirm Password"
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
@@ -127,7 +127,7 @@ export function ForgotPasswordFlow({ open, onClose, initialStaffId = '' }: Forgo
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="secondary" onClick={() => setStep('verify')}>Back</Button>
             <Button variant="primary" onClick={submitReset} disabled={!newPassword || !confirmPassword}>
-              Reset password
+              Reset Password
             </Button>
           </div>
         </div>

@@ -52,7 +52,7 @@ export function PrepaidCartStep({ lines, onAddAnother }: { lines: PrepaidLine[];
       )}
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="secondary" onClick={onAddAnother} disabled={lines.length === 0 || Boolean(duplicate)}>
-          Add another subscription
+          Add Another Subscription
         </Button>
         <span className="text-muted text-[length:var(--fs-caption)]">Or continue to checkout once the order has every subscription.</span>
       </div>

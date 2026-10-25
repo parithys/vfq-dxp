@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../../components/primitives/Icon';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
-import { ActionButton, DetailRows, FilterSelect, GridTable, IC, Pager, Panel, Pill, SearchBox, TabPage, ViewPill, fmtDate, fmtDateTime, usePaging } from './C360Kit';
+import { ActionButton, DetailRows, FilterSelect, GridTable, IC, Pagination, Panel, Pill, SearchBox, TabPage, ViewPill, fmtDate, fmtDateTime, usePaging } from './C360Kit';
 import type { Tone } from './C360Kit';
 import { SegmentedTabs } from '../../../components/primitives/SegmentedTabs';
 import { Dv } from '../demoValues';
@@ -42,10 +42,10 @@ const label = (status: string) => (/^complete$/i.test(status) ? 'Completed' : st
 const toneOf = (b: Bucket): Tone => (b === 'completed' ? 'green' : b === 'cancelled' ? 'red' : 'amber');
 
 const RANGES = [
-  { value: 'all', label: 'All time', days: 0 },
-  { value: '30', label: 'Last 30 days', days: 30 },
-  { value: '180', label: 'Last 6 months', days: 180 },
-  { value: '365', label: 'Last 12 months', days: 365 },
+  { value: 'all', label: 'All Time', days: 0 },
+  { value: '30', label: 'Last 30 Days', days: 30 },
+  { value: '180', label: 'Last 6 Months', days: 180 },
+  { value: '365', label: 'Last 12 Months', days: 365 },
 ];
 
 type TabKey = 'all' | 'progress' | 'completed' | 'cancelled' | 'pending';
@@ -128,7 +128,7 @@ export function C360Orders({ data }: { data: Customer360Data; services: Customer
     });
   }, [orders, pendingActions, tab, query, typeFilter, statusFilter, range, now]);
 
-  const { page, pages, setPage, slice } = usePaging(rows, 8);
+  const { page, setPage, slice } = usePaging(rows, 8);
   const selected = rows.find((r) => r.id === selectedId) ?? rows[0];
   const goTab = (k: TabKey) => {
     setTab(k);
@@ -155,7 +155,7 @@ export function C360Orders({ data }: { data: Customer360Data; services: Customer
           <div className="px-4 pt-2">
             {/* The tabs narrow the one list below them by status - a filter, so the pill switcher; underline tabs are for moving between sections. */}
             <SegmentedTabs
-              label="Orders by status"
+              label="Orders by Status"
               active={tab}
               onChange={(k) => goTab(k as TabKey)}
               items={[
@@ -206,11 +206,7 @@ export function C360Orders({ data }: { data: Customer360Data; services: Customer
               },
             ]}
           />
-          {pages > 1 && (
-            <div className="flex justify-end px-4 py-3">
-              <Pager page={page} pages={pages} onPage={setPage} />
-            </div>
-          )}
+          <Pagination className="m-3" page={page} total={rows.length} pageSize={8} onPage={setPage} />
         </section>
 
         <Panel

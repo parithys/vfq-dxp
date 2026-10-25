@@ -33,7 +33,7 @@ export function EligibilityChecksList({ rows }: { rows: EligibilityRow[] }) {
 function EligibilityOutcomeLegend() {
   return (
     <div className="mt-6 pt-4 border-t border-border-soft">
-      <h4 className="text-fg font-semibold text-[length:var(--fs-body)] mb-2">What these outcomes mean</h4>
+      <h4 className="text-fg font-semibold text-[length:var(--fs-body)] mb-2">What These Outcomes Mean</h4>
       <ul className="list-disc pl-5 space-y-2">
         {OUTCOME_LEGEND.map((item) => (
           <li key={item.title} className="text-[length:var(--fs-caption)] leading-snug">

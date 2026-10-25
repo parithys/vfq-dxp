@@ -2,7 +2,7 @@
 // constant instead of typing a label, so the same step is never called two things.
 
 /** Select an ID type, scan the document, validate with MOI, show the validated Identity Details. */
-export const CUSTOMER_IDENTIFICATION_LABEL = 'Customer Identification';
+export const CUSTOMER_IDENTIFICATION_LABEL = 'Customer Verification';
 /** The same step for the special-discounts journeys. */
 export const SPECIAL_DISCOUNTS_IDENTIFICATION_LABEL = 'Special Discounts Identification';
 /** Who will use the line when it is not the customer who owns it. */
@@ -27,7 +27,7 @@ export const APPOINTMENT_LABEL = 'Book Appointment';
 /** The closing note on the actions performed. */
 export const ACTIVITY_LABEL = 'Activity';
 /** Choose and validate the SIM. */
-export const SIM_TYPE_LABEL = 'SIM Type';
+export const SIM_TYPE_LABEL = 'SIM Selection';
 /** Scan and validate the SIM's serial number. */
 export const SIM_SERIAL_LABEL = 'SIM Serial';
 /** Choose which of the identified customer's existing lines the order changes. */

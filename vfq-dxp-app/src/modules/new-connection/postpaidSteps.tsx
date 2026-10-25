@@ -30,7 +30,7 @@ export interface PostpaidStepContext {
 const offerAccepted = (values: Record<string, unknown>) => (values.crossSales as CrossSalesValue | undefined)?.decision === 'accepted';
 
 /**
- * The New Postpaid steps, after Customer Identification and Product Selection: Address, Billing Profile (resolved for the
+ * The New Postpaid steps, after Customer Verification and Product Selection: Address, Billing Profile (resolved for the
  * agent), Plan and Add-ons, Number, SIM, Checkout, the full CAF and Payment, which submits.
  */
 export function postpaidSteps({ products, customerBenefits, device }: PostpaidStepContext): WizardStep[] {

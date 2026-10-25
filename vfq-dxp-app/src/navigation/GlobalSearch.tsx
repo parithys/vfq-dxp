@@ -88,7 +88,7 @@ export function GlobalSearch() {
               // A protected segment the signed-in role may not see: the hit says so and carries no name, ID or segment.
               canViewCustomerSegment(usePersonaStore.getState().activePersonaId, c.segment)
                 ? { key: `customer-${c.customerId}`, kind: 'Customer', label: c.name, sub: `${c.customerId} · ${c.segment}`, path: `/customer/${c.customerId}` }
-                : { key: `customer-${c.customerId}`, kind: 'Customer', label: 'Restricted customer', sub: 'Access restricted for your role', path: `/customer/${c.customerId}` }
+                : { key: `customer-${c.customerId}`, kind: 'Customer', label: 'Restricted Customer', sub: 'Access restricted for your role', path: `/customer/${c.customerId}` }
             ),
         leads: async () =>
           (await mockDataEngine.list<LeadRecord>('leads'))

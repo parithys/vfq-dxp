@@ -568,10 +568,10 @@ export function Customer360Layout() {
   const pendingSimSwap = data.simSwapOrders.some((o) => isSimSwapAwaitingDecision(o.status));
   const headerAlerts: HeaderAlert[] = [
     ...(data.customer.blacklisted ? [{ label: 'Blacklisted', tone: 'danger' as const }] : []),
-    ...(outstanding > 0 ? [{ label: 'Outstanding balance', tone: 'danger' as const }] : []),
+    ...(outstanding > 0 ? [{ label: 'Outstanding Balance', tone: 'danger' as const }] : []),
     ...(dunning && !/^(none|no dunning|current)$/i.test(dunning) ? [{ label: `Dunning: ${dunning}`, tone: 'danger' as const }] : []),
     ...(openTicketCount > 0 ? [{ label: `${openTicketCount} open ticket${openTicketCount === 1 ? '' : 's'}`, tone: 'warning' as const }] : []),
-    ...(pendingSimSwap ? [{ label: 'Pending SIM swap', tone: 'warning' as const }] : []),
+    ...(pendingSimSwap ? [{ label: 'Pending SIM Swap', tone: 'warning' as const }] : []),
   ];
 
   return (
@@ -644,9 +644,9 @@ export function Customer360Layout() {
 
       {!telesales && !headerOnly && (
       <div className="grid grid-cols-2 gap-4 mb-4">
-        <MetricCard label="Account status" value={accountStatus} subtext={`${data.accounts.length} account${data.accounts.length === 1 ? '' : 's'}`} />
+        <MetricCard label="Account Status" value={accountStatus} subtext={`${data.accounts.length} account${data.accounts.length === 1 ? '' : 's'}`} />
         <MetricCard
-          label="Current bill"
+          label="Current Bill"
           value={latestBill ? `${String(latestBill.totalAmount ?? '-')} QAR` : '-'}
           subtext={latestBill ? capitalizeStatus(latestBill.status) : 'No bills on file'}
         />
@@ -656,7 +656,7 @@ export function Customer360Layout() {
           subtext={outstanding > 0 ? 'Overdue balance' : 'No overdue balance'}
         />
         <MetricCard
-          label="Open tickets"
+          label="Open Tickets"
           value={String(openTicketCount)}
           subtext={openTicketCount > 0 ? 'Needs attention' : 'All resolved'}
         />

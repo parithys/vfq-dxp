@@ -182,8 +182,8 @@ export function CustomerProfileHeader(p: CustomerProfileHeaderProps) {
 
         <div className="lg:border-l lg:border-on-dark-line-2 lg:pl-6 lg:w-52 min-w-40 shrink-0 flex flex-col justify-center">
           <Stat label="Segment" value={p.segment} />
-          {p.totalConnections !== undefined && <Stat label="Total connections" value={p.totalConnections} />}
-          {p.creditLimit && <Stat label="Credit limit" value={p.creditLimit} />}
+          {p.totalConnections !== undefined && <Stat label="Total Connections" value={p.totalConnections} />}
+          {p.creditLimit && <Stat label="Credit Limit" value={p.creditLimit} />}
         </div>
 
         <aside

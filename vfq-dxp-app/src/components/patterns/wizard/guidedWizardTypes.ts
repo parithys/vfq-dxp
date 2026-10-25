@@ -93,7 +93,7 @@ export interface WizardStep {
    */
   customerFacing?: (values: Record<string, unknown>) => boolean;
   /**
-   * Whether "Save as Draft" is offered while this step is current. Absent: always offered. Customer Identification offers it only once
+   * Whether "Save as Draft" is offered while this step is current. Absent: always offered. Customer Verification offers it only once
    * the customer is validated and nothing stops the order, so a half-identified or blocked customer is not saved as a draft.
    */
   canSaveDraft?: (values: Record<string, unknown>) => boolean;

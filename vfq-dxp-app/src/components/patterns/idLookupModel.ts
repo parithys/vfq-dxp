@@ -195,7 +195,7 @@ export function pickHrnDemoNas<R extends DemoNasRecord>(records: readonly R[], d
 }
 
 /**
- * How the ID number and expiry came in at Customer Identification, which decides what the agent may change:
+ * How the ID number and expiry came in at Customer Verification, which decides what the agent may change:
  *   'upload'       a file was uploaded: nothing is read; the agent types the number and the expiry, then Fetch.
  *   'ocr-blurred'  the first reader pass: a blurred capture, number and expiry "extracted" (with errors, for the demo); both locked.
  *   'ocr-clear'    Retake 1: a clear capture, number and expiry extracted correctly; both locked.

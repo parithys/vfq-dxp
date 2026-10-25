@@ -300,7 +300,7 @@ export function Select({
           </ul>
           {shown.length === 0 && (
             <p role="status" className="px-4 py-3 text-muted text-[length:var(--fs-body)]">
-              No matches
+              No Matches
             </p>
           )}
           </div>

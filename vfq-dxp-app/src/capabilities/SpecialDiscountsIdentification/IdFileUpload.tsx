@@ -8,9 +8,9 @@ import type { IdUploadResult, IdUploadSides, UploadedIdFile } from './idUploadMo
 const UPLOAD_ICON = 'M12 16V4 M7 9l5-5 5 5 M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3';
 
 const SIDE_CHOICES: { sides: IdUploadSides; label: string }[] = [
-  { sides: 'both', label: 'Front and back' },
-  { sides: 'front', label: 'Front only' },
-  { sides: 'back', label: 'Back only' },
+  { sides: 'both', label: 'Front and Back' },
+  { sides: 'front', label: 'Front Only' },
+  { sides: 'back', label: 'Back Only' },
 ];
 
 /**

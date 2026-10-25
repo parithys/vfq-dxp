@@ -22,7 +22,7 @@ export interface ConnectionStepContext extends QualificationContext, ProductStep
 }
 
 /**
- * The steps of New Connection, all of them in one list: Customer Identification (once, for every product), Product
+ * The steps of New Connection, all of them in one list: Customer Verification (once, for every product), Product
  * Selection, then each product's own steps. A product's steps are active only while it is the chosen product, so the agent
  * sees one continuous journey and the draft, the customer lock and the title never change.
  */
@@ -32,7 +32,7 @@ export function buildConnectionSteps(ctx: ConnectionStepContext): WizardStep[] {
   if (ctx.journey === 'home') {
     return [customerQualificationStep({ ...ctx, productAgnostic: true }), productStep(ctx), ...forProduct('fixed-line', fixedLineSteps())];
   }
-  // The Address and the Billing Profile are collected once, after Customer Identification and BEFORE Recommended Offers, for every product:
+  // The Address and the Billing Profile are collected once, after Customer Verification and BEFORE Recommended Offers, for every product:
   // each product's own list drops its copy (a product that has no billing profile skips the shared one, see billingStep below).
   const shared = (steps: WizardStep[]) => steps.filter((s) => !SHARED_KEYS.includes(s.key));
   // Fixed Line keeps its Installation Address: it needs the connection type chosen after this point, and has its own mandatory fields.
@@ -44,8 +44,9 @@ export function buildConnectionSteps(ctx: ConnectionStepContext): WizardStep[] {
     serviceAddressStep({
       mode: 'structured',
       autoPass: true,
-      // The address is captured through this step. A registry address is never used to fill it for a NEW customer (the NAS's National Address is kept
-      // apart, unchanged, and not shown); only an existing Qatari customer's registered address is offered as an editable head start.
+      billing: billingStepActive,
+      // Continue passes over this step: the address is filled from the billing profile (or "-" when there is none) and stays editable from the rail. It is
+      // never the NAS National Address, which is kept apart, unchanged, and not shown to the agent.
       identity: (values) => {
         const contact = values.contact as GuidedContactValue | undefined;
         return contact?.moiResult?.isNewCustomer ? undefined : { idNumber: contact?.idNumber, nationality: contact?.moiResult?.nationality };

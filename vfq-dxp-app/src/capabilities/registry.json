@@ -1,7 +1,7 @@
 [
   {
     "id": "customer-identification",
-    "name": "Customer Identification",
+    "name": "Customer Verification",
     "status": "consolidated",
     "home": "capabilities/CustomerIdentification",
     "entry": "CustomerIdentification",
@@ -40,7 +40,7 @@
       "specialDiscountsIdentificationStep"
     ],
     "stepLabel": "SPECIAL_DISCOUNTS_IDENTIFICATION_LABEL",
-    "summary": "The Special Discounts section of Mobile Postpaid Activation as its own capability: choose Consumer B2B2C, Retiree or MADA, supply the evidence (company, ID number, Office ID scan or upload) and accept or reject the benefit. Independent of Customer Identification and Customer Type; always offers both Initiate scan and Upload document.",
+    "summary": "The Special Discounts section of Mobile Postpaid Activation as its own capability: choose Consumer B2B2C, Retiree or MADA, supply the evidence (company, ID number, Office ID scan or upload) and accept or reject the benefit. Independent of Customer Verification and Customer Type; always offers both Initiate scan and Upload document.",
     "parts": [
       "capabilities/SpecialDiscountsIdentification/CompanySearchInput.tsx",
       "capabilities/SpecialDiscountsIdentification/IdFileUpload.tsx",
@@ -343,7 +343,7 @@
       "customerQualificationStep"
     ],
     "stepLabel": "CUSTOMER_IDENTIFICATION_LABEL",
-    "summary": "Identify the customer, run eligibility, then offer the special-discount types - the whole \"Customer Identification\" step of an activation, with its outcomes and footer actions.",
+    "summary": "Identify the customer, run eligibility, then offer the special-discount types - the whole \"Customer Verification\" step of an activation, with its outcomes and footer actions.",
     "parts": [],
     "publicApi": [],
     "previewable": true
@@ -426,6 +426,19 @@
     ],
     "stepLabel": "ACTUAL_USER_LABEL",
     "summary": "Who will use the line when it is not the customer who owns it: the agent adds an actual user, who is identified like the primary customer (ID type, scan or upload, MOI, email, phone). The actual user is named on the Supplementary Form, which the one CAF signature also signs; an existing customer's changed email is written back to their record.",
+    "parts": [],
+    "previewable": true,
+    "publicApi": []
+  },
+  {
+    "id": "pagination",
+    "name": "Pagination",
+    "status": "consolidated",
+    "home": "capabilities/Pagination",
+    "entry": "Pagination",
+    "stepBuilders": [],
+    "stepLabel": null,
+    "summary": "The one way to page a list: usePagination (1-based pages, a changed list returns to page 1, a page that no longer exists is clamped), the \"Showing a-b of N\" summary and the numbered pager, hidden on a single page. Used by the number picker, data tables and every paged Customer 360 and Telesales list.",
     "parts": [],
     "previewable": true,
     "publicApi": []

@@ -1,6 +1,6 @@
 /**
  * Uploading the identity document as an alternative to scanning it: the files a customer's ID can arrive as, and how one is read.
- * One definition for every ID type, so the rules are the same wherever Customer Identification is used.
+ * One definition for every ID type, so the rules are the same wherever Customer Verification is used.
  */
 export const ID_UPLOAD_ACCEPT = '.pdf,.jpg,.jpeg,.png';
 export const ID_UPLOAD_MAX_BYTES = 5 * 1024 * 1024;
@@ -128,7 +128,7 @@ export function removeIdUpload<T extends UploadValue>(value: T, side: 'front' | 
 
 /**
  * Special Discounts offers BOTH capture actions on every device: the reader ("Initiate scan", when it is available) and "Upload document".
- * Unlike Customer Identification, nothing here depends on the device type.
+ * Unlike Customer Verification, nothing here depends on the device type.
  */
 export function idCaptureOptions(readerAvailable: boolean): { scan: boolean; upload: boolean } {
   return { scan: readerAvailable, upload: true };

@@ -36,7 +36,7 @@ export interface MnpFormInput {
 export function mnpFormMissing(f: MnpFormInput): string[] {
   const d = f.donor;
   const missing: string[] = [];
-  if (!f.customerName || !f.idNumber) missing.push('Customer identification');
+  if (!f.customerName || !f.idNumber) missing.push('Customer verification');
   if (!d?.portInNumber || !normalizePortInNumber(d.portInNumber)) missing.push('Port-in number');
   if (!d?.donorId || !d.donorIdType || !d.donorCustomerType || !d.donorOperator || !d.donorSubscriptionType) missing.push('Donor details');
   if (!f.productId) missing.push('Plan');
@@ -130,23 +130,23 @@ export function DonorAttachmentStep({ value, onChange, form }: DonorAttachmentSt
             <p className="text-fg-2 text-[length:var(--fs-caption)] mt-0.5">Review the details with the customer before they sign.</p>
           </div>
           <div className="text-right">
-            <div className="text-[length:var(--fs-caption)] text-muted">Form number</div>
+            <div className="text-[length:var(--fs-caption)] text-muted">Form Number</div>
             <div className="text-fg text-[length:var(--fs-body)] font-medium" data-testid="mnp-form-number">{current ? value.formNumber : 'Generating...'}</div>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-x-6 gap-y-3 pt-3 border-t border-border-soft">
           <Row label="Customer">{form.customerName}</Row>
           <Row label={form.idType ?? 'ID Number'}>{form.idNumber}</Row>
-          <Row label="Port-in number">{normalizePortInNumber(d.portInNumber ?? '')}</Row>
-          <Row label="Plan type">{form.mnpType === 'prepaid' ? 'Prepaid' : 'Postpaid'}</Row>
-          <Row label="Donor customer ID">{d.donorId}</Row>
-          <Row label="Donor ID type">{d.donorIdType}</Row>
-          <Row label="Donor customer type">{d.donorCustomerType}</Row>
-          <Row label="Donor operator">{d.donorOperator}</Row>
-          <Row label="Donor subscription type">{d.donorSubscriptionType}</Row>
-          <Row label="Scheduled Port-In date">{d.scheduledPortInDate ?? 'First window after NPAS approval'}</Row>
+          <Row label="Port-In Number">{normalizePortInNumber(d.portInNumber ?? '')}</Row>
+          <Row label="Plan Type">{form.mnpType === 'prepaid' ? 'Prepaid' : 'Postpaid'}</Row>
+          <Row label="Donor Customer ID">{d.donorId}</Row>
+          <Row label="Donor ID Type">{d.donorIdType}</Row>
+          <Row label="Donor Customer Type">{d.donorCustomerType}</Row>
+          <Row label="Donor Operator">{d.donorOperator}</Row>
+          <Row label="Donor Subscription Type">{d.donorSubscriptionType}</Row>
+          <Row label="Scheduled Port-In Date">{d.scheduledPortInDate ?? 'First window after NPAS approval'}</Row>
           <Row label="Plan">{plan ? String(plan.name) : form.productId}</Row>
-          <Row label="SIM serial">{form.simSerial}</Row>
+          <Row label="SIM Serial">{form.simSerial}</Row>
         </div>
         <p className="text-fg-2 text-[length:var(--fs-caption)] pt-3 border-t border-border-soft">
           By signing below, the subscriber authorizes the port-in request to Vodafone Qatar.

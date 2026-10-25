@@ -55,7 +55,7 @@ export async function submitServiceChangeOrder(
   // without its eligibility result (it is never carried over, so the customer must be re-identified).
   const checkedCustomer = (values.eligibility as EligibilityResult | undefined)?.customerId;
   if (!line || !checkedCustomer || line.customerId !== checkedCustomer) {
-    throw new Error('The customer\'s eligibility has not been checked for this line. Return to Customer Identification, then choose the line again.');
+    throw new Error('The customer\'s eligibility has not been checked for this line. Return to Customer Verification, then choose the line again.');
   }
   const customerType = values.customerType as CustomerTypeValue | undefined;
   const addonIds = (values.addonIds as string[] | undefined) ?? [];
@@ -135,8 +135,8 @@ export async function submitServiceChangeOrder(
     heading: pendingApproval ? `${label} submitted for approval` : `${label} complete`,
     statusLabel: pendingApproval ? 'Submitted for Approval' : 'Complete',
     extraLines: [
-      ...(changesPlan ? [{ label: 'Previous plan', value: line.productName }] : []),
-      ...(addons.length > 0 ? [{ label: 'Add-ons', value: addons.map((a) => a.name).join(', ') }] : []),
+      ...(changesPlan ? [{ label: 'Previous Plan', value: line.productName }] : []),
+      ...(addons.length > 0 ? [{ label: 'Add-Ons', value: addons.map((a) => a.name).join(', ') }] : []),
     ],
     customerEmail: contact.email,
     customerEmailDisplay: contact.moiResult?.isNewCustomer && !contact.moiResult?.createdByAgent && contact.email ? maskEmail(contact.email) : contact.email,

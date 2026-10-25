@@ -9,6 +9,7 @@ import { ActionList, HeaderButton, ICON, SectionHeader, StatStrip, Table, WideBl
 import { rowDate, demoOf, arr } from './shared';
 import { strOrEmpty as str } from '../../../lib/values';
 import { AUDIT_PAGE } from './listShared';
+import { Pagination } from '../../../capabilities';
 
 export function AuditSection({ ctx }: { ctx: Ctx }) {
   const { data } = ctx;
@@ -38,7 +39,6 @@ export function AuditSection({ ctx }: { ctx: Ctx }) {
     ['Activities', count(/activit/i)],
   ];
   const maxSum = Math.max(1, ...summary.map(([, n]) => n));
-  const pages = Math.ceil(filtered.length / AUDIT_PAGE);
   const exportRows = () => downloadCsv(`${data.customer.customerId}-audit-trail.csv`, filtered.map((r) => ({ dateTime: r.at, module: r.module, action: r.action, field: r.field, oldValue: r.old, newValue: r.new, performedBy: r.by, channel: r.channel, reference: r.ref })));
   const reset = () => {
     setQuery('');
@@ -105,18 +105,7 @@ export function AuditSection({ ctx }: { ctx: Ctx }) {
                 { header: 'Reference No.', render: (r) => <b>{r.ref}</b> },
               ]}
             />
-            <div className="flex items-center justify-between px-5 py-4 border-t border-[var(--field-card-border)]">
-              <span className="text-muted text-[length:var(--fs-body)]">
-                Showing {filtered.length === 0 ? 0 : page * AUDIT_PAGE + 1}–{Math.min(filtered.length, (page + 1) * AUDIT_PAGE)} of {filtered.length} records
-              </span>
-              <div className="flex gap-2">
-                {Array.from({ length: pages }, (_, i) => (
-                  <button key={i} type="button" onClick={() => setPage(i)} className={`w-9 h-9 rounded-[var(--radius-button)] border text-[length:var(--fs-body)] ${i === page ? 'bg-accent text-accent-on border-accent' : 'bg-bg border-border hover:bg-surface'}`}>
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <Pagination className="m-4" page={page + 1} total={filtered.length} pageSize={AUDIT_PAGE} onPage={(p) => setPage(p - 1)} />
           </Card>
         </div>
         <div className="space-y-4">

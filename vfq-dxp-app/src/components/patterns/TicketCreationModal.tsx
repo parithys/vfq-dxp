@@ -203,7 +203,7 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
         />
         {blocked && <RestrictedCustomerNotice compact />}
         <Input
-          label="Search ticket category"
+          label="Search Ticket Category"
           placeholder="Type at least 3 characters to filter…"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -231,7 +231,7 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
           />
         )}
         <Select
-          label="Actual Issue (optional)"
+          label="Actual Issue (Optional)"
           value={actualIssue}
           onChange={(e) => setActualIssue(e.target.value)}
           placeholder="Select the real root-cause classification"

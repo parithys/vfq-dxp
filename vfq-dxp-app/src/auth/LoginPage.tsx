@@ -148,7 +148,7 @@ export function LoginPage() {
               <VodafoneWordmark className="h-6 w-auto [&_path]:fill-[var(--on-dark)]" />
             </div>
             <p className="text-on-dark-2 font-semibold uppercase tracking-wide text-[length:var(--fs-caption-upper)] mb-3">Staff Portal</p>
-            <h1 className="text-[length:var(--fs-h3)] font-bold leading-tight text-on-dark mb-3">Welcome back</h1>
+            <h1 className="text-[length:var(--fs-h3)] font-bold leading-tight text-on-dark mb-3">Welcome Back</h1>
             <p className="text-on-dark-2 text-[length:var(--fs-body-lg)]">Sign in to your Vodafone workspace.</p>
           </div>
 

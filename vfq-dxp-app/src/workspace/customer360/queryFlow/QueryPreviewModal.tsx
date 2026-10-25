@@ -211,7 +211,7 @@ export function QueryPreviewModal({
 
         <SectionCard icon={IC.headset} title={`Recent Tickets (${openTickets.length})`}>
           {recentTickets.length === 0 ? (
-            <p className="text-muted text-[length:var(--fs-body)] py-2">No recent tickets</p>
+            <p className="text-muted text-[length:var(--fs-body)] py-2">No Recent Tickets</p>
           ) : (
             <ul>
               {recentTickets.map((t) => (

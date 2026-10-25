@@ -48,16 +48,16 @@ export function CreditLimitCard({
           <dd className="text-fg font-medium">{category}</dd>
         </div>
         <div className={row}>
-          <dt className="text-fg-2">Default credit limit</dt>
+          <dt className="text-fg-2">Default Credit Limit</dt>
           <dd className="text-fg font-medium">QAR {defaultQar}</dd>
         </div>
         <div className={row}>
-          <dt className="text-fg-2">Amount payable</dt>
+          <dt className="text-fg-2">Amount Payable</dt>
           <dd className="text-fg font-medium">{advance > 0 ? `QAR ${advance} advance` : hrn ? 'No advance payable (HRN fee not marked: Credit Risk Exemption Low or No)' : 'No advance payable'}</dd>
         </div>
       </dl>
       <Select
-        label="Credit limit (QAR)"
+        label="Credit Limit (QAR)"
         value={String(value)}
         disabled={hrn}
         helperText={hrn ? 'Credit limit modification is not allowed for an HRN customer.' : `Choose a limit up to the ${segment ?? 'customer'} default of QAR ${defaultQar}.`}

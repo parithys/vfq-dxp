@@ -5,9 +5,9 @@ import type { CompanySelection } from './CompanySearchInput';
 /**
  * SPECIAL DISCOUNTS IDENTIFICATION - the Special Discounts section of Mobile Postpaid Activation (the SSOT), as its own capability:
  * the agent chooses Consumer B2B2C, Retiree or MADA, supplies the evidence for it (company, ID number, Office ID scan or upload),
- * and accepts or rejects the benefit. It replaces Customer Identification's ID-type selection for the special-discounts journeys.
+ * and accepts or rejects the benefit. It replaces Customer Verification's ID-type selection for the special-discounts journeys.
  *
- * Independent of Customer Identification and Customer Type: it has its own copy of every part, and always offers both
+ * Independent of Customer Verification and Customer Type: it has its own copy of every part, and always offers both
  * "Initiate scan" and "Upload document" on every device.
  */
 export interface SpecialDiscountsIdentificationProps {

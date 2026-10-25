@@ -31,8 +31,8 @@ type Filter = 'all' | 'built' | 'not-built' | 'no-access';
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'built', label: 'Built' },
-  { key: 'not-built', label: 'Not built' },
-  { key: 'no-access', label: 'No access' },
+  { key: 'not-built', label: 'Not Built' },
+  { key: 'no-access', label: 'No Access' },
 ];
 
 interface Enriched {
@@ -146,7 +146,7 @@ export function ModuleScreenList() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         <div className="card p-4">
           <div className="text-[length:var(--fs-h4)] font-bold text-accent">{catalogued}</div>
-          <div className="text-[length:var(--fs-caption)] text-muted">Catalogued screens</div>
+          <div className="text-[length:var(--fs-caption)] text-muted">Catalogued Screens</div>
         </div>
         <div className="card p-4">
           <div className="text-[length:var(--fs-h4)] font-bold text-success">{built}</div>
@@ -154,11 +154,11 @@ export function ModuleScreenList() {
         </div>
         <div className="card p-4">
           <div className="text-[length:var(--fs-h4)] font-bold text-fg-2">{notBuilt}</div>
-          <div className="text-[length:var(--fs-caption)] text-muted">Not built</div>
+          <div className="text-[length:var(--fs-caption)] text-muted">Not Built</div>
         </div>
         <div className="card p-4">
           <div className="text-[length:var(--fs-h4)] font-bold text-accent">{grantedToRole}</div>
-          <div className="text-[length:var(--fs-caption)] text-muted">Granted to this role</div>
+          <div className="text-[length:var(--fs-caption)] text-muted">Granted to This Role</div>
         </div>
       </div>
 

@@ -62,7 +62,7 @@ function ReserveSummary({ msisdn, priceQAR, values, setValue }: { msisdn: string
           <span className="text-fg text-[length:var(--fs-body)]">{star ? formatQar(priceQAR) : 'Free'}</span>
         </div>
         <div className="flex justify-between gap-4">
-          <span className="text-fg-2 text-[length:var(--fs-body)]">Reserved for</span>
+          <span className="text-fg-2 text-[length:var(--fs-body)]">Reserved For</span>
           <span className="text-fg text-[length:var(--fs-body)] text-right">{identity?.moiResult?.name ?? '-'}</span>
         </div>
         <div className="flex justify-between gap-4">
@@ -81,7 +81,7 @@ function ReserveSummary({ msisdn, priceQAR, values, setValue }: { msisdn: string
 
 /**
  * Reserve Number: the number chosen in the Number Management Portal is reserved against a customer. The agent identifies the customer
- * first (the shared Customer Identification: ID type, scan, MOI), then reviews and reserves. The reservation is written to the number
+ * first (the shared Customer Verification: ID type, scan, MOI), then reviews and reserves. The reservation is written to the number
  * inventory (status Reserved, held by the agent, for the identified customer's ID) only at the last step; abandoning leaves the
  * number available.
  */
@@ -104,7 +104,7 @@ export function ReserveNumberWizard({
       {
         key: 'reserve',
         label: 'Reserve Number',
-        heading: 'Reserve this number',
+        heading: 'Reserve This Number',
         subheading: 'Check the details, then reserve the number for the customer.',
         render: ({ values, setValue }) => <ReserveSummary msisdn={msisdn} priceQAR={priceQAR} values={values} setValue={setValue} />,
         isValid: (values) => !values.reserveBlocked,

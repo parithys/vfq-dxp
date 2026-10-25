@@ -44,7 +44,7 @@ export async function submitPreToPostOrder(
   // without its eligibility result (it is never carried over, so the customer must be re-identified).
   const checkedCustomer = (values.eligibility as EligibilityResult | undefined)?.customerId;
   if (!line || !checkedCustomer || line.customerId !== checkedCustomer) {
-    throw new Error('The customer\'s eligibility has not been checked for this line. Return to Customer Identification, then choose the line again.');
+    throw new Error('The customer\'s eligibility has not been checked for this line. Return to Customer Verification, then choose the line again.');
   }
   const msisdn = line.identifier;
 
@@ -96,7 +96,7 @@ export async function submitPreToPostOrder(
     customerWorkEmail: contact.workEmail,
     // A new customer's National Address as the NAS returned it: kept with the order, unchanged; the address the customer gave is `address`.
     nationalAddress: contact.moiResult?.nationalAddress,
-    // The identity document captured at Customer Identification, as scanned or uploaded.
+    // The identity document captured at Customer Verification, as scanned or uploaded.
     attachments: idScanAttachments(contact.idType, contact.qidScans),
     msisdn,
     installedAssetId: line.installedAssetId,

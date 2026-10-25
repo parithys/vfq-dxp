@@ -21,7 +21,7 @@ const STATUS: Record<JourneyStatus, {
     cta: 'Start now',
   },
   partly: {
-    label: 'Partly available',
+    label: 'Partly Available',
     variant: 'warning',
     border: 'border-[var(--field-card-border)] hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]',
     cta: 'Check compatibility',

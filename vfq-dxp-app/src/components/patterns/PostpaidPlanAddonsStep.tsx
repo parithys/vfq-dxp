@@ -1,6 +1,4 @@
 import { type CustomerBenefit } from '../../engines/customerBenefitEngine';
-import { hrnAdvanceQar } from '../../engines/hrnConfiguration';
-import { usePersonaStore } from '../../stores/personaStore';
 import { Icon } from '../primitives/Icon';
 import { SelectedPlanFigure } from '../primitives/offerCardParts';
 import { BillLimitEditor } from '../domain/BillLimitEditor';
@@ -33,15 +31,9 @@ interface PostpaidPlanAddonsStepProps {
   /** Agent 360... no - Agent 360 doesn't apply here; this is BR-076's
    * eligibility-derived default (EligibilityGateStep), shown read-only so
    * the agent sees what limit this activation was pre-qualified against. */
-  /** From eligibility - true for an HRN (High Risk Nationality) customer
-   * (2026-09-28 request: "show 'Please collect QAR [configurable amount]
-   * from the customer.'"). */
-  requiresHrnAdvance: boolean;
-  /** The customer's nationality: the HRN category, with the persona, decides the advance. */
-  nationality?: string;
-  /** Benefit the agent accepted on Customer Identification (office ID confirmed): the plan's matching discount is applied automatically. */
+  /** Benefit the agent accepted on Customer Verification (office ID confirmed): the plan's matching discount is applied automatically. */
   customerBenefit?: 'mada' | 'b2b2c' | 'retired' | 'none';
-  /** The Special Discount chosen on Customer Identification (accepted or not): names the contextual third tab. */
+  /** The Special Discount chosen on Customer Verification (accepted or not): names the contextual third tab. */
   specialDiscountType?: 'mada' | 'b2b2c' | 'retired';
   /** Benefits the customer's record lists (see customerBenefitEngine). Only discounts they unlock are offered; undefined = customer not known, nothing is filtered. */
   customerBenefits?: CustomerBenefit[];
@@ -74,15 +66,12 @@ export function PostpaidPlanAddonsStep({
   onSelectionChange,
   billLimit,
   onBillLimitChange,
-  requiresHrnAdvance,
-  nationality,
   customerBenefit,
   specialDiscountType,
   customerBenefits,
   customerContext,
   hiddenProductId,
 }: PostpaidPlanAddonsStepProps) {
-  const personaId = usePersonaStore((s) => s.activePersonaId);
   const {
     plans,
     discounts,
@@ -123,17 +112,7 @@ export function PostpaidPlanAddonsStep({
 
   return (
     <div className="space-y-6">
-      {/* HRN collection message (2026-09-28 request), shown regardless of
-          which plan is chosen - it is a fact about the CUSTOMER (nationality-
-          derived, per BR-112), not about the plan. The amount is the one
-          centralised constant (postpaidPricing.ts) rather than a value typed
-          here, so "configurable" means changing that one line, not hunting
-          for every place QAR 100 appears. */}
-      {requiresHrnAdvance && (
-        <div className="rounded-[var(--radius-card)] border border-accent-border bg-surface-warm p-4">
-          <p className="text-fg font-medium">Please collect QAR {hrnAdvanceQar({ nationality, personaId })} from the customer.</p>
-        </div>
-      )}
+      {/* The HRN advance ("Please collect QAR ... from the customer") is shown once, on Customer Verification, and not repeated here. */}
       {/* Tabbed (2026-09-28 mockup, replacing the stacked layout the
           2026-09-26 asset had asked for): plan groups, Add-ons and Eligible
           Discounts are all panels of ONE tab strip now, rather than three-
@@ -221,10 +200,10 @@ export function PostpaidPlanAddonsStep({
                   <div className="min-w-0 space-y-2">
                     <h3 className="text-fg font-bold text-[length:var(--fs-h4)] leading-snug">{selectedPlan.name}</h3>
                     <span className="inline-flex rounded-[var(--radius-pill)] bg-[var(--tint-pink-bg)] px-2.5 py-0.5 text-[var(--tint-pink-fg)] text-[length:var(--fs-tag)] font-semibold uppercase tracking-wide">
-                      Selected plan
+                      Selected Plan
                     </span>
                   </div>
-                  <SelectedPlanFigure label="Monthly plan">
+                  <SelectedPlanFigure label="Monthly Plan">
                     <span className="text-[length:var(--fs-body)]">QAR </span>
                     <span className="text-[length:var(--fs-h3)] font-bold">{selectedPlan.mrcQAR}</span>
                     <span className="text-fg-2 text-[length:var(--fs-caption)]"> /month{selectedPlan.promoMonths ? ` for ${selectedPlan.promoMonths} months` : ''}</span>
@@ -240,7 +219,7 @@ export function PostpaidPlanAddonsStep({
                   const included = selectedPlan.benefits ?? [];
                   const lists: { title: string; items: string[] }[] = [
                     { title: 'Benefits', items: benefits },
-                    ...(included.length > 0 ? [{ title: 'Included in this offer', items: included }] : []),
+                    ...(included.length > 0 ? [{ title: 'Included in This Offer', items: included }] : []),
                   ];
                   const showAddons = selectionSource === 'PLAN';
                   return (
@@ -314,7 +293,6 @@ export function PostpaidPlanAddonsStep({
                     discountId={discountId}
                     onSelectDiscount={onSelectDiscount}
                     discounts={discounts}
-                    selectedDiscount={selectedDiscount}
                     discountsState={discountsState}
                     onRetryDiscounts={retryDiscounts}
                   />

@@ -59,7 +59,7 @@ export function planSelectionStep(opts: {
 export function prepaidExtrasStep(opts: { segment?: (values: Record<string, unknown>) => string | undefined }): WizardStep {
   return {
     key: 'planExtras',
-    label: 'Add-ons',
+    label: 'Add-Ons',
     render: ({ values, setValue }) => (
       <PlanSelection
         kind="prepaid"

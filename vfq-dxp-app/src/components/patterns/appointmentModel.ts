@@ -40,9 +40,9 @@ export interface AppointmentDocument {
   label: string;
 }
 export const APPOINTMENT_DOCUMENTS: AppointmentDocument[] = [
-  { id: 'caf', label: 'Contract application form (CAF)' },
-  { id: 'tenancy', label: 'Tenancy document' },
-  { id: 'qid', label: 'QID copy' },
+  { id: 'caf', label: 'Contract Application Form (CAF)' },
+  { id: 'tenancy', label: 'Tenancy Document' },
+  { id: 'qid', label: 'QID Copy' },
 ];
 
 /**

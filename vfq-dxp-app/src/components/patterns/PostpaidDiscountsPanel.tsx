@@ -1,5 +1,4 @@
 import { Button } from '../primitives/Button';
-import { Input } from '../primitives/Input';
 import { SPECIAL_DISCOUNT_ADDON_TYPES, SPECIAL_DISCOUNT_CARD_TITLE, type Discount } from './postpaidPlanModel';
 import { DiscountCard } from './DiscountCard';
 
@@ -9,7 +8,6 @@ interface PostpaidDiscountsPanelProps {
   discountId: string | undefined;
   onSelectDiscount: (discountId: string | undefined) => void;
   discounts: Discount[];
-  selectedDiscount: Discount | undefined;
   /** Where the plan's discounts are in loading; on error the agent can retry or continue without one. */
   discountsState?: 'loading' | 'error' | 'ready';
   onRetryDiscounts?: () => void;
@@ -21,7 +19,6 @@ export function PostpaidDiscountsPanel({
   discountId,
   onSelectDiscount,
   discounts,
-  selectedDiscount,
   discountsState = 'ready',
   onRetryDiscounts,
 }: PostpaidDiscountsPanelProps) {
@@ -47,7 +44,7 @@ export function PostpaidDiscountsPanel({
         // choose on this panel. Either way this explains why, rather
         // than showing a "No discount" picker with nothing behind it.
         <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-tone-warn-soft px-4 py-3">
-          <p className="text-fg font-semibold text-[length:var(--fs-body)]">Discounts unavailable for this plan</p>
+          <p className="text-fg font-semibold text-[length:var(--fs-body)]">Discounts Unavailable for This Plan</p>
           <p className="text-[var(--warn-text)] text-[length:var(--fs-caption)] mt-1">
             The selected plan is pre-bundled and already includes its offer, so it does not accept extra
             discounts. Choose another plan to apply a discount.
@@ -65,7 +62,7 @@ export function PostpaidDiscountsPanel({
           ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(max(15rem,calc((100%-2rem)/3)),1fr))] gap-4">
             <DiscountCard
-              title="No discount"
+              title="No Discount"
               description="Continue without a discount"
               value="-"
               selected={!discountId}

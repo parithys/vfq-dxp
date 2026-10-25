@@ -37,7 +37,7 @@ export interface ConfirmedOrder {
    * sending is blocked). See customerEmailVerified for the gate itself.
    */
   customerEmail?: string;
-  /** The address as Customer Identification shows it (masked for a new customer). */
+  /** The address as Customer Verification shows it (masked for a new customer). */
   customerEmailDisplay?: string;
   /** Same definition as GuidedContactStep's own emailVerification tick. */
   customerEmailVerified: boolean;

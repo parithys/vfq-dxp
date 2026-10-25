@@ -183,7 +183,7 @@ function GroupBlock({
 
       {drill.length > 0 && (
         <div className="mt-3">
-          <p className="text-muted text-[length:var(--fs-caption)] mb-1">More detail</p>
+          <p className="text-muted text-[length:var(--fs-caption)] mb-1">More Detail</p>
           <div className="card border-dashed divide-y divide-[var(--field-card-border)]">
             {drill.map((m) => (
               <DrillRow key={m.key} item={m} expanded={expandAll || open.has(m.key)} onToggle={expandAll ? undefined : () => toggle(m.key)} />
@@ -200,7 +200,7 @@ function Chevron({ expanded }: { expanded: boolean }) {
 }
 
 const summaryOf = (item: Item) =>
-  present(item.value) ? item.value : <span className="text-muted">View details</span>;
+  present(item.value) ? item.value : <span className="text-muted">View Details</span>;
 
 /** A KPI tile; expands inline when the field has a detail view. */
 function Tile({ item, expanded, onToggle }: { item: Item; expanded: boolean; onToggle?: () => void }) {

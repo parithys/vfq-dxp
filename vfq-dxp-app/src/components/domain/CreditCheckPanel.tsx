@@ -26,7 +26,7 @@ export function CreditCheckPanel({ collectionStatus, acknowledged, onAcknowledge
   if (result.pass) {
     return (
       <div className="rounded-[var(--radius-card)] border border-success bg-tone-success p-3 text-[length:var(--fs-caption)] text-fg">
-        <Badge variant="success">Credit check</Badge> <span className="ml-2">{result.message}</span>
+        <Badge variant="success">Credit Check</Badge> <span className="ml-2">{result.message}</span>
       </div>
     );
   }
@@ -34,7 +34,7 @@ export function CreditCheckPanel({ collectionStatus, acknowledged, onAcknowledge
   return (
     <div className="rounded-[var(--radius-card)] border border-[var(--warn)] bg-tone-warn-soft p-3 space-y-2">
       <div className="flex items-center gap-2">
-        <Badge variant="warning">Unresolved policy conflict</Badge>
+        <Badge variant="warning">Unresolved Policy Conflict</Badge>
       </div>
       <p className="text-[length:var(--fs-caption)] text-fg">{result.message}</p>
       <label className="flex items-center gap-2 text-[length:var(--fs-caption)] text-fg">

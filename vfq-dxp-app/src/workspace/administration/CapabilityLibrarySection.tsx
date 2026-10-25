@@ -21,7 +21,7 @@ function PathRow({ path }: { path: string }) {
         {copied ? 'Copied' : 'Copy path'}
       </Button>
       <a className="text-link text-[length:var(--fs-caption)] font-medium hover:underline" href={editorLink(path)}>
-        Open in editor
+        Open in Editor
       </a>
     </li>
   );
@@ -44,7 +44,7 @@ function Detail({ cap }: { cap: CapabilityDef }) {
       </div>
 
       <section aria-label="Live preview" className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 space-y-3">
-        <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Live preview</h4>
+        <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Live Preview</h4>
         {preview ? (
           <div className="rounded-[var(--radius-card)] bg-[var(--surface)] p-4">{preview()}</div>
         ) : (
@@ -55,21 +55,21 @@ function Detail({ cap }: { cap: CapabilityDef }) {
       </section>
 
       <section aria-label="Where it lives" className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 space-y-3">
-        <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Where it lives</h4>
+        <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Where It Lives</h4>
         <dl className="grid grid-cols-[10rem_1fr] gap-y-2 text-[length:var(--fs-body)]">
-          <dt className="text-fg">Entry point</dt>
+          <dt className="text-fg">Entry Point</dt>
           <dd className="text-fg font-medium">{cap.entry}</dd>
           <dt className="text-fg">Home</dt>
           <dd><code className="text-[length:var(--fs-caption)]">src/{cap.home}</code></dd>
           {cap.stepBuilders.length > 0 && (
             <>
-              <dt className="text-fg">Step builders</dt>
+              <dt className="text-fg">Step Builders</dt>
               <dd className="text-fg">{cap.stepBuilders.join(', ')}</dd>
             </>
           )}
           {cap.stepLabel && (
             <>
-              <dt className="text-fg">Step name</dt>
+              <dt className="text-fg">Step Name</dt>
               <dd><code className="text-[length:var(--fs-caption)]">{cap.stepLabel}</code> in data/stepLabels.ts</dd>
             </>
           )}
@@ -81,7 +81,7 @@ function Detail({ cap }: { cap: CapabilityDef }) {
       </section>
 
       <section aria-label="Implementation files" className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
-        <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-2">Implementation files</h4>
+        <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-2">Implementation Files</h4>
         <ul className="divide-y divide-border-soft">
           <PathRow path={cap.home} />
           {[...cap.parts, ...cap.publicApi].map((p) => <PathRow key={p} path={p} />)}
@@ -120,7 +120,7 @@ export function CapabilityLibrarySection() {
   return (
     <div className="grid grid-cols-[18rem_1fr] gap-6 items-start">
       <aside aria-label="Capabilities" className="space-y-3">
-        <Input label="Search capabilities" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. address, payment" />
+        <Input label="Search Capabilities" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. address, payment" />
         <p className="text-muted text-[length:var(--fs-caption)]">
           {CAPABILITY_REGISTRY.length} capabilities - {CAPABILITY_REGISTRY.filter((c) => c.status === 'consolidated').length} in the library
         </p>

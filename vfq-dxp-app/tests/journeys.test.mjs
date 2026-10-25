@@ -72,7 +72,7 @@ test('customer 360: a customer loads with services, accounts and a billing summa
   assert.equal(await eng.getCustomer360('CUST-DOES-NOT-EXIST'), undefined);
 });
 
-// ---- 4. Identity validation (Customer Identification) -----------------------------------------------------------
+// ---- 4. Identity validation (Customer Verification) -----------------------------------------------------------
 test('identity: alternate phone accepts Qatar mobiles only; email and date of birth are validated', async () => {
   const m = await load('/src/components/patterns/guidedContactModel.ts');
   assert.equal(m.isValidAltPhone('5566 7766'), true);

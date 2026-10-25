@@ -1,4 +1,4 @@
-// New Connection is ONE journey: Customer Identification once, then the chosen product's steps in the same wizard.
+// New Connection is ONE journey: Customer Verification once, then the chosen product's steps in the same wizard.
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { boot, load, close } from './harness.mjs';
@@ -26,7 +26,7 @@ const ctx = { device: 'web', wizardId: 'new-connection', flow: 'new', existingCu
 const activeKeys = (values) => conn.buildConnectionSteps(ctx).filter((s) => !s.skip?.(values)).map((s) => s.key);
 
 // ---- one wizard, four products ----------------------------------------------------------------------------------------
-test('before a product is chosen the journey is Customer Identification, Address, Billing Profile and Product Selection', () => {
+test('before a product is chosen the journey is Customer Verification, Address, Billing Profile and Product Selection', () => {
   assert.deepEqual(activeKeys({}), ['contact', 'address', 'billingAccount', 'product']);
 });
 

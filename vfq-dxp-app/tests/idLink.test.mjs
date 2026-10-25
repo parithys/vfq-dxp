@@ -1,4 +1,4 @@
-// QID <-> Passport reconciliation at Customer Identification, and the Passport-to-QID update. Expectations are written from the rules and
+// QID <-> Passport reconciliation at Customer Verification, and the Passport-to-QID update. Expectations are written from the rules and
 // from a table of what each seeded registry person IS, not from the code under test.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';

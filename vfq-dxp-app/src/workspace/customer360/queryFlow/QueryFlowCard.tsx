@@ -267,7 +267,7 @@ export function QueryFlowCard({
               <dt className="text-fg">Query Issue</dt>
               <dd className="text-fg">{issue.name}</dd>
               <dt className="text-fg">Query Service Type</dt>
-              <dd>{serviceType ? <Pill tone="blue">{serviceTypeLabel(serviceType)}</Pill> : <span className="text-muted">Not selected</span>}</dd>
+              <dd>{serviceType ? <Pill tone="blue">{serviceTypeLabel(serviceType)}</Pill> : <span className="text-muted">Not Selected</span>}</dd>
             </dl>
             {!issue.category && <Banner tone="warn">No Query Category is mapped for this issue yet.</Banner>}
           </div>
@@ -278,7 +278,7 @@ export function QueryFlowCard({
               label="Selected MSISDN"
               value={msisdnRef}
               onChange={(e) => setMsisdnRef(e.target.value)}
-              options={[{ value: '', label: 'Not selected' }, ...lines.map((l) => ({ value: l.ref, label: `${l.identifier} (${l.status ?? 'Active'})` }))]}
+              options={[{ value: '', label: 'Not Selected' }, ...lines.map((l) => ({ value: l.ref, label: `${l.identifier} (${l.status ?? 'Active'})` }))]}
             />
             {(!service || !derivedType) && (
               <>

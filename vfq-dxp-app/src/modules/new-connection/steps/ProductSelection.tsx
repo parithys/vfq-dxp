@@ -20,7 +20,7 @@ export interface ProductStepContext {
   wizardId: string;
   /** 'connection' (New Connection) or 'home' (New Home Connection): which products Product Selection offers. */
   journey: ConnectionJourney;
-  /** 'new' (Agent 360 / Mobile) or 'existing' (Customer 360) - how Customer Identification treated the customer. */
+  /** 'new' (Agent 360 / Mobile) or 'existing' (Customer 360) - how Customer Verification treated the customer. */
   flow: 'new' | 'existing';
   existingCustomerId: string | undefined;
   applyCrossSales: (setValue: (field: string, value: unknown) => void, v: CrossSalesValue) => void;

@@ -93,7 +93,7 @@ export async function submitFixedActivationOrder(
     customerWorkEmail: contact.workEmail,
     // A new customer's National Address as the NAS returned it: kept with the order, unchanged; the address the customer gave is `address`.
     nationalAddress: contact.moiResult?.nationalAddress,
-    // The identity document captured at Customer Identification, as scanned or uploaded.
+    // The identity document captured at Customer Verification, as scanned or uploaded.
     attachments: idScanAttachments(contact.idType, contact.qidScans),
     // Which home product was sold (Fibre, Fixed-Line, FWA, 5G Home); the service type below is what the installation uses.
     homeProduct: homeProductLabel(values.homeProduct as HomeProduct | undefined),

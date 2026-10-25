@@ -1,4 +1,4 @@
-// QID <-> Passport reconciliation at Customer Identification. A person presenting a QID that no customer holds may already be a customer under
+// QID <-> Passport reconciliation at Customer Verification. A person presenting a QID that no customer holds may already be a customer under
 // their PASSPORT (the registry returns the Passport linked to the QID). Before anyone is treated as new, the existing customer is looked for:
 //   1. through the linked Passport: the customer holding it, confirmed to be the same person (name, date of birth and nationality agree);
 //   2. failing a link, by exactly those three attributes: one customer is the person, several are an ambiguity, none means new.

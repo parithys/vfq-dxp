@@ -77,7 +77,7 @@ export function OffersSection({ ctx }: { ctx: Ctx }) {
                     <li key={b}>✓ {b}</li>
                   ))}
                 </ul>
-                {o.personalised && <div className="text-accent font-semibold text-[length:var(--fs-caption)] mb-3">Personalised for this customer</div>}
+                {o.personalised && <div className="text-accent font-semibold text-[length:var(--fs-caption)] mb-3">Personalised for This Customer</div>}
                 <div className="flex gap-2">
                   <HeaderButton>View Details</HeaderButton>
                   <HeaderButton primary>Add to Cart</HeaderButton>

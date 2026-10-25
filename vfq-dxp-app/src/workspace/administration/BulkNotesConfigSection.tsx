@@ -85,7 +85,7 @@ export function BulkNotesConfigSection() {
     <div>
       {canConfigure ? (
         <div className="card p-5 mb-6">
-          <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Configure a bulk note</h2>
+          <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Configure a Bulk Note</h2>
           <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
             Applies to every account ID listed - agents will see this note when viewing any of those customers.
           </p>
@@ -100,9 +100,9 @@ export function BulkNotesConfigSection() {
               }}
               options={Object.keys(TEMPLATES).map((id) => ({ value: id, label: id }))}
             />
-            <Textarea label="Note content" value={content} onChange={(e) => setContent(e.target.value)} />
+            <Textarea label="Note Content" value={content} onChange={(e) => setContent(e.target.value)} />
             <Input
-              label="Account IDs (comma-separated)"
+              label="Account IDs (Comma-Separated)"
               placeholder="e.g. ACC-5001, ACC-5002"
               value={accountIdsInput}
               onChange={(e) => setAccountIdsInput(e.target.value)}
@@ -110,13 +110,13 @@ export function BulkNotesConfigSection() {
           </div>
           <div className="pt-4">
             <Button variant="primary" onClick={publish} disabled={!content.trim() || !accountIdsInput.trim() || submitting}>
-              Post note
+              Post Note
             </Button>
           </div>
         </div>
       ) : (
         <div className="card p-5 mb-6">
-          <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Configure a bulk note</h2>
+          <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Configure a Bulk Note</h2>
           <p className="text-fg-2 text-[length:var(--fs-caption)]">
             Restricted to Backoffice and privileged staff roles (Agent 360 BNT-04). This persona does not have
             configuration access.
@@ -124,7 +124,7 @@ export function BulkNotesConfigSection() {
         </div>
       )}
 
-      <h3 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-2">All bulk notes</h3>
+      <h3 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-2">All Bulk Notes</h3>
       <div className="card divide-y divide-border-soft">
         {notes.length === 0 && <p className="px-4 py-6 text-center text-muted">No bulk notes posted yet.</p>}
         {notes.map((note) => (

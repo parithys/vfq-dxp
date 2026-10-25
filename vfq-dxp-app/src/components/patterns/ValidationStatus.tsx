@@ -4,7 +4,7 @@ import { Spinner } from '../primitives/Spinner';
 import { describeFailure, failureReference, MAX_RETRIES, type FailureKind, type ServiceName } from '../../engines/serviceCall';
 import { Button } from '../primitives/Button';
 
-// The one panel every Customer Identification validation reports through, so the
+// The one panel every Customer Verification validation reports through, so the
 // five situations an agent can be in look different at a glance and never get
 // confused with each other:
 //

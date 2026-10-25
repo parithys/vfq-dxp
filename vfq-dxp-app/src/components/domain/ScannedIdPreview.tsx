@@ -146,7 +146,7 @@ const THEMES: Record<IdVariant, Theme> = {
   b2b2c: {
     bg: P.cf2f7ff, accent: P.c2563eb, headerText: 'EMPLOYEE ID  -  PARTNER COMPANY', headerFill: P.cffffff, second: P.cbfd3fb,
     rows: [['Employer', 'Acme Trading W.L.L.'], ['Staff No.', 'E-20418'], ['Department', 'Operations']],
-    back: [{ label: 'Issued by', value: 'Human Resources' }, { label: 'Use', value: 'Proof of employment' }],
+    back: [{ label: 'Issued By', value: 'Human Resources' }, { label: 'Use', value: 'Proof of employment' }],
   },
   retired: {
     bg: P.cfff8ee, accent: P.cb45309, headerText: 'RETIRED PERSON CARD', headerFill: P.cffffff, second: P.cf3c98b,
@@ -156,7 +156,7 @@ const THEMES: Record<IdVariant, Theme> = {
   mada: {
     bg: P.c14532d, accent: P.c0b3b1f, headerText: 'MADA', headerFill: P.cffffff, second: P.cd9b44a, dark: true,
     rows: [['Card no.', '5078  ****  ****  1234'], ['Valid thru', '11/29'], ['Scheme', 'MADA debit']],
-    back: [{ label: 'Customer service', value: '800 0000' }, { label: 'Issuer', value: 'Qatar bank (specimen)' }],
+    back: [{ label: 'Customer Service', value: '800 0000' }, { label: 'Issuer', value: 'Qatar bank (specimen)' }],
   },
 };
 

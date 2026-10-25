@@ -44,6 +44,9 @@ export const ROW_ICON: Record<RowTone, string> = {
  */
 type RowTone = EligibilityOutcome | 'advisory';
 
+/** The title of the HRN advance-payment advisory, here and on the info toast that announces it. */
+export const UPFRONT_PAYMENT_TITLE = 'Upfront Payment Required';
+
 export interface EligibilityRow {
   id: string;
   title: string;
@@ -65,7 +68,7 @@ export function buildEligibilityRows(
   nationality: string | undefined,
   journeyType: 'postpaid' | 'prepaid' = 'postpaid',
   existingCustomer = false,
-  /** False at Customer Identification (before a product is chosen): the HRN advance is a postpaid matter, so no HRN row yet. */
+  /** False at Customer Verification (before a product is chosen): the HRN advance is a postpaid matter, so no HRN row yet. */
   includeHrn = true
 ): EligibilityRow[] {
   const hrn = evaluateRule('BR-187', { hrnFlag });
@@ -86,7 +89,7 @@ export function buildEligibilityRows(
       ? [
           {
             id: 'hrn',
-            title: hrnFlag ? 'Upfront payment required' : 'Non-HRN new account',
+            title: hrnFlag ? UPFRONT_PAYMENT_TITLE : 'Non-HRN new account',
             detail: hrnFlag
               ? hrn.message
                   ? `An advance payment of QAR ${hrnAdvanceQar({ nationality, personaId: usePersonaStore.getState().activePersonaId })} is required at checkout.`
@@ -106,6 +109,9 @@ export function buildEligibilityRows(
 // plain-language explanation of what it means for the order. Static copy,
 // not derived from `rows`: it describes the four possible outcomes in
 // general, not which ones this particular customer hit.
+/** Whether a row is the HRN advance-payment advisory (the one eligibility row shown as an info toast, not in the list). */
+export const isUpfrontPaymentRow = (row: { id: string; tone: RowTone }): boolean => row.id === 'hrn' && row.tone === 'advisory';
+
 export const OUTCOME_LEGEND: { title: string; example: string; detail: string }[] = [
   {
     title: 'Hard Stop',

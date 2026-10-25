@@ -23,7 +23,7 @@ The app shell (App, router, main) is not a journey and is left out of the lists.
 
 The one thing that is declared here rather than derived is the short list of
 CROSS-JOURNEY CAPABILITIES (CAPABILITIES below): which components make up a named
-capability such as Customer Identification. Their consumers are still computed,
+capability such as Customer Verification. Their consumers are still computed,
 and the script ABORTS if an anchor file no longer exists, so the list cannot
 silently point at nothing.
 
@@ -393,7 +393,7 @@ ls.column_dimensions['B'].width = 110
 notes = [
     ('Source', 'Read from src/ on every run: components/{primitives,domain,patterns,patterns/wizard}, engines/, stores/, hooks/, lib/, and every relative import.'),
     ('Item', 'A UI component is a .tsx file in a components layer that exports a capitalised function/const. A shared non-UI item is any .ts/.tsx file in engines/, stores/, hooks/ or lib/.'),
-    ('Consumer area', 'A journey or workspace folder: src/modules/<x>, src/workspace/<x>, or src/navigation. Resolved transitively - through other shared components AND through journey files that another journey reuses (Fixed Line reusing New Connection\'s contact step reaches Customer Identification that way).'),
+    ('Consumer area', 'A journey or workspace folder: src/modules/<x>, src/workspace/<x>, or src/navigation. Resolved transitively - through other shared components AND through journey files that another journey reuses (Fixed Line reusing New Connection\'s contact step reaches Customer Verification that way).'),
     ('Not a consumer', 'The app shell (App, router, main). Tests and files outside the folders above.'),
     ('Reach', 'Shared = reached by 2+ consumer areas. Single area = extracted from one area but not yet reused. App shell only = used by App/router/main alone (global furniture such as the toast host). No consumer = nothing imports it.'),
     ('Used directly by shared files', 'The shared components that import this one directly - the composition parents.'),

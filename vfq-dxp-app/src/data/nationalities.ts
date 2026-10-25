@@ -1,5 +1,5 @@
 /**
- * Nationalities an agent can record for a NEW customer created at Customer Identification (no MOI/NAS record exists for the ID). Spelled as the
+ * Nationalities an agent can record for a NEW customer created at Customer Verification (no MOI/NAS record exists for the ID). Spelled as the
  * customer records spell them (the demonym), so every downstream rule keyed on nationality - Qatari limits, the HRN configuration - reads them
  * the same way. Qatar, the GCC and the main expatriate-source countries; the HRN nationalities are all present.
  */

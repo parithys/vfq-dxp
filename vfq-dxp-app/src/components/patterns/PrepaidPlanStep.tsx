@@ -126,10 +126,10 @@ export function PrepaidPlanStep({ mode = 'plan', hiddenProductId, packsOnly, sho
               <div className="min-w-0 space-y-2">
                 <h3 className="text-fg font-bold text-[length:var(--fs-h4)] leading-snug">{selectedPlan.name}</h3>
                 <span className="inline-flex rounded-[var(--radius-pill)] bg-[var(--tint-pink-bg)] px-2.5 py-0.5 text-[var(--tint-pink-fg)] text-[length:var(--fs-tag)] font-semibold uppercase tracking-wide">
-                  Selected pack
+                  Selected Pack
                 </span>
               </div>
-              <SelectedPlanFigure label="Starter pack">
+              <SelectedPlanFigure label="Starter Pack">
                 <span className="text-[length:var(--fs-body)]">QAR </span>
                 <span className="text-[length:var(--fs-h3)] font-bold">{selectedPlan.starterPackChargeQAR}</span>
               </SelectedPlanFigure>
@@ -189,7 +189,7 @@ export function PrepaidPlanStep({ mode = 'plan', hiddenProductId, packsOnly, sho
             {/* One choice, shown as selectable cards with a tick mark (like the number cards), not radio buttons. */}
             <div role="radiogroup" aria-label="Eligible discounts" className="grid gap-3 sm:grid-cols-2">
               {[
-                { id: undefined as string | undefined, title: 'No discount', detail: 'Continue without a discount', value: <span className="text-muted">-</span> },
+                { id: undefined as string | undefined, title: 'No Discount', detail: 'Continue without a discount', value: <span className="text-muted">-</span> },
                 ...discounts.map((d) => ({
                   id: d.addonDiscountId as string | undefined,
                   title: d.name,
@@ -257,7 +257,7 @@ export function PrepaidPlanStep({ mode = 'plan', hiddenProductId, packsOnly, sho
             </tbody>
           </table>
           <div className="text-right pt-3">
-            <p className="opacity-80 text-[length:var(--fs-caption)]">Pack total</p>
+            <p className="opacity-80 text-[length:var(--fs-caption)]">Pack Total</p>
             <p className="font-bold text-[length:var(--fs-h3)] leading-tight">QAR {(netStarterPack ?? 0) + chosenAddons.reduce((t, a) => t + a.price, 0)}</p>
           </div>
         </div>

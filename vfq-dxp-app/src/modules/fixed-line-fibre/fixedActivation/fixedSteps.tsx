@@ -73,7 +73,7 @@ export function fixedCafStep(): WizardStep {
 }
 
 /**
- * The Fixed Line steps after Customer Identification and Product Selection (the first two steps of New Connection, which
+ * The Fixed Line steps after Customer Verification and Product Selection (the first two steps of New Connection, which
  * Fixed Line shares with the other products): Installation Address, Billing Profile (resolved for the agent), Plan, Number and
  * Devices, Checkout, CAF, Payment (which moves on once paid) and the installation Appointment, which submits. Covers fibre and
  * both 5G Home (FWA) service types.

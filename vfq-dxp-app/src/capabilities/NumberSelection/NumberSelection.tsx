@@ -40,7 +40,7 @@ export function NumberSelection({ value, onChange, variant = 'journey', plan, re
       selected={value}
       onSelect={(msisdn, priceQAR) => onChange(msisdn, priceQAR)}
       // Choosing a number again clears the choice, in a journey and in the portal alike (in the portal, choosing only selects; the
-      // reservation is made after Customer Identification).
+      // reservation is made after Customer Verification).
       onDeselect={() => onChange()}
       refreshKey={refreshKey}
       planMrcQar={plan?.mrcQar}

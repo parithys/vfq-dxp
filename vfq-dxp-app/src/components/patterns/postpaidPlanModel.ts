@@ -136,14 +136,14 @@ export const SPECIAL_DISCOUNT_TYPE: Record<'mada' | 'b2b2c' | 'retired', { addon
   retired: { addonType: 'Retired Discount' },
 };
 
-/** The addon types that are a Special Discount (MADA / B2B2C / Retired): one is held by the customer, chosen at Customer Identification. */
+/** The addon types that are a Special Discount (MADA / B2B2C / Retired): one is held by the customer, chosen at Customer Verification. */
 export const SPECIAL_DISCOUNT_ADDON_TYPES: ReadonlySet<string> = new Set(Object.values(SPECIAL_DISCOUNT_TYPE).map((t) => t.addonType));
 
 /** The label every Special Discount card carries on the plan step: the customer's own type is not shown, only that they hold one. */
 export const SPECIAL_DISCOUNT_CARD_TITLE = 'Special Discount';
 
 /**
- * The discounts to offer once the Special Discount chosen at Customer Identification is known: of the three special types only that one
+ * The discounts to offer once the Special Discount chosen at Customer Verification is known: of the three special types only that one
  * stays (a customer holds one), and every other discount (Loyalty, ...) is untouched. `chosen` undefined = nothing chosen / not known here:
  * the list is returned as it is.
  */

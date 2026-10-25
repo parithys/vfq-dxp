@@ -83,7 +83,7 @@ export function WinCashPaymentStep({ amountDueQAR, value, onChange, onProceedWit
         </div>
         {value.paid && value.zeroValue ? (
           <div className="flex items-center gap-2">
-            <Badge variant="success">Zero-value receipt issued</Badge>
+            <Badge variant="success">Zero-Value Receipt Issued</Badge>
             <span className="text-[length:var(--fs-caption)] text-muted">Receipt: {value.reference}</span>
           </div>
         ) : (
@@ -159,7 +159,7 @@ export function WinCashPaymentStep({ amountDueQAR, value, onChange, onProceedWit
         </div>
       ) : value.sessionExpired ? (
         <div className="rounded-[var(--radius-card)] border border-[var(--danger-border)] bg-tone-danger-soft p-4 space-y-3">
-          <Badge variant="danger">Session expired</Badge>
+          <Badge variant="danger">Session Expired</Badge>
           <p className="text-[length:var(--fs-caption)] text-fg">
             Your DXP session timed out while you were completing this payment in WinCash. If the payment
             actually went through there, confirm it below to record it and continue - otherwise, try again.
@@ -197,7 +197,7 @@ export function WinCashPaymentStep({ amountDueQAR, value, onChange, onProceedWit
             disabled={processing}
             className={`text-[length:var(--fs-caption)] text-muted hover:text-danger transition-colors ${SYNTHETIC_CLASS}`}
           >
-            Simulate session expiry (demo)
+            Simulate Session Expiry (Demo)
           </button>
         </div>
       ) : (
@@ -205,7 +205,7 @@ export function WinCashPaymentStep({ amountDueQAR, value, onChange, onProceedWit
           {value.declined && (
             <div className="rounded-[var(--radius-card)] border border-[var(--danger-border)] bg-tone-danger-soft p-3 space-y-1">
               <div className="flex items-center gap-2">
-                <Badge variant="danger">Payment declined</Badge>
+                <Badge variant="danger">Payment Declined</Badge>
               </div>
               <p className="text-[length:var(--fs-caption)] text-fg">
                 WinCash declined the authorization. Retry the same amount, or take payment by another method.
@@ -215,7 +215,7 @@ export function WinCashPaymentStep({ amountDueQAR, value, onChange, onProceedWit
           {value.errored && (
             <div className="rounded-[var(--radius-card)] border border-[var(--danger-border)] bg-tone-danger-soft p-3 space-y-1">
               <div className="flex items-center gap-2">
-                <Badge variant="danger">WinCash error</Badge>
+                <Badge variant="danger">WinCash Error</Badge>
               </div>
               <p className="text-[length:var(--fs-caption)] text-fg">
                 WinCash reported an error and no payment was taken. Retry the same amount in WinCash.
@@ -228,7 +228,7 @@ export function WinCashPaymentStep({ amountDueQAR, value, onChange, onProceedWit
             </Button>
             {onProceedWithout && (
               <Button variant="secondary" onClick={onProceedWithout}>
-                Proceed without WinCash
+                Proceed Without WinCash
               </Button>
             )}
           </div>

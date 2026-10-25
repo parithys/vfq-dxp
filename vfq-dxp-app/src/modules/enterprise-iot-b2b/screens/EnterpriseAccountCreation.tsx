@@ -89,7 +89,7 @@ export function EnterpriseAccountCreation() {
         {crSearched && <Badge variant="success">CR Verified</Badge>}
         {!crSearched && crNumber && <p className="text-[length:var(--fs-caption)] text-muted">Mandatory CR-number search required before account creation.</p>}
 
-        <Input label="Agent ID (for commission)" value={agentId} onChange={(e) => setAgentId(e.target.value)} />
+        <Input label="Agent ID (for Commission)" value={agentId} onChange={(e) => setAgentId(e.target.value)} />
 
         <Select
           label="Business Type"

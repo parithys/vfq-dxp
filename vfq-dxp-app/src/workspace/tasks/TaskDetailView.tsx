@@ -161,7 +161,7 @@ export function TaskDetailView() {
       <div className="card p-5 mb-6">
         <div className="text-[length:var(--fs-caption)] text-muted mb-1">Description</div>
         <p className="text-fg text-[length:var(--fs-body)]">{task.taskDescription || 'No description on file.'}</p>
-        <div className="text-[length:var(--fs-caption)] text-muted mt-4 mb-1">Assigned to</div>
+        <div className="text-[length:var(--fs-caption)] text-muted mt-4 mb-1">Assigned To</div>
         <p className="text-fg text-[length:var(--fs-body)]">{task.assignedAgentId ?? 'Unassigned'}</p>
       </div>
 
@@ -173,14 +173,14 @@ export function TaskDetailView() {
             </Button>
           )}
           <Button variant="primary" onClick={closeTask}>
-            Close task
+            Close Task
           </Button>
         </div>
       )}
 
       {isSupervisor && task.taskStatus !== 'Closed' && (
         <div className="card p-5">
-          <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Assign to a team member</h2>
+          <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Assign to a Team Member</h2>
           <p className="text-fg-2 text-[length:var(--fs-caption)] mb-3">Supervisor-only action.</p>
           <div className="flex gap-2">
             <div className="flex-1">

@@ -229,7 +229,7 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
       </div>
 
       <TabStrip
-        label="Ticket views"
+        label="Ticket Views"
         items={[
           { key: 'all', label: 'All Tickets' },
           { key: 'mine', label: 'My Tickets' },
@@ -294,7 +294,7 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
       {selectedIds.size > 0 && (
         <div className="flex items-center gap-3 mb-3 card p-3">
           <span className="text-[length:var(--fs-body)] text-fg">{selectedIds.size} selected</span>
-          <Button variant="secondary" compact onClick={bulkAssign}>Bulk Assign to me</Button>
+          <Button variant="secondary" compact onClick={bulkAssign}>Bulk Assign to Me</Button>
           <Button variant="secondary" compact onClick={bulkClose}>Bulk Close</Button>
           <Button variant="secondary" compact className="ml-auto" onClick={() => setSelectedIds(new Set())}>Clear selection</Button>
         </div>

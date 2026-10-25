@@ -82,14 +82,14 @@ export function SpecialDiscountsStep({
         <div className={`${CARD} space-y-3`}>
           <div className="grid gap-4 sm:grid-cols-[7fr_3fr] items-start">
             <CompanySearchInput
-              label="Company name"
+              label="Company Name"
               required
               allowAddNew={false}
               value={value.company ?? {}}
               onChange={(company) => onChange({ ...value, company })}
             />
             <Input
-              label="ID Number (optional)"
+              label="ID Number (Optional)"
               value={value.idNumber ?? ''}
               onChange={(e) => onChange({ ...value, idNumber: e.target.value })}
               placeholder="Employee ID number"
@@ -141,7 +141,7 @@ export function SpecialDiscountsStep({
           {type === 'retired' && value.govValidation?.status === 'failed' && (
             <ValidationStatus
               variant="business-failure"
-              title="Retired status not validated"
+              title="Retired Status Not Validated"
               actions={
                 <Button variant="secondary" compact onClick={() => onChange({ type: 'none' })}>
                   Continue as standard customer

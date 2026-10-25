@@ -54,11 +54,11 @@ export function describeOrderScenario(r: DemoContentFields): { title?: string; d
   if (reasons.length > 0) {
     const hits = [...new Map(reasons.map((x) => REASON_SCENARIOS.find(([re]) => re.test(x))).filter(Boolean).map((h) => [h![1], h!])).values()];
     const approval = ` The order requires ${r.approverRole ? `${teamOf(r.approverRole)} ` : ''}approval.`;
-    if (hits.length === 0) return { title: 'Needs approval', detail: `${reasons.map((x) => x.replace(/\.$/, '')).join('. ')}.${approval}` };
+    if (hits.length === 0) return { title: 'Needs Approval', detail: `${reasons.map((x) => x.replace(/\.$/, '')).join('. ')}.${approval}` };
     return { title: hits.map((h) => h[1]).join(' + '), detail: `${hits.map((h) => h[2]).join(' ')}${approval}` };
   }
   if (r.status === 'Submitted for Approval') {
-    return { title: 'Awaiting approval', detail: `${r.orderType ?? 'Order'} was submitted and requires ${r.approverRole ? `${teamOf(r.approverRole)} ` : ''}approval.` };
+    return { title: 'Awaiting Approval', detail: `${r.orderType ?? 'Order'} was submitted and requires ${r.approverRole ? `${teamOf(r.approverRole)} ` : ''}approval.` };
   }
   const plain = r.status ? PLAIN_STATUS[r.status] : undefined;
   if (plain) {

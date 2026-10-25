@@ -18,7 +18,7 @@ import type { DonorDetailsValue } from '../../../components/patterns/DonorDetail
 import { DonorAttachmentStep, mnpFormSigned } from '../../../components/patterns/DonorAttachmentStep';
 import type { DonorAttachmentValue } from '../../../components/patterns/DonorAttachmentStep';
 
-// The MNP port-in steps, after Customer Identification and Product Selection (the first two steps of New Connection, which
+// The MNP port-in steps, after Customer Verification and Product Selection (the first two steps of New Connection, which
 // MNP shares with the other products; the Postpaid/Prepaid choice is made on the product step and kept as `mnpType`).
 //   Postpaid: Address -> Billing Profile -> SIM Serial -> Plan -> Add-ons (Bill Limit, discounts) -> Donor Details -> Checkout -> MNP Form -> CAF -> Payment -> Activity.
 //   Prepaid:  Address -> SIM Serial -> Plan (prepaid pack + discount) -> Donor Details -> Checkout -> MNP Form -> CAF -> Payment -> Activity,
@@ -62,6 +62,7 @@ export function mnpSteps(ctx: ProductStepContext & Partial<Pick<PostpaidStepCont
     serviceAddressStep({
       mode: 'structured',
       autoPass: true,
+      billing: (values) => !isPrepaidMnp(values),
       identity: (values) => ({ idNumber: contactOf(values)?.idNumber, nationality: contactOf(values)?.moiResult?.nationality }),
     }),
     postpaidOnly(billingAccountStep()),
@@ -74,7 +75,7 @@ export function mnpSteps(ctx: ProductStepContext & Partial<Pick<PostpaidStepCont
       ...prepaidOnly(prepaidExtrasStep({ segment: (values) => (values.eligibility as EligibilityResult | undefined)?.segment })),
       summary: [
         { key: 'discount', label: 'Discount', type: 'select', optional: true, labelFrom: { kind: 'addons-discounts', idField: 'addonDiscountId', labelField: 'name' }, value: (v) => v.discountId },
-        { key: 'addons', label: 'Add-ons', type: 'multi', optional: true, labelFrom: { kind: 'addons-discounts', idField: 'addonDiscountId', labelField: 'name' }, value: (v) => v.addonIds },
+        { key: 'addons', label: 'Add-Ons', type: 'multi', optional: true, labelFrom: { kind: 'addons-discounts', idField: 'addonDiscountId', labelField: 'name' }, value: (v) => v.addonIds },
       ],
     },
     {
@@ -110,12 +111,12 @@ export function mnpSteps(ctx: ProductStepContext & Partial<Pick<PostpaidStepCont
         details: (values) => {
           const donor = values.donorDetails as DonorDetailsValue | undefined;
           return [
-            { label: 'Port-in number', value: normalizePortInNumber(donor?.portInNumber ?? '') ?? donor?.portInNumber ?? '-' },
-            { label: 'Donor operator', value: donor?.donorOperator ?? '-' },
+            { label: 'Port-In Number', value: normalizePortInNumber(donor?.portInNumber ?? '') ?? donor?.portInNumber ?? '-' },
+            { label: 'Donor Operator', value: donor?.donorOperator ?? '-' },
           ];
         },
         fees: [
-          { label: 'Port-in charge', amountQar: PORT_IN_FEE_QAR },
+          { label: 'Port-In Charge', amountQar: PORT_IN_FEE_QAR },
           { label: 'Deposit', amountQar: PORT_IN_DEPOSIT_QAR },
         ],
         before: ({ values, goToStepKey }) => <MnpValidationGate gate={mnpValidationGate(values, 'checkout')} onFix={(id) => goToStepKey(FIX_STEP[id] ?? 'contact')} />,

@@ -4,7 +4,7 @@
  * Where a guided journey starts, which decides how the customer is treated:
  *  - 'new'      Agent 360 (Dashboard) or Mobile Connections: the customer is ALWAYS treated as NEW. Full scan -> NAS
  *               lookup; even an ID that has a Siebel record proceeds as a new customer.
- *  - 'existing' Customer Details: the customer is already identified, so Customer Identification opens pre-resolved
+ *  - 'existing' Customer Details: the customer is already identified, so Customer Verification opens pre-resolved
  *               with the ID locked (read-only); eligibility still runs.
  */
 export type JourneyFlow = 'new' | 'existing';
