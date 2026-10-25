@@ -13,7 +13,7 @@ import { create } from 'zustand';
 // fail. `useServiceFaults` (below) lets a demo inject each failure kind so the
 // recovery states can be shown; it is inert unless a fault is armed.
 
-export type ServiceName = 'moi' | 'nas' | 'customer-lookup' | 'eligibility' | 'govt-retiree';
+export type ServiceName = 'moi' | 'nas' | 'customer-lookup' | 'eligibility';
 
 export type FailureKind =
   | 'timeout'
@@ -41,7 +41,6 @@ export const SERVICE_LABEL: Record<ServiceName, string> = {
   nas: 'NAS (National Address System)',
   'customer-lookup': 'Customer lookup',
   eligibility: 'Eligibility service',
-  'govt-retiree': 'Government retiree validation',
 };
 
 export class ServiceError extends Error {

@@ -13,19 +13,17 @@ import type { CompanySelection } from './CompanySearchInput';
 export interface SpecialDiscountsIdentificationProps {
   value: SpecialDiscountsValue;
   onChange: (value: SpecialDiscountsValue) => void;
-  /** The ID number the benefit is checked against (Retiree validation). */
-  idNumber?: string;
   /** Employer already on the MOI record, offered as the Consumer B2B2C starting point. */
   derivedCompany?: CompanySelection;
   /** The agent rejected the benefit. Default: back to Standard with nothing carried. */
   onReject?: () => void;
 }
 
-export function SpecialDiscountsIdentification({ value, onChange, idNumber, derivedCompany, onReject }: SpecialDiscountsIdentificationProps) {
+export function SpecialDiscountsIdentification({ value, onChange, derivedCompany, onReject }: SpecialDiscountsIdentificationProps) {
   return (
     <div className="space-y-4">
       <h3 className="text-fg font-semibold text-[length:var(--fs-h5)]">Special Discounts</h3>
-      <SpecialDiscountsStep value={value} onChange={onChange} idNumber={idNumber} derivedCompany={derivedCompany} onReject={onReject} />
+      <SpecialDiscountsStep value={value} onChange={onChange} derivedCompany={derivedCompany} onReject={onReject} />
     </div>
   );
 }

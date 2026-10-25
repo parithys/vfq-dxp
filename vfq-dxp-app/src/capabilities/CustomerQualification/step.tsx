@@ -154,7 +154,6 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
             <SpecialDiscountsIdentification
               value={(values.customerType as SpecialDiscountsValue) ?? {}}
               onChange={(v) => setValue('customerType', v)}
-              idNumber={contact.idNumber}
               onReject={() => {
                 // Decline the benefit: stay on this page with every Customer Type selection
                 // cleared (company, office ID scan, acceptance) back to Standard, no discount carried.

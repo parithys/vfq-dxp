@@ -12,8 +12,19 @@ export function logMilestone(journeyId: string, event: Pick<MilestoneEvent, 'typ
   console.info('[milestone]', JSON.stringify({ journey: journeyId, milestone: event.id, event: event.type, at: new Date(event.at).toISOString() }));
 }
 
-/** The toast for a milestone just reached: success, closes itself, and a keyed push so it is never shown twice at once. */
+/**
+ * Whether a milestone's toast is displayed. OFF: milestones are still reached, recorded, logged and shown in the Summary - only the toast is not
+ * displayed. The toast code below is kept as it was, so showing them again is changing this one value (or `setMilestoneToastsVisible(true)`).
+ */
+export const MILESTONE_TOASTS_VISIBLE_DEFAULT = false;
+let milestoneToastsVisible = MILESTONE_TOASTS_VISIBLE_DEFAULT;
+export const setMilestoneToastsVisible = (visible: boolean): void => {
+  milestoneToastsVisible = visible;
+};
+
+/** The toast for a milestone just reached: success, closes itself, and a keyed push so it is never shown twice at once. Not displayed while milestone toasts are off. */
 export function announceMilestone(def: MilestoneDef, message?: string, values?: Record<string, unknown>): void {
+  if (!milestoneToastsVisible) return;
   const text = values && def.wording ? def.wording(values) : { title: def.title, message: def.message };
   useNotificationStore.getState().pushToast('success', text.title, { detail: message ?? text.message, key: `milestone:${def.id}`, autoDismissMs: MILESTONE_TOAST_MS });
 }
