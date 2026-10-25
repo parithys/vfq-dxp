@@ -51,8 +51,13 @@ export const HRN_CATEGORIES: readonly HrnCategory[] = [
 /** The category every HRN nationality is in today. */
 export const STANDARD_HRN: HrnCategoryId = 'STANDARD_HRN';
 
-/** The credit limit for a customer who is not HRN (BR-076): QAR 1,000. */
+/** The credit limit for a customer who is not HRN (BR-076): QAR 1,000 - an Expat's. */
 export const NON_HRN_CREDIT_LIMIT_QAR = 1000;
+/** A Qatari's default credit limit (a Qatari is never HRN): QAR 4,000. */
+export const QATARI_CREDIT_LIMIT_QAR = 4000;
+
+/** A Qatari national, by the demonym the customer records use or the country name. */
+export const isQatariNationality = (nationality: string | undefined): boolean => ['qatari', 'qatar'].includes((nationality ?? '').trim().toLowerCase());
 
 /**
  * Nationality -> HRN categories. Keys are lower-case; both the demonym the customer records use ("Pakistani") and the country name are listed,
@@ -128,10 +133,13 @@ export function hrnAdvanceQar({ nationality, categoryId, personaId }: { national
  */
 export function defaultCreditLimit({ nationality, categoryId, hrn }: { nationality?: string; categoryId?: HrnCategoryId; hrn?: boolean } = {}): number {
   const categories = nationality === undefined && !categoryId ? (hrn ? HRN_CATEGORIES.filter((c) => c.configured).slice(0, 1) : []) : applicable(nationality, categoryId);
-  return categories.length ? Math.min(...categories.map((c) => c.creditLimitQar ?? NON_HRN_CREDIT_LIMIT_QAR)) : NON_HRN_CREDIT_LIMIT_QAR;
+  if (categories.length) return Math.min(...categories.map((c) => c.creditLimitQar ?? NON_HRN_CREDIT_LIMIT_QAR));
+  // Not HRN: a Qatari's default is QAR 4,000, an Expat's QAR 1,000. With no nationality given, nothing says Qatari, so the Expat default stands.
+  return isQatariNationality(nationality) ? QATARI_CREDIT_LIMIT_QAR : NON_HRN_CREDIT_LIMIT_QAR;
 }
 
 /**
+ * (Superseded for new accounts by defaultCreditLimit's nationality rule: Qatari 4,000, Expat 1,000, HRN 50.)
  * Default credit limit BY CUSTOMER SEGMENT, in QAR, for a segment the business has set one for. Empty: none has been given, so a segment's default
  * is the HRN category's limit when the segment is an HRN one, and the standard QAR 1,000 otherwise.
  */

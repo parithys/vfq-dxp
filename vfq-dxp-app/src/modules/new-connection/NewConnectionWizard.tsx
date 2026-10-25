@@ -1,4 +1,8 @@
 import { POSTPAID_MILESTONES, SUBMITTED_FOR_APPROVAL_MESSAGE, postpaidMilestonesApply } from './milestones';
+import { useRestrictedCustomers } from '../../hooks/useRestrictedCustomers';
+import { RestrictedCustomerNotice } from '../../components/patterns/RestrictedCustomerNotice';
+import { canViewCustomerSegment } from '../../engines/agentPrivilegeEngine';
+import { usePersonaStore } from '../../stores/personaStore';
 import { reachMilestoneOnEvent } from '../../components/patterns/wizard/useJourneyMilestones';
 import type { JourneyMilestones } from '../../engines/milestoneEngine';
 import { useEffect, useState } from 'react';
@@ -74,11 +78,14 @@ export function NewConnectionWizard({
 
   // Existing Customer: the route names the customer, so their name sits under the title from the start.
   const [routeCustomerName, setRouteCustomerName] = useState<string | undefined>();
+  // The route names the customer: if they are in a protected segment this role may not see, the journey is blocked here - before the badge, the scanner's
+  // card or any other detail of them is drawn.
+  const restricted = useRestrictedCustomers();
   useEffect(() => {
     if (flow !== 'existing' || !existingCustomerId) return;
     let cancelled = false;
     void mockDataEngine.list<{ customerId: string; name: string }>('customers').then((all) => {
-      if (!cancelled) setRouteCustomerName(all.find((c) => c.customerId === existingCustomerId)?.name);
+      if (!cancelled) setRouteCustomerName(all.find((c) => c.customerId === existingCustomerId && canViewCustomerSegment(usePersonaStore.getState().activePersonaId, (c as { segment?: string }).segment))?.name);
     });
     return () => {
       cancelled = true;
@@ -115,6 +122,17 @@ export function NewConnectionWizard({
         return submitNewConnectionOrder(values, { flow, createRecord, updateRecord });
     }
   };
+
+  if (flow === 'existing' && existingCustomerId) {
+    if (!restricted.ready) return <div className="p-8 text-fg-2" role="status">Loading…</div>;
+    if (restricted.isRestricted(existingCustomerId)) {
+      return (
+        <div className="p-8 max-w-2xl">
+          <RestrictedCustomerNotice backTo="/customer-search" backLabel="Back to Customer Search" />
+        </div>
+      );
+    }
+  }
 
   return (
     <div className="min-h-full flex flex-col" data-device={device}>

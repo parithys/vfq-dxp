@@ -1,4 +1,6 @@
 import type { GuidedContactValue } from '../../components/patterns/guidedContactModel';
+import { accountTypeForJourney } from '../../engines/creditLimit';
+import { CreditLimitCard } from '../../components/patterns/CreditLimitCard';
 import { billingAccountSummary } from './summary';
 import { maskEmail } from '../../components/patterns/guidedContactModel';
 import type { EligibilityResult } from '../../components/domain/eligibilityTypes';
@@ -22,14 +24,26 @@ import type { WizardStep } from '../../components/patterns/wizard/guidedWizardTy
 // app-level demo assumption (the "Gatan" gateway name and the
 // "VIP" segment/7th-of-month default have no evidence anywhere in
 // this corpus).
-export function billingAccountStep(opts: { /** What the new profile is for, in its name ("... - Postpaid"). */ profileSuffix?: string } = {}): WizardStep {
+type BillingJourney = 'postpaid' | 'fixed-line';
+export function billingAccountStep(
+  opts: {
+    /** What the new profile is for, in its name ("... - Postpaid"). */
+    profileSuffix?: string;
+    /** The journey the agent started, which decides the account type (default postpaid); a function when one wizard serves several products. */
+    journey?: BillingJourney | ((values: Record<string, unknown>) => BillingJourney);
+  } = {}
+): WizardStep {
   return {
     key: 'billingAccount',
     summary: billingAccountSummary,
     // Passed over on the way forward. An existing billing account is selected automatically, or one is created when there is none
     // (never reported as a problem): BillingAccountAutoResolver, mounted by the wizard for this step wherever the journey enters it
     // (a journey that skips Product Selection included). The step stays in the rail so the agent can go back and change either.
-    autoPass: () => true,
+    // ...EXCEPT while a NEW account is being created: its credit limit is the agent's to see and choose, so the step is shown.
+    autoPass: (values) => {
+      const b = values.billingAccount as BillingAccountValue | undefined;
+      return !(b?.creatingNew && !b.selectedProfileId);
+    },
     headless: ({ values, setValue }) => {
       const contact = values.contact as GuidedContactValue | undefined;
       if (!contact?.moiResult) return null;
@@ -51,7 +65,10 @@ export function billingAccountStep(opts: { /** What the new profile is for, in i
         [address?.streetNo && `Street ${address.streetNo}`, address?.zone && `Zone ${address.zone}`, address?.area, address?.addressLine]
           .filter(Boolean)
           .join(', ') || undefined;
+      const billing = (values.billingAccount as BillingAccountValue) ?? {};
+      const nationality = eligibility?.nationality ?? (values.contact as GuidedContactValue | undefined)?.moiResult?.nationality;
       return (
+        <>
         <BillingAccount
           customerId={eligibility?.customerId}
           defaultAddressLine={defaultAddressLine}
@@ -63,6 +80,17 @@ export function billingAccountStep(opts: { /** What the new profile is for, in i
             return c?.moiResult?.isNewCustomer && !c?.moiResult?.createdByAgent && c.email ? maskEmail(c.email) : c?.email;
           })()}
         />
+        {/* A NEW account (a new customer, or one with no billing account yet) gets its credit limit here: the default for the segment, and the agent's choice from the values that apply. */}
+        {billing.creatingNew && !billing.selectedProfileId && nationality && (
+          <CreditLimitCard
+            nationality={nationality}
+            accountType={accountTypeForJourney(typeof opts.journey === 'function' ? opts.journey(values) : (opts.journey ?? 'postpaid'))}
+            hrnFeeApplies={eligibility?.requiresHrnAdvance}
+            selected={billing.newAccount?.creditLimitQar}
+            onChange={(limit) => setValue('billingAccount', { ...billing, newAccount: { ...billing.newAccount, creditLimitQar: limit } })}
+          />
+        )}
+        </>
       );
     },
     isValid: (values) => isBillingAccountValid((values.billingAccount as BillingAccountValue) ?? {}),

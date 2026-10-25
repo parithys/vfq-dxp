@@ -238,5 +238,41 @@
     "handledByUserId": "USR-1101",
     "releasedAt": "2026-08-13T10:12:00+03:00",
     "taskType": "Billing Issue"
+  },
+  {
+    "qTicketId": "QTK-7101",
+    "kioskMobileNumber": "+97455513056",
+    "customerId": "CUST-3101",
+    "orderId": null,
+    "journeyCode": "J011",
+    "queueName": "New Connections",
+    "generatedInSystem": "QNomy",
+    "generatedAt": "2026-10-22T09:30:00+03:00",
+    "branch": "Doha City Center",
+    "counterNumber": "C-04",
+    "status": "Waiting",
+    "agentInDxpSessionId": null,
+    "handledByUserId": null,
+    "releasedAt": null,
+    "taskType": null,
+    "_note": "Demo seed (2026-10-22) - belongs to a protected-segment customer (Safwa / Safwa+ / Royal): shown only to a role holding that segment's grant; every other role sees these lists without it."
+  },
+  {
+    "qTicketId": "QTK-7102",
+    "kioskMobileNumber": "+97455513056",
+    "customerId": "CUST-3101",
+    "orderId": null,
+    "journeyCode": "J011",
+    "queueName": "New Connections",
+    "generatedInSystem": "QNomy",
+    "generatedAt": "2026-10-21T09:00:00+03:00",
+    "branch": "Doha City Center",
+    "counterNumber": "C-04",
+    "status": "Completed",
+    "agentInDxpSessionId": null,
+    "handledByUserId": "USR-1101",
+    "releasedAt": "2026-10-21T09:20:00+03:00",
+    "taskType": "New Connection",
+    "_note": "Demo seed (2026-10-22) - belongs to a protected-segment customer (Safwa / Safwa+ / Royal): shown only to a role holding that segment's grant; every other role sees these lists without it."
   }
 ]

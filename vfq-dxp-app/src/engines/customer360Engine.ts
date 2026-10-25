@@ -138,6 +138,8 @@ export interface Customer360Data {
   adjustments: Record<string, unknown>[];
   creditLimits: Record<string, unknown>[];
   deposits: Record<string, unknown>[];
+  /** Deposit bundles on the customer's accounts (they raise the credit limit - see engines/creditLimit.depositIncreaseOf). */
+  depositBundles: Record<string, unknown>[];
   tickets: Record<string, unknown>[];
   simSwapOrders: Record<string, unknown>[];
   installedAssets: Record<string, unknown>[];
@@ -241,6 +243,7 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
     overviewDemo,
     demoCatalog,
     products,
+    depositBundles,
   ] = await Promise.all([
     mockDataEngine.list<CustomerRecord>('customers'),
     mockDataEngine.list<AccountRecord>('accounts'),
@@ -277,6 +280,7 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
     mockDataEngine.list<Record<string, unknown>>('customer-overview-demo'),
     mockDataEngine.list<Record<string, unknown>>('telesales-demo-catalog'),
     mockDataEngine.list<{ productId: string; name: string; type: string }>('products'),
+    mockDataEngine.list<Record<string, unknown>>('deposit-bundles'),
   ]);
 
   const customer = customers.find((c) => c.customerId === customerId);
@@ -309,6 +313,10 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
     adjustments: adjustments.filter((a) => a.customerId === customerId),
     creditLimits: creditLimits.filter((cl) => cl.customerId === customerId),
     deposits: deposits.filter((d) => accountIds.has(d.accountId as string)),
+    // The deposits on the customer's accounts AND on the account their credit-limit record is held on (which need not be one of their own - CRL-4003).
+    depositBundles: depositBundles.filter(
+      (d) => accountIds.has(d.accountId as string) || creditLimits.some((cl) => cl.customerId === customerId && cl.accountId === d.accountId)
+    ),
     tickets: tickets.filter((t) => t.customerId === customerId),
     simSwapOrders: simSwapOrders.filter((s) => customerMsisdns.has(s.msisdn as string)),
     installedAssets: customerInstalledAssets,
@@ -323,7 +331,8 @@ export async function getCustomer360(customerId: string): Promise<Customer360Dat
     inPlatformBalances: inPlatformBalances.filter((b) => accountIds.has(b.accountId as string)),
     callDetailRecords: callDetailRecords.filter((c) => accountIds.has(c.accountId as string)),
     communications: communications.filter((c) => c.customerId === customerId),
-    auditTrail: auditTrail.filter((r) => recordIds.has(r.recordId as string)),
+    // A row belongs to the customer when it is about one of their accounts or contacts - or about the customer themself (a credit-limit change made with no account yet).
+    auditTrail: auditTrail.filter((r) => recordIds.has(r.recordId as string) || r.recordId === customerId),
     leads: leads.filter((l) => l.mobileNumber && l.mobileNumber === customer.phone),
     crossSalesOffers: crossSalesOffers.filter((o) => contactIds.has(o.contactId as string)),
     deviceInstallments: deviceInstallments.filter((d) => accountIds.has(d.accountId as string)),

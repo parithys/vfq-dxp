@@ -74,8 +74,6 @@ function PostpaidPlan({ mode }: { mode: 'plan' | 'extras' }) {
   const [d, setD] = useState<string | undefined>();
   const [a, setA] = useState<string[]>([]);
   const [limit, setLimit] = useState<number | undefined>();
-  const [supportingId, setSupportingId] = useState<string | undefined>();
-  const [proof, setProof] = useState<{ fileName: string; sizeBytes: number } | undefined>();
   return (
     <PlanSelection
       kind="postpaid"
@@ -92,10 +90,6 @@ function PostpaidPlan({ mode }: { mode: 'plan' | 'extras' }) {
       billLimit={limit}
       onBillLimitChange={(amount) => setLimit(amount)}
       requiresHrnAdvance={false}
-      discountSupportingId={supportingId}
-      onDiscountSupportingIdChange={setSupportingId}
-      discountProofDocument={proof}
-      onDiscountProofDocumentChange={setProof}
     />
   );
 }

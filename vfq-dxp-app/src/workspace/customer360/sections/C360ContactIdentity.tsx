@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { Icon } from '../../../components/primitives/Icon';
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
-import { ActionButton, DetailRows, IC, IconTile, LinkAction, Panel, Pill, TabPage, fmtDate } from './C360Kit';
+import { ActionButton, DetailRows, IC, IconTile, LinkAction, Panel, Pill, PrimaryTag, TabPage, fmtDate } from './C360Kit';
 import type { Tone } from './C360Kit';
 import { contactInformationResolvers } from './contactInformationResolvers';
 import { Dv } from '../demoValues';
@@ -208,7 +208,7 @@ export function C360ContactIdentity({ data, services, goToTab, onEdit }: { data:
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-fg font-semibold text-[length:var(--fs-body)] break-words">{c.name}</span>
-                      {c.primary && <Pill tone="blue">Primary</Pill>}
+                      {c.primary && <PrimaryTag />}
                     </div>
                     <div className="text-fg-2 text-[length:var(--fs-caption)] break-words">{c.role}</div>
                     <div className="flex flex-wrap gap-x-4 text-fg-2 text-[length:var(--fs-caption)]">

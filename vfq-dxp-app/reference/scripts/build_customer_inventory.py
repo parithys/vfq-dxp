@@ -159,12 +159,16 @@ NAMES = {
     "CUST-3084": ("Aisha", "Mohammed Khalid", "Al-Kuwari"),
     "CUST-3085": ("Rashid", "Saud Abdulla", "Al-Hajri"),
     "CUST-3090": ("Maryam", "Ahmed Abdulla", "Al-Sulaiti"),
+    "CUST-3101": ("Hessa", "Jassim", "Al-Thani"),
+    "CUST-3102": ("Abdulaziz", "Khalid", "Al-Sulaiti"),
+    "CUST-3103": ("Sheikha", "Nasser", "Al-Naimi"),
     "CUST-3065": ("Abdulrahman", "Jassim Hamad", "Al-Kubaisi"),
     "CUST-3066": ("Maha", "Rashid Saeed", "Al-Ghanim"),
     "CUST-3067": ("Mohamed", "Nabil Ibrahim", "Soliman"),
     "NAS-7002": ("Yousef", "Khalifa Hamad", "Al-Khulaifi"),
     "NAS-7003": ("Anil", "Ramesh", "Sharma"),
     "NAS-7004": ("Mustafa", "Salem Ali", "Al-Baker"),
+    "NAS-7006": ("Farhan", "Aslam Javed", "Chaudhry"),
 }
 # Non-customer-table people that are still customer-side contacts. Keyed by
 # (file, old full name) -> (first, middle, last).
@@ -395,6 +399,19 @@ PROPOSED += [
       "Qatari aged 12 (under 18), no lines: a family member who can be added as the ACTUAL USER of a parent's postpaid line.", "None", "-", "New Postpaid (Actual User step)",
       "Under 18, so the Actual User step accepts her; the age rule is the only check (Number of Connections, HRN and the Collections / Grey List / Security blacklists are not run for an actual user). Anyone 18 or older is refused there.",
       jk=PP, req="Actual user (minor)"),
+    # ---- 11. Restricted segments (Safwa, Safwa+, Royal): visible only to a role holding that segment's own grant
+    P("CUST-3101", "Hessa Al-Thani", "Qatari", "Qatari", "QID", "27801013400101", "2031-03-31", "1978-01-10", "Female", "Safwa", "Arabic", 0, 0, "11 Restricted segments",
+      "Qatari in the Safwa segment (VIP tag). A protected customer: only a role granted Safwa may see them.", "None", "-", "Customer Search; Customer 360; Customer Identification in any journey",
+      "Premium (granted Safwa) sees the customer and continues; every other role is blocked with the access-restriction message and sees no name, ID, phone or segment.", jk=C360, req="Restricted segment: Safwa"),
+    P("CUST-3102", "Abdulaziz Al-Sulaiti", "Qatari", "Qatari", "QID", "27505023400102", "2031-03-31", "1975-05-02", "Male", "Safwa+", "Arabic", 0, 0, "11 Restricted segments",
+      "Qatari in the Safwa+ segment (VVIP tag). A protected customer, with its own grant independent of Safwa and Royal.", "None", "-", "Customer Search; Customer 360; Customer Identification in any journey",
+      "Premium (granted Safwa+) sees the customer and continues; every other role is blocked with the access-restriction message and sees no customer information.", jk=C360, req="Restricted segment: Safwa+"),
+    P("CUST-3103", "Sheikha Al-Naimi", "Qatari", "Qatari", "QID", "28203033400103", "2031-03-31", "1982-03-03", "Female", "Royal", "Arabic", 0, 0, "11 Restricted segments",
+      "Qatari in the Royal segment. A protected customer, with its own grant independent of Safwa and Safwa+.", "None", "-", "Customer Search; Customer 360; Customer Identification in any journey",
+      "Premium (granted Royal) sees the customer and continues; every other role is blocked with the access-restriction message and sees no customer information.", jk=C360, req="Restricted segment: Royal"),
+    P("NAS-7006", "Farhan Chaudhry", "Pakistani", "Expat (QID)", "QID", "29303051200106", "2030-10-31", "1993-03-05", "Male", "Consumer", "English", 0, 0, "4 New customer / MNP",
+      "NEW HRN customer (NAS only, Pakistani). The New Customer journey's demo scan always returns this person, so a demo New Customer is HRN-category.", "None", "-", "New Postpaid; New Prepaid",
+      "Resolves via NAS, no customerId. HRN: QAR 100 advance, QAR 50 default credit limit, no limit choice (hrnConfiguration). The scanned card, the number read and the MOI result are this one person, so ID reconciliation passes.", status="New (NAS record only)", jk=PP, req="New HRN customer (demo scan)"),
 ]
 
 # Scenario rewrites forced by the nationality rule (the nationalities originally
@@ -505,7 +522,7 @@ def refresh_seeded(rd, wr):
         p = by.get(d["customerId"])
         if p and SEED_TAG in str(d.get("_note", "")):
             d["documentType"], d["documentNumber"] = p["idt"], p["idn"]
-            d["validationPath"] = "MOI Validation" if p["idt"] == "QID" else "Capture/Validate Details"
+            d["validationPath"] = "MOI Validation" if p["idt"] in ("QID", "Diplomatic ID") else "Capture/Validate Details"
             d.pop("issuingCountry", None)
             if p["idt"] == "Passport":
                 d["issuingCountry"] = p["nat"]
@@ -912,7 +929,7 @@ def seed():
         d = {"_note": SEED_TAG, "identityDocumentId": f"IDD-{n_doc}", "customerId": p["cid"], "documentType": p["idt"], "documentNumber": p["idn"]}
         if p["exp"]:
             d["expiryDate"] = p["exp"]
-        d.update({"validationPath": "MOI Validation" if p["idt"] == "QID" else "Capture/Validate Details", "status": "Validated", "scanCompleted": True,
+        d.update({"validationPath": "MOI Validation" if p["idt"] in ("QID", "Diplomatic ID") else "Capture/Validate Details", "status": "Validated", "scanCompleted": True,
                   "scannedAt": "2026-09-30T10:00:00+03:00", "docStatus": "Active", "uploadDateTime": "2026-09-30T10:00:00+03:00", "serviceReference": p["cid"]})
         if p["idt"] == "Passport":
             d["issuingCountry"] = p["nat"]
@@ -1083,8 +1100,12 @@ for cid, c in customers.items():
                  (c.get("activePostpaidLines", 0) + c.get("activePrepaidLines", 0)) if "activePostpaidLines" in c else "",
                  bl or ("(blacklisted)" if c.get("blacklisted") else "No"), "HRN" if is_hrn(c.get("nationality")) else "Standard", c.get("companyName", ""),
                  a["disc"], a["mnp"], a["scen"], a["journeys"], a["expected"], roles_for(a["jk"]), " ".join(note)])
+_passports_on_file = {d["documentNumber"] for d in docs if d["documentType"] == "Passport"}
 for n in nas:
     if n["nasRecordId"] in PROP_IDS:
+        continue
+    # A QID whose linked Passport is already a customer's is that customer (CUST-1002 for NAS-7005), not a second person: no row of its own.
+    if n.get("linkedPassportNumber") in _passports_on_file:
         continue
     a = SEED_NAS[n["nasRecordId"]]
     rows.append(["", n["nasRecordId"], ORIG + " (NAS only)", a["cat"], n["name"], n.get("firstName", ""), n.get("middleName", ""), n.get("lastName", ""), n["nationality"], "Qatari" if n["nationality"] == "Qatari" else "Expat", n["documentType"],
@@ -1259,7 +1280,7 @@ cov = [
     ("B2B2C type discount", "Requested", ["CUST-1002"] + reqmap["B2B2C type discount"]),
     ("Both MADA and B2B2C eligible", "Requested", reqmap["MADA + B2B2C both eligible"]),
     ("B2B2C with pre-existing Special Management", "Added", reqmap["B2B2C + Special Management"]),
-    ("New customer (not in Siebel)", "Requested", ["NAS-7001", "NAS-7002", "NAS-7003", "NAS-7004"]),
+    ("New customer (not in Siebel)", "Requested", ["NAS-7001", "NAS-7002", "NAS-7003", "NAS-7004", "NAS-7006"]),
     ("Mobile Number Portability - new customer", "Requested", ["NAS-7001", "NAS-7002", "NAS-7003"]),
     ("MNP - existing customer / conditional accept", "Added", ["CUST-1004 (seeded MNP-11002)"] + reqmap["Existing customer MNP / conditional accept"]),
     ("MNP - rejection (name mismatch)", "Added", reqmap["MNP rejection"]),

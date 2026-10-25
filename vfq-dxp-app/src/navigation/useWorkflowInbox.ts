@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useRestrictedCustomers } from '../hooks/useRestrictedCustomers';
 import { useEntityStore } from '../stores/entityStore';
 import { useAuthStore } from '../stores/authStore';
 import { usePersonaStore } from '../stores/personaStore';
@@ -39,13 +40,17 @@ interface OrderRow {
   createdBy?: string;
   createdAt?: string;
   customerName?: string;
+  customerId?: string;
 }
 
 export function useWorkflowInbox() {
   const loadKind = useEntityStore((s) => s.loadKind);
   const rawOrders = useEntityStore((s) => s.records.orders);
   const rawActivities = useEntityStore((s) => s.records['customer-activities']);
-  const orders = useMemo(() => (rawOrders ?? []) as unknown as OrderRow[], [rawOrders]);
+  const allOrders = useMemo(() => (rawOrders ?? []) as unknown as OrderRow[], [rawOrders]);
+  // An order of a protected-segment customer this role may not see is never announced - not its id, not the customer's name; nothing until customers are known.
+  const guard = useRestrictedCustomers();
+  const orders = useMemo(() => guard.filter(allOrders, (o) => o.customerId).visible, [guard, allOrders]);
   const activities = useMemo(() => (rawActivities ?? []) as unknown as DecisionRecord[], [rawActivities]);
   const personaId = usePersonaStore((s) => s.activePersonaId);
   const jobTitle = useAuthStore((s) => s.profile?.jobTitle);

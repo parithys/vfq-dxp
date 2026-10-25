@@ -1,4 +1,6 @@
 import { DataTable } from '../../../components/primitives/DataTable';
+import { creditBreakdownOf } from '../creditLimitView';
+import { hrnFeeApplies } from '../../../engines/creditLimit';
 import { Badge } from '../../../components/primitives/Badge';
 import { computeBillingSummary, withinBillHistoryWindow, type Customer360Data } from '../../../engines/customer360Engine';
 import { MetricCard } from '../MetricCard';
@@ -47,7 +49,9 @@ export function BillingSection({ data }: { data: Customer360Data }) {
   const { creditLimit, latestBill, outstanding, formattedBillPeriod, previousPayment } = computeBillingSummary(data);
   const hasMetrics = Boolean(creditLimit) || Boolean(latestBill);
   const collectionStatus = profile?.collectionStatus ? String(profile.collectionStatus) : undefined;
-  const hrnRequired = isHrnNationality(data.customer.nationality as string | undefined);
+  // The HRN fee follows the nationality, but is NOT marked when the customer's Credit Risk Exemption is Low or No.
+  const risk = data.customer as { creditRisk?: string; creditRiskExemption?: string; creditRiskUpdatedAt?: string };
+  const hrnRequired = isHrnNationality(data.customer.nationality as string | undefined) && hrnFeeApplies(risk.creditRiskExemption);
   const billsInWindow = data.bills.filter((b) => withinBillHistoryWindow(b.billPeriod));
 
   return (
@@ -57,7 +61,7 @@ export function BillingSection({ data }: { data: Customer360Data }) {
           {creditLimit && (
             <MetricCard
               label="Credit limit"
-              value={`${String(creditLimit.creditLimitQar ?? creditLimit.creditLimitQAR ?? '-')} QAR`}
+              value={`${String(creditBreakdownOf(data).overall ?? creditLimit.creditLimitQar ?? creditLimit.creditLimitQAR ?? '-')} QAR`}
               subtext={
                 creditLimit.restrictionApplied
                   ? 'Restriction applied'
@@ -122,6 +126,8 @@ export function BillingSection({ data }: { data: Customer360Data }) {
               ) : undefined
             }
           />
+          <Field label="Credit Risk" value={risk.creditRisk ? `${risk.creditRisk}${risk.creditRiskUpdatedAt ? ` (Big Data, updated ${risk.creditRiskUpdatedAt})` : ''}` : undefined} />
+          <Field label="Credit Risk Exemption" value={risk.creditRiskExemption} />
           <Field
             label="HRN Advance Payment Required"
             value={<Badge variant={hrnRequired ? 'warning' : 'filled-neutral'}>{hrnRequired ? 'Yes' : 'No'}</Badge>}

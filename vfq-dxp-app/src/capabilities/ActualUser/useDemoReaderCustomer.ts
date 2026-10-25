@@ -4,7 +4,7 @@ import { pickDemoReaderCustomer } from './actualUserModel';
 
 /**
  * The demo has no card reader: the simulated one presents some customer's own document. For the primary customer that is the one on screen; for the
- * actual user it must be SOMEONE ELSE who qualifies, so the two never share details. Chosen by rule, not by name: the first customer under 18, other
+ * actual user it must be SOMEONE ELSE who qualifies, so the two never share details. Chosen by rule, not by name: the first customer aged 18 or over, other
  * than the primary, holding an unexpired QID with a real QID number (11-14 digits). Undefined until the data loads, or when nobody qualifies.
  */
 export function useDemoReaderCustomer(primaryCustomerId: string | undefined, asOf: Date = new Date()): string | undefined {

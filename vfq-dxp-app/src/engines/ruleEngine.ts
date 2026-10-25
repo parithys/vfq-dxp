@@ -20,7 +20,7 @@ export type RuleImplementation = (ctx: RuleContext) => { pass: boolean; message?
 // all Explicit/high-confidence, directly evidenced across multiple guided journeys.
 // High-Risk Nationality: which nationalities, the advance payment and the credit limit are configured in hrnConfiguration.ts.
 /** BR-076: the default credit limit on a new account - the HRN category's for a High Risk Nationality customer, the standard one otherwise. */
-export const defaultCreditLimitQar = (hrnFlag: boolean): number => defaultCreditLimit({ hrn: hrnFlag });
+export const defaultCreditLimitQar = (hrnFlag: boolean, nationality?: string): number => defaultCreditLimit({ hrn: hrnFlag, nationality: hrnFlag ? undefined : nationality });
 
 export const isHrnNationality = (nationality: string | undefined): boolean => isHrn(nationality);
 
@@ -290,8 +290,8 @@ const ruleImplementations: Record<string, RuleImplementation> = {
   // a footnote about the limit. The amount and `pass` are unchanged; only the
   // sentence is shorter.
   'BR-076': (ctx) => {
-    const { hrnFlag } = ctx as { hrnFlag: boolean };
-    const amount = defaultCreditLimitQar(hrnFlag);
+    const { hrnFlag, nationality } = ctx as { hrnFlag: boolean; nationality?: string };
+    const amount = defaultCreditLimitQar(hrnFlag, nationality);
     return { pass: true, message: `Default credit limit: QAR ${amount} on a new account.` };
   },
 

@@ -49,6 +49,8 @@ export interface IdUploadResult {
 }
 
 interface UploadValue {
+  /** A scan's captured identity: an upload reads nothing, so it clears it. */
+  captured?: unknown;
   frontScanned?: boolean;
   backScanned?: boolean;
   frontImage?: string;
@@ -68,7 +70,7 @@ interface UploadValue {
  * capture that came from the reader: a first upload replaces it whole.
  */
 export function applyIdUpload<T extends UploadValue>(value: T, { sides, files }: IdUploadResult): T {
-  const base = value.source === 'upload' ? value : { ...value, frontScanned: false, backScanned: false, frontImage: undefined, backImage: undefined, frontFile: undefined, backFile: undefined, combined: undefined };
+  const base = value.source === 'upload' ? value : { ...value, frontScanned: false, backScanned: false, frontImage: undefined, backImage: undefined, frontFile: undefined, backFile: undefined, combined: undefined, captured: undefined };
   const [first, second] = sides === 'pair' ? orderPair(files) : files;
   if (sides === 'pair' && first && second) {
     return { ...base, frontScanned: true, backScanned: true, frontImage: first.image, backImage: second.image, frontFile: first.name, backFile: second.name, combined: false, sidesSet: true, source: 'upload', clear: true };

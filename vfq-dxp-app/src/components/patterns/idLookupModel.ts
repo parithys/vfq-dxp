@@ -1,5 +1,7 @@
 import type { QidImageUploadValue } from '../domain/qidImageUploadModel';
 import type { QidType } from '../domain/QidInput';
+import { isHrn } from '../../engines/hrnConfiguration';
+import { isIdExpired } from '../../engines/eligibilityEngine';
 
 /** A customer record that shares the scanned ID with others - offered to the agent to choose from. */
 export interface DuplicateCandidate {
@@ -39,6 +41,8 @@ export interface MoiResult {
   emailSource?: 'Siebel' | 'NAS' | 'Billing Profile';
   /** No customer record exists for this ID - details come from NAS, not Siebel. */
   isNewCustomer?: boolean;
+  /** Set when a QID known only to the registry resolved to an EXISTING customer (through the Passport linked to it): the order adds the QID to that customer's record. */
+  linkedIdUpdate?: import('./idLinkModel').LinkedIdUpdate;
   /** The agent created this customer: no registry knows the ID, so the identity was typed (see buildNewCustomerIdentity). */
   createdByAgent?: boolean;
   /** A NEW customer's National Address, as the NAS returned it. Hidden: carried with the identity, stored with the order, never displayed or edited. */
@@ -126,6 +130,8 @@ export type IdLookupValue = {
   qidScans?: QidImageUploadValue;
   /** verifyThenFetch only: the expiry read off the scan (DD/MM/YYYY), editable so the agent can correct it after comparing with the card. */
   scannedExpiry?: string;
+  /** verifyThenFetch only: the attribute-level result of comparing what was captured with what MOI returned (kept with the identity evidence). */
+  idReconciliation?: import('./idReconciliation').AttributeMatch[];
   /** The number was typed after the scan budget ran out, not read from a scan: the order needs Store Manager approval. */
   manualEntry?: boolean;
 };
@@ -166,6 +172,26 @@ export function selectScanCandidates<D extends { documentType: string }>({
   if (!ownDocs) return docs.filter((d) => detectable.includes(d.documentType));
   if (chosenType) return ownDocs.filter((d) => d.documentType === chosenType);
   return [...ownDocs].sort((a, b) => Number(b.documentType === 'QID') - Number(a.documentType === 'QID'));
+}
+
+/** A NAS identity record as the demo scan needs it. */
+export interface DemoNasRecord {
+  documentType: string;
+  documentNumber: string;
+  expiryDate?: string;
+  name: string;
+  dob: string;
+  nationality: string;
+}
+
+/**
+ * The person the demo reader returns in the New Customer journey (every ID there is treated as a new customer, so the card is a NAS
+ * identity, never a Siebel customer): the first unexpired NAS record of the given document type whose nationality is HRN. Demo scope,
+ * stated plainly - a real reader returns whatever card is in it. The same record drives the card drawn in the reader, the number the
+ * reader reads and what MOI returns, so the scan reconciles. Undefined when the type has no HRN record (the reader then behaves as before).
+ */
+export function pickHrnDemoNas<R extends DemoNasRecord>(records: readonly R[], documentType: string, now: Date = new Date()): R | undefined {
+  return records.find((r) => r.documentType === documentType && isHrn(r.nationality) && !(r.expiryDate && isIdExpired(r.expiryDate, now)));
 }
 
 /**

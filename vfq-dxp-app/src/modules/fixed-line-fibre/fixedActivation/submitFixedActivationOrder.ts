@@ -1,4 +1,7 @@
 import { currentAgentId } from '../../../stores/authStore';
+import { accountTypeForJourney } from '../../../engines/creditLimit';
+import { saveLinkedIdDocument } from '../../new-connection/saveLinkedIdDocument';
+import { contactIdentityOrderFields } from '../../new-connection/contactIdentityOrderFields';
 import { saveCustomerSalutation } from '../../new-connection/saveCustomerSalutation';
 import { idScanAttachments } from '../../new-connection/idScanAttachments';
 import { COLLECTION_TEAM_ROLE, emailVerification, maskEmail, persistBillingAccount } from '../../../capabilities';
@@ -55,18 +58,24 @@ export async function submitFixedActivationOrder(
   const billingProfileId = await persistBillingAccount(billingAccount, {
     createRecord,
     updateRecord,
-    kind: 'Consumer Fixed Line (GigaHome)',
+    kind: accountTypeForJourney('fixed-line'),
     customerId: eligibility?.customerId,
     idNumber: contact.idNumber,
     contactName: contact.moiResult?.name,
     contactEmail: contact.email,
     contactPhone: contact.moiResult?.phone,
+    // The credit limit rules apply to a fixed-line account as to any other new account: the default for the customer, the agent's choice from the card.
+    creditLimitQar: eligibility?.defaultCreditLimitQar,
+    nationality: eligibility?.nationality,
+    agentId: currentAgentId() ?? undefined,
     addressLine: [address?.zone && `Zone ${address.zone}`, address?.streetNo && `Street ${address.streetNo}`, address?.buildingNo && `Building ${address.buildingNo}`].filter(Boolean).join(', ') || undefined,
   });
 
   const orderId = `ORD-${Date.now().toString().slice(-6)}`;
   // The salutation the agent entered is saved to the customer's profile (shown in Customer 360).
   await saveCustomerSalutation(eligibility?.customerId, contact.salutation, updateRecord);
+  // A QID linked to an existing customer through their Passport is added to that customer's documents (no duplicate customer).
+  await saveLinkedIdDocument(contact.moiResult?.linkedIdUpdate, createRecord);
   await createRecord('orders', {
     orderId,
     orderType: 'New Fixed Line Activation',
@@ -80,6 +89,7 @@ export async function submitFixedActivationOrder(
     idNumber: contact.idNumber,
     customerEmail: contact.email,
     customerSalutation: contact.salutation,
+    ...contactIdentityOrderFields(contact),
     customerWorkEmail: contact.workEmail,
     // A new customer's National Address as the NAS returned it: kept with the order, unchanged; the address the customer gave is `address`.
     nationalAddress: contact.moiResult?.nationalAddress,

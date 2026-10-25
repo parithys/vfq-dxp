@@ -14,7 +14,8 @@ export type BadgeVariant =
   | 'tag-amber'
   | 'tag-green'
   | 'tag-violet'
-  | 'tag-red';
+  | 'tag-red'
+  | 'tag-primary';
 
 import type { ComponentPropsWithRef } from 'react';
 
@@ -69,6 +70,8 @@ const variantClasses: Record<BadgeVariant, string> = {
   'tag-green': 'bg-tone-success text-success border border-transparent',
   'tag-violet': 'bg-tone-info text-[var(--info)] border border-transparent',
   'tag-red': 'bg-tone-accent text-accent border border-transparent',
+  // The Primary marker (primary contact / primary line): solid brand plum with a white label, so it stands apart from every tinted tag.
+  'tag-primary': 'bg-[var(--tag-primary-bg)] text-[var(--tag-primary-fg)] border border-transparent',
 };
 
 // Takes the span's own props and ref, so a Tooltip can wrap it (hover, focus and aria-describedby land on the pill).

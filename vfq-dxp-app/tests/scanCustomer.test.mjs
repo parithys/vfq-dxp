@@ -76,14 +76,14 @@ test('the presented ID decides who is identified; the selected customer only ste
   assert.doesNotMatch(lookup, /opts\.forceCustomerId \?\? asCustomerId/);
   assert.match(lookup, /setOwnerMismatch\(/);
   const elig = fs.readFileSync('src/capabilities/EligibilityGate/EligibilityGateStep.tsx', 'utf8');
-  assert.match(elig, /docs\.find\(\(d\) => d\.documentNumber === idNumber\) \?\? \(asCustomerId/);
+  assert.match(elig, /docs\.find\(\(d\) => d\.documentNumber === idNumber\) \?\?[\s\S]*?\(asCustomerId/);
 });
 test('a journey opened for a customer is never a New Customer journey, whatever its flow', () => {
   const step = fs.readFileSync('src/capabilities/CustomerQualification/step.tsx', 'utf8');
   assert.match(step, /const asNewCustomer = flow === 'new' && !knownCustomer && !launchedFor;/);
   assert.match(step, /const actedForId = knownCustomer \? \(knownCustomerId \?\? launchedFor\) : launchedFor;/);
   const product = fs.readFileSync('src/modules/new-connection/steps/ProductEligibility.tsx', 'utf8');
-  assert.match(product, /asNewCustomer=\{flow === 'new' && !values\[LAUNCH_CUSTOMER_KEY\]\}/);
+  assert.match(product, /asNewCustomer=\{flow === 'new' && !values\[LAUNCH_CUSTOMER_KEY\] && !contact\.moiResult\?\.linkedIdUpdate\}/);
 });
 
 test.after(close);

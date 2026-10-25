@@ -16,6 +16,8 @@ interface UseCheckoutSummaryArgs {
   msisdn: string | undefined;
   numberPriceQar: number | undefined;
   eligibility: EligibilityResult | undefined;
+  /** The credit limit in force for the order's new account (the agent's choice, else the default); when absent the default applies. */
+  creditLimitQar?: number;
   simType: SimTypeValue | undefined;
   onTotalsComputed: (totals: CheckoutTotals) => void;
   onSummaryComputed?: (rows: { label: string; value: string }[]) => void;
@@ -35,6 +37,7 @@ export function useCheckoutSummary({
   msisdn,
   numberPriceQar,
   eligibility,
+  creditLimitQar: creditLimitOverride,
   simType,
   onTotalsComputed,
   onSummaryComputed,
@@ -90,7 +93,7 @@ export function useCheckoutSummary({
   // agent-set value to show - what the customer must be told is the cap, which
   // that rule defines as the credit limit. Stated as a cap, not invented as a
   // figure, because no default bill limit exists in the data for this plan.
-  const creditLimitQar = eligibility?.defaultCreditLimitQar;
+  const creditLimitQar = creditLimitOverride ?? eligibility?.defaultCreditLimitQar;
   // One shared itemisation with the Plan step and the order payload - see
   // engines/postpaidPricing.ts. Derived here rather than restated, because
   // this figure is what the agent reads to the customer and the order's is

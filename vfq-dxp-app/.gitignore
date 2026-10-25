@@ -38,3 +38,9 @@ dist-ssr
 out
 next-env.d.ts
 *.next.log
+
+# Reference material not used by the app, tests, scripts or CI (screenshots and client deliverables)
+/reference/screenshots/
+/reference/journey-screenshots/
+/reference/postpaid-activation-screenshots/
+/reference/deliverables/

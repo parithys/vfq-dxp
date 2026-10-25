@@ -4,14 +4,15 @@ import { Icon } from '../../components/primitives/Icon';
 import { CARD_SELECTABLE } from '../stepStyles';
 import type { GuidedContactValue } from '../../components/patterns/guidedContactModel';
 import { useDemoReaderCustomer } from './useDemoReaderCustomer';
-import { actualUserAgeProblem, isOtherUser, sameId } from './actualUserModel';
+import { actualUserAgeProblem, isOtherUser, sameId, withRecordPhone } from './actualUserModel';
 import type { ActualUserValue } from './actualUserModel';
 
 /**
  * ACTUAL USER - the line's real user, when it is not the customer who owns it. The agent chooses "Same as primary customer" (the default)
  * or "Add actual user"; adding one identifies them the way the primary customer was identified (ID type, scan or upload, MOI, identity
  * details, email, phone) through Customer Identification, so the two never drift apart. For someone who is already a customer, MOI
- * brings their email and phone from the record; what the agent changes is written back to that record when the order is submitted.
+ * brings their email and phone from the record; what the agent changes is written back when the order is submitted (the email to their
+ * customer record, the phone to their existing contact-level record).
  *
  * Journeys mount THIS component (through actualUserStep) and say what their context needs; none identifies the second person itself.
  */
@@ -90,7 +91,7 @@ export function ActualUser({
             verifyThenFetch
             showIptvToggle={false}
             value={identity ?? {}}
-            onChange={(v: GuidedContactValue) => onChange({ ...value, choice: 'other', identity: v })}
+            onChange={(v: GuidedContactValue) => onChange({ ...value, choice: 'other', identity: withRecordPhone(identity, v) })}
           />
           {ageProblem && !samePerson && (
             <p role="alert" className="text-danger text-[length:var(--fs-caption)]">

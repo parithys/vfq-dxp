@@ -6,8 +6,16 @@ import * as mockDataEngine from '../../engines/mockDataEngine';
 import { useActedForCustomer } from './useActedForCustomer';
 import { useEnterToSubmit } from '../../hooks/useEnterToSubmit';
 import type { NationalAddress, NewCustomerMoi } from './idLookupModel';
+import { pickHrnDemoNas, type DemoNasRecord } from './idLookupModel';
 import { MAX_SCAN_ATTEMPTS, LEGACY_MAX_SCAN_ATTEMPTS, SCANNABLE_ID_TYPES, captureModeOf, NEW_CUSTOMER_ID_TYPES, buildNewCustomerPatch, misread, misreadDate, isoToDmy, selectScanCandidates } from './idLookupModel';
 import type { DuplicateCandidate, IdLookupValue } from './idLookupModel';
+import { isIdExpired } from '../../engines/eligibilityEngine';
+import { canViewCustomerSegment } from '../../engines/agentPrivilegeEngine';
+import { usePersonaStore } from '../../stores/personaStore';
+import { resolveExistingCustomer, duplicateCustomerMessage, type LinkedIdUpdate } from './idLinkModel';
+import { moiIdDetailsPatch, MOI_UPDATE_BASIS } from './moiIdRefresh';
+import { useEntityStore } from '../../stores/entityStore';
+import { reconcileIdentity, reconciliationPasses, type AttributeMatch } from './idReconciliation';
 
 export interface IdLookupFailure {
   service: ServiceName;
@@ -42,8 +50,15 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
   const [ownerMismatch, setOwnerMismatch] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
-  const [expiryMismatch, setExpiryMismatch] = useState(false);
+  // The attribute-level result of a reconciliation that FAILED (the identity is not accepted, so it is not on the value): what to show the agent.
+  const [reconciliation, setReconciliation] = useState<AttributeMatch[] | undefined>();
+  // Why a person cannot be taken as a new customer or linked to an existing one (a Passport link that disagrees, a duplicate): shown to the agent.
+  const [linkProblem, setLinkProblem] = useState<string | undefined>();
+  // The ID resolved to a customer in a protected segment (Safwa, Safwa+, Royal) the signed-in role may not see: nothing about them is kept or shown.
+  const [accessRestricted, setAccessRestricted] = useState(false);
   const numberInputRef = useRef<HTMLInputElement>(null);
+  // The customer the reader would present is protected from this role: the simulated scan reads nothing (it would put their QID in the number field).
+  const cardRestrictedRef = useRef(false);
   // The current value, readable from an async continuation that was started
   // under an older one.
   //
@@ -139,16 +154,26 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
   useEffect(() => {
     setContextNoDocument(undefined);
     setContextHeldTypes([]);
+    cardRestrictedRef.current = false;
     if (!cardCustomerId) {
       setContextIdentity(undefined);
       return;
     }
     let cancelled = false;
     void Promise.all([
-      mockDataEngine.list<{ customerId: string; name: string; nationality: string; dob: string }>('customers'),
+      mockDataEngine.list<{ customerId: string; name: string; nationality: string; dob: string; segment?: string }>('customers'),
       mockDataEngine.list<{ customerId: string; documentType: string; documentNumber: string; expiryDate?: string }>('identity-documents'),
     ]).then(([customers, docs]) => {
       const c = customers.find((x) => x.customerId === cardCustomerId);
+      if (cancelled) return;
+      // The reader would draw THIS customer's own card (name, QID, nationality, date of birth): a protected one this role may not see is never drawn - only the restriction.
+      cardRestrictedRef.current = Boolean(c && !canViewCustomerSegment(usePersonaStore.getState().activePersonaId, c.segment));
+      if (cardRestrictedRef.current) {
+        setContextIdentity(undefined);
+        setContextNoDocument(undefined);
+        setAccessRestricted(true);
+        return;
+      }
       const own = docs.filter((d) => d.customerId === cardCustomerId);
       // The card drawn is the one of the type the agent chose; a customer who does not hold that type has no card to read for it.
       const d = own.find((x) => x.documentType === idType);
@@ -171,6 +196,21 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
       cancelled = true;
     };
   }, [cardCustomerId, idType]);
+
+  // New Customer journey (no customer on screen): the card drawn in the reader is the HRN demo person's, so the card's printed name, date of
+  // birth and nationality are the ones MOI will return for the number the reader then reads. Reconciliation compares them.
+  useEffect(() => {
+    if (!asNewCustomer || cardCustomerId) return;
+    let cancelled = false;
+    void mockDataEngine.list<DemoNasRecord>('nas-records').then((nas) => {
+      if (cancelled) return;
+      const p = pickHrnDemoNas(nas, idType);
+      setContextIdentity(p ? { name: p.name, idNo: p.documentNumber, nationality: p.nationality, dob: isoToDmy(p.dob), expiry: p.expiryDate ? isoToDmy(p.expiryDate) : '' } : undefined);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [asNewCustomer, cardCustomerId, idType]);
 
   // ---- Failure handling ------------------------------------------------------
   // A lookup that cannot complete is UNRESOLVED: it never becomes "not found",
@@ -223,7 +263,9 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
     if (attemptsRef.current.number !== requested) attemptsRef.current = { number: requested, n: 0 };
     setLoading(true);
     setNotFound(false);
-    setExpiryMismatch(false);
+    setReconciliation(undefined);
+    setLinkProblem(undefined);
+    setAccessRestricted(false);
     setOwnerMismatch(undefined);
     setDuplicates(null);
     setExpiredNotice(false);
@@ -232,7 +274,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
     try {
       // MOI: the identity document registry.
       const identityDocs = await callService('moi', () =>
-        mockDataEngine.list<{ documentNumber: string; customerId: string; expiryDate?: string }>('identity-documents')
+        mockDataEngine.list<{ documentNumber: string; documentType: string; customerId: string; expiryDate?: string }>('identity-documents')
       );
       if (stale()) return;
       const docMatches = identityDocs.filter((d) => d.documentNumber === requested);
@@ -244,7 +286,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
           ? undefined
           : (
               await callService('nas', () =>
-                mockDataEngine.list<{ documentNumber: string; expiryDate?: string; name: string; firstName?: string; middleName?: string; lastName?: string; dob: string; nationality: string; gender?: string; email?: string; occupation?: string; nationalAddress?: NationalAddress }>(
+                mockDataEngine.list<{ documentNumber: string; linkedPassportNumber?: string; expiryDate?: string; name: string; firstName?: string; middleName?: string; lastName?: string; dob: string; nationality: string; gender?: string; email?: string; occupation?: string; nationalAddress?: NationalAddress }>(
                   'nas-records'
                 )
               )
@@ -256,14 +298,28 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
         setNotFound(true);
         return;
       }
-      // MOI validates the number AND the expiry together. Only when the agent
-      // verified a scanned expiry; the other journeys never supply one.
-      if (verifyThenFetch && match.expiryDate && latest.current.scannedExpiry !== isoToDmy(match.expiryDate)) {
-        setExpiryMismatch(true);
-        return;
-      }
+      // ID reconciliation (verifyThenFetch: a scanned card, or its number and expiry typed after one): every attribute captured from the ID is
+      // compared with what MOI returned and the result kept per attribute. Any disagreement stops the identity being accepted; an attribute
+      // that was not captured (an upload reads only what the agent types) or that MOI cannot answer is recorded and does not block.
+      const settle = (moiResult: NonNullable<IdLookupValue['moiResult']>) => {
+        // What the reader printed is captured only while the reader read it: an upload, and the typed-entry pass after the reader failed, supply
+        // just the number and expiry the agent typed.
+        const card = captureMode === 'manual' || captureMode === 'upload' ? undefined : latest.current.qidScans?.captured;
+        const result = verifyThenFetch
+          ? reconcileIdentity(
+              { idNumber: requested, expiry: latest.current.scannedExpiry, name: card?.name, dob: card?.dob, nationality: card?.nationality },
+              { idNumber: requested, expiry: match.expiryDate, name: moiResult.name, dob: moiResult.dob, nationality: moiResult.nationality }
+            )
+          : undefined;
+        if (result && !reconciliationPasses(result)) {
+          setReconciliation(result);
+          return false;
+        }
+        onChange({ ...latest.current, manualEntry: fallbackUnlocked && !scanComplete, moiResult, idReconciliation: result });
+        return true;
+      };
       const customers = await callService('customer-lookup', () =>
-        mockDataEngine.list<{ customerId: string; name: string; firstName?: string; middleName?: string; lastName?: string; dob: string; nationality: string; email?: string; gender?: string; companyName?: string; occupation?: string; phone?: string; preferredLanguage?: string }>(
+        mockDataEngine.list<{ customerId: string; idType?: string; qid?: string; segment?: string; name: string; firstName?: string; middleName?: string; lastName?: string; dob: string; nationality: string; email?: string; gender?: string; companyName?: string; occupation?: string; phone?: string; preferredLanguage?: string }>(
           'customers'
         )
       );
@@ -281,6 +337,11 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
           if (other) ids.push(other.customerId);
         }
         if (ids.length > 1) {
+          // A protected customer among the candidates: no candidate is listed (a list would name them), the identification is simply refused.
+          if (ids.some((id) => !canViewCustomerSegment(usePersonaStore.getState().activePersonaId, customers.find((c) => c.customerId === id)?.segment))) {
+            setAccessRestricted(true);
+            return;
+          }
           setDuplicates(
             ids
               .map((id) => customers.find((c) => c.customerId === id))
@@ -295,15 +356,56 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
       // A journey bound to a customer (opened from their Customer 360) cannot continue with someone else's document.
       if (explicitCustomerId && !asNewCustomer && !opts.forceCustomerId && !boundHoldsIt && match.customerId) {
         const bound = customers.find((c) => c.customerId === explicitCustomerId);
+        // The customer the journey is bound to is itself protected from this role: the mismatch message would NAME them, so only the restriction is given.
+        if (bound && !canViewCustomerSegment(usePersonaStore.getState().activePersonaId, bound.segment)) {
+          setAccessRestricted(true);
+          return;
+        }
         setOwnerMismatch(bound?.name ?? explicitCustomerId);
         return;
       }
-      const customer = wantedId ? customers.find((c) => c.customerId === wantedId) : undefined;
+      // A QID known only to the registry (NAS): before this person is treated as new, look for the customer they already are - through the
+      // Passport the registry links to the QID, else by name, date of birth and nationality (see idLinkModel). This applies in the New Customer
+      // journey too: a person who is already a customer is never created a second time.
+      let linked: LinkedIdUpdate | undefined;
+      if (nasRecord && !docMatch && !wantedId) {
+        const found = resolveExistingCustomer(
+          { name: nasRecord.name, dob: nasRecord.dob, nationality: nasRecord.nationality, linkedPassportNumber: nasRecord.linkedPassportNumber },
+          identityDocs,
+          customers,
+          requested
+        );
+        if (found.kind === 'conflict') {
+          setLinkProblem(found.message);
+          return;
+        }
+        if (found.kind === 'linked') {
+          // A journey bound to a customer cannot continue with someone else's QID.
+          if (explicitCustomerId && found.customerId !== explicitCustomerId) {
+            const bound = customers.find((c) => c.customerId === explicitCustomerId);
+            if (bound && !canViewCustomerSegment(usePersonaStore.getState().activePersonaId, bound.segment)) {
+              setAccessRestricted(true);
+              return;
+            }
+            setOwnerMismatch(bound?.name ?? explicitCustomerId);
+            return;
+          }
+          linked = { customerId: found.customerId, documentType: 'QID', documentNumber: requested, expiryDate: match.expiryDate, via: found.via, passportNumber: found.passportNumber };
+        }
+      }
+      const customer = wantedId || linked ? customers.find((c) => c.customerId === (wantedId ?? linked?.customerId)) : undefined;
       // The record this ID points at is missing from the lookup: that is a
       // lookup failure, NOT evidence that the person is new.
-      if (wantedId && !customer) throw new ServiceError('customer-lookup', 'partial');
+      if ((wantedId || linked) && !customer) throw new ServiceError('customer-lookup', 'partial');
+      // AUTHORISATION, before anything about this customer is kept or drawn: a protected segment the signed-in role may not see ends the lookup here -
+      // no MOI result, no name, no eligibility. The journey cannot continue (there is no identified customer) and the agent is told why.
+      if (customer && !canViewCustomerSegment(usePersonaStore.getState().activePersonaId, customer.segment)) {
+        setAccessRestricted(true);
+        onChange({ ...latest.current, moiResult: undefined });
+        return;
+      }
 
-      if ((!customer && nasRecord) || (asNewCustomer && (nasRecord || customer))) {
+      if ((!customer && nasRecord) || (asNewCustomer && !linked && (nasRecord || customer))) {
         // NEW customer: identity and email come from NAS, not Siebel. In the New
         // Customer journey (asNewCustomer) an ID that also has a Siebel record is
         // still treated as new - its demographics are used only as the fallback
@@ -313,10 +415,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
         if (!src.name || !src.dob || !src.nationality) throw new ServiceError(nasRecord ? 'nas' : 'customer-lookup', 'partial');
         if (stale()) return;
         attemptsRef.current = { number: requested, n: 0 };
-        onChange({
-          ...latest.current,
-          manualEntry: fallbackUnlocked && !scanComplete,
-          moiResult: {
+        settle({
             name: src.name,
             firstName: src.firstName,
             middleName: src.middleName,
@@ -332,7 +431,6 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
             nationalAddress: nasRecord?.nationalAddress,
             expiryDate: match.expiryDate,
             moiUpdateTime: new Date().toISOString(),
-          },
         });
         return;
       }
@@ -369,10 +467,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
         // document's demographics to another's number.
         if (stale()) return;
         attemptsRef.current = { number: requested, n: 0 };
-        onChange({
-          ...latest.current,
-          manualEntry: fallbackUnlocked && !scanComplete,
-          moiResult: {
+        const accepted = settle({
             customerId: customer.customerId,
             name: customer.name,
             firstName: customer.firstName,
@@ -388,10 +483,18 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
             companyName: customer.companyName,
             companyAccountId,
             occupation: customer.occupation,
+            linkedIdUpdate: linked,
             expiryDate: match.expiryDate,
             moiUpdateTime: new Date().toISOString(),
-          },
         });
+        // MOI's latest answer updates the customer's ID details (ID Type, ID Number) - each change goes to the audit trail with the old value. The
+        // identification itself does not depend on it, so a failed write does not undo an identity MOI confirmed.
+        if (accepted && docMatch && !linked) {
+          const patch = moiIdDetailsPatch(customer, docMatch, identityDocs);
+          if (patch) {
+            await useEntityStore.getState().updateRecord('customers', 'customerId', customer.customerId, patch, { how: MOI_UPDATE_BASIS, by: 'MOI' }).catch(() => undefined);
+          }
+        }
       }
     } catch (err) {
       if (stale()) return; // interrupted by a newer request: not this one's to report
@@ -527,6 +630,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
   // resolves to the same customer. A real integration would return whatever
   // card is physically in the reader.
   const readDocumentFromScan = async (): Promise<{ documentType: QidType; documentNumber: string; expiryDate?: string } | undefined> => {
+    if (cardRestrictedRef.current) return undefined;
     const docs = await mockDataEngine.list<{ documentType: string; documentNumber: string; expiryDate?: string }>(
       'identity-documents'
     );
@@ -550,6 +654,14 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
     const ownDocs = cardCustomerId
       ? docs.filter((d) => (d as { customerId?: string }).customerId === cardCustomerId)
       : undefined;
+    // New Customer journey: the reader returns the HRN demo person (a NAS identity), for the first detectable type that has one.
+    if (asNewCustomer && !cardCustomerId) {
+      const nas = await mockDataEngine.list<DemoNasRecord>('nas-records');
+      for (const t of detectable) {
+        const p = pickHrnDemoNas(nas, t);
+        if (p) return { documentType: p.documentType as QidType, documentNumber: p.documentNumber, expiryDate: p.expiryDate };
+      }
+    }
     const candidates = selectScanCandidates({ docs, ownDocs, chosenType, detectable });
     // Prefers an UNEXPIRED document rather than simply the first match.
     //
@@ -563,7 +675,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
     // fallback accepts once the scan budget is spent.
     const now = Date.now();
     const found =
-      candidates.find((d) => !d.expiryDate || new Date(d.expiryDate).getTime() >= now) ?? candidates[0];
+      candidates.find((d) => !d.expiryDate || !isIdExpired(d.expiryDate, new Date(now))) ?? candidates[0];
     if (!found) return undefined;
     return { documentType: found.documentType as QidType, documentNumber: found.documentNumber, expiryDate: found.expiryDate };
   };
@@ -641,7 +753,19 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
 
   // No registry knows this ID: for the ID types a customer can be created for, and a journey that is not bound to a customer, the agent may create one.
   const canCreateCustomer = notFound && allowNewCustomer && !explicitCustomerId && NEW_CUSTOMER_ID_TYPES.includes(idType);
-  const createNewCustomer = (moi: NewCustomerMoi) => {
+  // Creating a customer the registries do not know: first make sure the typed person is not already a customer (same name, date of birth and
+  // nationality, or the same Passport) - a duplicate is refused, with the existing customer named, rather than created.
+  const createNewCustomer = async (moi: NewCustomerMoi) => {
+    setLinkProblem(undefined);
+    const [docs, customers] = await Promise.all([
+      mockDataEngine.list<{ customerId: string; documentType: string; documentNumber: string; expiryDate?: string }>('identity-documents'),
+      mockDataEngine.list<{ customerId: string; name: string; dob: string; nationality: string }>('customers'),
+    ]);
+    const problem = duplicateCustomerMessage(resolveExistingCustomer({ name: moi.name, dob: moi.dob, nationality: moi.nationality }, docs, customers));
+    if (problem) {
+      setLinkProblem(problem);
+      return;
+    }
     setNotFound(false);
     onChange({ ...latest.current, ...buildNewCustomerPatch(moi) });
   };
@@ -652,8 +776,10 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
     loading,
     notFound,
     setNotFound,
-    expiryMismatch,
-    setExpiryMismatch,
+    accessRestricted,
+    linkProblem,
+    reconciliation,
+    clearReconciliation: () => setReconciliation(undefined),
     numberInputRef,
     latest,
     idType,

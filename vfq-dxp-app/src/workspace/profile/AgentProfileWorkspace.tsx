@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useRestrictedCustomers } from '../../hooks/useRestrictedCustomers';
 import { useAuthStore } from '../../stores/authStore';
 import { useEntityStore } from '../../stores/entityStore';
 import { useNotificationStore } from '../../stores/notificationStore';
@@ -167,7 +168,11 @@ export function AgentProfileWorkspace() {
     pushToast('success', language === 'English' ? 'Language set to English.' : 'تم تعيين اللغة إلى العربية.');
   };
 
-  const exportRecords = exportEntity === 'orders' ? orders : exportEntity === 'trouble-tickets' ? tickets : [];
+  // The export holds ONLY what this role may see: a record of a protected-segment customer the role may not see is left out (and counted), and
+  // nothing is exported until the customers are known.
+  const restricted = useRestrictedCustomers();
+  const exportRows = exportEntity === 'orders' ? orders : exportEntity === 'trouble-tickets' ? tickets : [];
+  const { visible: exportRecords, hiddenCount: exportHidden } = restricted.filter(exportRows as { customerId?: string }[], (r) => r.customerId);
 
   // AEX-02: "export all visible entity records... irrespective of whether
   // they are assigned to the logged-in agent" - every record this agent's
@@ -175,7 +180,7 @@ export function AgentProfileWorkspace() {
   // existing lack of per-agent row filtering on these two entities.
   const exportEntities = () => {
     downloadCsv(`${exportEntity}-export-${new Date().toISOString().slice(0, 10)}.csv`, exportRecords);
-    pushToast('success', `Exported ${exportRecords.length} ${exportEntity === 'orders' ? 'order(s)' : 'ticket(s)'}.`);
+    pushToast('success', `Exported ${exportRecords.length} ${exportEntity === 'orders' ? 'order(s)' : 'ticket(s)'}.${exportHidden > 0 ? ` ${exportHidden} left out: access restricted for your role.` : ''}`);
   };
 
   return (

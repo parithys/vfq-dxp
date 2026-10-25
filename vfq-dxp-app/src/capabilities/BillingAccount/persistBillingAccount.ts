@@ -1,9 +1,12 @@
 import type { EntityKind } from '../../engines/mockDataEngine';
+import type { JourneyAccountType } from '../../engines/creditLimit';
+import { creditLimitAuditRecord, creditLimitOptions, creditSegmentOf } from '../../engines/creditLimit';
+import { isHrn } from '../../engines/hrnConfiguration';
 import { ordinal, profilePatchFromEdit } from '../../components/patterns/billingAccountModel';
 import type { BillingAccountValue } from '../../components/patterns/billingAccountModel';
 
 /** What the customer's billing account is for: decides the account's type. */
-export type BillingAccountKind = 'Consumer Mobile Postpaid' | 'Consumer Fixed Line (GigaHome)';
+export type BillingAccountKind = Extract<JourneyAccountType, 'Consumer Mobile Postpaid' | 'Consumer Fixed Line (GigaHome)'>;
 
 /**
  * Makes the billing account of an order real, and returns the billing profile the order is billed to.
@@ -30,8 +33,12 @@ export async function persistBillingAccount(
     contactPhone?: string;
     /** The address the bill goes to, as a line. */
     addressLine?: string;
-    /** The credit limit set for a new postpaid account. */
+    /** The credit limit set for a new postpaid account: the DEFAULT for the customer (the agent's choice, when allowed, is on `newAccount.creditLimitQar`). */
     creditLimitQar?: number;
+    /** The customer's nationality, which decides the credit-limit options (an agent's choice outside them is ignored). */
+    nationality?: string;
+    /** The agent making the change, for the audit trail. */
+    agentId?: string;
   }
 ): Promise<string | undefined> {
   if (billing?.selectedProfileId) {
@@ -46,6 +53,10 @@ export async function persistBillingAccount(
   if (!fresh) return undefined;
   const stamp = Date.now().toString().slice(-6);
   const accountId = `ACC-${stamp}`;
+  // The credit limit: the agent's choice when it is one of the options for this customer's segment (HRN allows none), else the default.
+  const defaultQar = ctx.creditLimitQar;
+  const chosen = fresh.creditLimitQar !== undefined && creditLimitOptions(ctx.nationality).includes(fresh.creditLimitQar) ? fresh.creditLimitQar : undefined;
+  const limit = chosen ?? defaultQar;
   const billingProfileId = `BILL-${stamp}`;
   await ctx.createRecord('accounts', {
     accountId,
@@ -71,12 +82,35 @@ export async function persistBillingAccount(
     paymentMethod: fresh.cardToken ? 'Card on file' : undefined,
     cardLast4: fresh.cardLast4,
     collectionStatus: 'Good Standing',
-    creditLimitQAR: ctx.creditLimitQar,
+    creditLimitQAR: limit,
     promiseToPayStatus: 'None',
     billingContactName: ctx.contactName,
     billingContactPhone: ctx.contactPhone,
     billingContactEmail: ctx.contactEmail,
     previousOutstandingQAR: 0,
   });
+  // The account's credit limit, with its breakdown (default / agent's choice / Credit Control blank), and the audit-trail row for it.
+  if (limit !== undefined) {
+    const today = new Date().toISOString().slice(0, 10);
+    await ctx.createRecord('credit-limits', {
+      id: `CRL-${stamp}`,
+      accountId,
+      customerId: ctx.customerId,
+      idNumber: ctx.idNumber,
+      customerSegment: creditSegmentOf(ctx.nationality),
+      creditLimitQar: limit,
+      defaultCreditLimitQar: defaultQar,
+      selectedCreditLimitQar: chosen !== undefined && chosen !== defaultQar ? chosen : null,
+      creditControlLimitQar: null,
+      isHrn: isHrn(ctx.nationality),
+      setByAgentId: ctx.agentId,
+      restrictionApplied: false,
+      lastUpdated: today,
+    });
+    await ctx.createRecord(
+      'audit-trail',
+      creditLimitAuditRecord({ recordId: accountId, toQar: limit, by: ctx.agentId ?? 'agent', how: chosen !== undefined && chosen !== defaultQar ? 'Selected on a new account' : 'Default on a new account' })
+    );
+  }
   return billingProfileId;
 }

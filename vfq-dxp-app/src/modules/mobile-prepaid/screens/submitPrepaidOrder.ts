@@ -1,4 +1,7 @@
 import { currentAgentId } from '../../../stores/authStore';
+import { accountTypeForJourney } from '../../../engines/creditLimit';
+import { saveLinkedIdDocument } from '../../new-connection/saveLinkedIdDocument';
+import { contactIdentityOrderFields } from '../../new-connection/contactIdentityOrderFields';
 import { saveCustomerSalutation } from '../../new-connection/saveCustomerSalutation';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { logActivity, newActivityId } from '../../../engines/activityEngine';
@@ -68,16 +71,17 @@ export async function submitPrepaidOrder(
       mockDataEngine.list<AccountRecord>('accounts'),
       mockDataEngine.get<{ activePrepaidLines?: number }>('customers', customerId),
     ]);
-    const existing = accounts.find((a) => a.customerId === customerId && a.accountType === 'Consumer Mobile Prepaid');
+    const existing = accounts.find((a) => a.customerId === customerId && a.accountType === accountTypeForJourney('prepaid'));
     if (existing) {
       accountId = existing.accountId;
       await updateRecord('accounts', 'accountId', accountId, { hrnFlag: Boolean(eligibility?.requiresHrnAdvance) });
     } else {
+      // A prepaid account carries no credit limit: the customer pays in advance (balance), so none of the credit-limit rules applies to it.
       accountId = `ACC-${Date.now().toString().slice(-6)}`;
       await createRecord('accounts', {
         accountId,
         customerId,
-        accountType: 'Consumer Mobile Prepaid',
+        accountType: accountTypeForJourney('prepaid'),
         status: 'Active',
         hrnFlag: Boolean(eligibility?.requiresHrnAdvance),
       });
@@ -101,7 +105,7 @@ export async function submitPrepaidOrder(
   const approvalReason = [
     activeLinesCheck ? (lineDecision ? `Line approval required - ${approvalMessages(lineDecision)}` : `Active prepaid line limit reached - ${activeLinesCheck.message.split('\n')[1] ?? activeLinesCheck.message}`) : '',
     manualIdEntry ? 'Identity manually entered - Store Manager approval required' : '',
-    routedChecks.some((c) => c.id === 'id-type-routing') ? 'ID type cannot be sold directly - routed to Back Office Fulfilment approval workflow' : '',
+    routedChecks.some((c) => c.id === 'id-type-routing') ? 'ID type requires Credit Control approval - routed to Credit Control' : '',
     routedChecks.some((c) => c.id === 'id-validity') ? 'ID expiry date not on file - routed for approval' : '',
   ]
     .filter(Boolean)
@@ -132,10 +136,13 @@ export async function submitPrepaidOrder(
 
   // The salutation the agent entered is saved to the customer's profile (shown in Customer 360).
   await saveCustomerSalutation(eligibility?.customerId, contact?.salutation, updateRecord);
+  // A QID linked to an existing customer through their Passport is added to that customer's documents (no duplicate customer).
+  await saveLinkedIdDocument(contact?.moiResult?.linkedIdUpdate, createRecord);
   await createRecord('orders', {
     orderId,
     customerEmail: contact?.email,
     customerSalutation: contact?.salutation,
+    ...contactIdentityOrderFields(contact),
     customerWorkEmail: contact?.workEmail,
     // A new customer's National Address as the NAS returned it: kept with the order, unchanged; the address the customer gave is `address`.
     nationalAddress: contact?.moiResult?.nationalAddress,
@@ -144,7 +151,7 @@ export async function submitPrepaidOrder(
     createdAt: now(),
     orderSubType: 'Consumer',
     status: pendingApproval ? 'Submitted for Approval' : 'Open',
-    ...(pendingApproval ? { manualIdEntry: manualIdEntry || undefined, approvalReason, approverRole: creditControl ? COLLECTION_TEAM_ROLE : manualIdEntry ? STORE_MANAGER_ROLE : undefined } : {}),
+    ...(pendingApproval ? { manualIdEntry: manualIdEntry || undefined, approvalReason, approverRole: creditControl || routedChecks.some((c) => c.id === 'id-type-routing') ? COLLECTION_TEAM_ROLE : manualIdEntry ? STORE_MANAGER_ROLE : undefined } : {}),
     customerName: contact?.moiResult?.name,
     customerId,
     accountId,

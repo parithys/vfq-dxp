@@ -103,7 +103,9 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
           <CustomerStatusBanner customerId={eligibility?.customerId} />
           <EligibilityOutcomePanel />
           <EligibilityGateStep
-            asNewCustomer={asNewCustomer}
+            // Linked to an existing customer through their Passport: judged as that customer, on the QID presented.
+            asNewCustomer={asNewCustomer && !contact?.moiResult?.linkedIdUpdate}
+            linkedIdDocument={contact?.moiResult?.linkedIdUpdate}
             asCustomerId={flow === 'existing' ? existingCustomerId : actedForId}
             announcePass={false}
             // A customer created here (no registry knows the ID) is judged on what the agent entered.
@@ -158,8 +160,6 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
                 // cleared (company, office ID scan, acceptance) back to Standard, no discount carried.
                 setValue('customerType', { type: 'none', rejected: true });
                 setValue('discountId', undefined);
-                setValue('discountSupportingId', undefined);
-                setValue('discountProofDocument', undefined);
               }}
               derivedCompany={
                 contact.isB2B2C

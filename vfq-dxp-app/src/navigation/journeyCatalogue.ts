@@ -111,7 +111,6 @@ export const PRODUCT_LINES: readonly ProductLine[] = [
           { id: 'mob-add-addon', title: 'Add Add-On', description: 'Add a roaming, data, or IDD add-on', status: 'available', featureKey: 'mobile.add-addon', path: '/mobile/add-addon' },
           { id: 'mob-number-selection', title: 'New Number Selection', description: 'Reserve and assign a preferred number', status: 'partly', featureKey: 'numbers.management-portal', screenId: 'SCR-024' },
           { id: 'mob-mnp-portin', title: 'MNP Port-In', description: 'Port a number from another Qatari operator', status: 'available', featureKey: 'mnp.process-choice', screenId: 'SCR-120' },
-          { id: 'mob-fnp-change', title: 'FNP Number Change', description: 'Change to a number within Vodafone Qatar', status: 'available', featureKey: 'mnp.port-in-wizard', screenId: 'SCR-121' },
           { id: 'mob-number-reservation', title: 'Number Reservation', description: 'Reserve a standard or preferred number', status: 'partly', featureKey: 'numbers.management-portal', screenId: 'SCR-024' },
           { id: 'mob-gold-number', title: 'Special / Gold Number', description: 'Select and assign a premium or gold number', status: 'partly', featureKey: 'numbers.management-portal', screenId: 'SCR-024' },
           { id: 'mob-port-in-status', title: 'Port-In Status', description: 'Track a port-in request: NPAS status, confirmed date, rejection', status: 'available', featureKey: 'mnp.port-in-status', screenId: 'SCR-136' },
@@ -125,8 +124,7 @@ export const PRODUCT_LINES: readonly ProductLine[] = [
         icon: CAT_ICONS.existingService,
         journeys: [
           { id: 'mob-view-service', title: 'View Mobile Service', description: 'View account, usage, and service details', status: 'available', featureKey: 'workspace.customer360-view', path: '/customer-search' },
-          { id: 'mob-sim-replacement', title: 'SIM Replacement', description: 'Replace a lost, damaged, or expired SIM', status: 'partly', featureKey: 'numbers.sim-swap-queue', screenId: 'SCR-196' },
-          { id: 'mob-sim-swap', title: 'SIM Swap', description: 'Transfer a number to a new SIM card', status: 'partly', featureKey: 'numbers.sim-swap-queue', screenId: 'SCR-196' },
+          { id: 'mob-sim-replacement', title: 'SIM Replacement / Swap', description: 'Replace a lost, damaged, or expired SIM, or move the number to a new SIM card', status: 'partly', featureKey: 'numbers.sim-swap-queue', screenId: 'SCR-196' },
           { id: 'mob-esim-activation', title: 'eSIM Activation', description: 'Provision an eSIM for a compatible device', status: 'planned' },
           { id: 'mob-phys-to-esim', title: 'Physical SIM to eSIM', description: 'Convert a physical SIM to an eSIM profile', status: 'planned' },
           { id: 'mob-esim-to-phys', title: 'eSIM to Physical SIM', description: 'Revert an eSIM to a physical SIM card', status: 'planned' },
@@ -178,6 +176,7 @@ export const PRODUCT_LINES: readonly ProductLine[] = [
         icon: CAT_ICONS.plans,
         journeys: [
           { id: 'fib-fwa-5g-service', title: 'FWA / 5G Service', description: 'Manage FWA and 5G home services', status: 'available', featureKey: 'fwa.serial-number-check', screenId: 'SCR-093' },
+          { id: 'fib-fnp-change', title: 'FNP Number Change', description: 'Change to a number within Vodafone Qatar (fibre-to-fibre number portability)', status: 'available', featureKey: 'mnp.port-in-wizard', screenId: 'SCR-121' },
           { id: 'fib-change-plan', title: 'Change Plan', description: 'Move a customer to a different plan tier', status: 'planned' },
           { id: 'fib-upgrade', title: 'Upgrade Service', description: 'Upgrade speed tier or service type', status: 'planned' },
           { id: 'fib-coverage-check', title: 'Coverage Check', description: 'Check fibre or FWA availability at an address', status: 'partly', featureKey: 'fixedline.new-fixed-line-wizard', screenId: 'SCR-043' },

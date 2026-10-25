@@ -4,6 +4,9 @@ import { searchCustomers, toActiveCustomerSummary, type CustomerSearchResult } f
 import { searchBusinessAccounts, type BusinessAccount } from '../../engines/businessAccountEngine';
 import { useCustomerContext } from '../../stores/customerContextStore';
 import { Badge } from '../../components/primitives/Badge';
+import { RestrictedCustomerNotice } from '../../components/patterns/RestrictedCustomerNotice';
+import { canViewCustomerSegment } from '../../engines/agentPrivilegeEngine';
+import { usePersonaStore } from '../../stores/personaStore';
 
 /** Shortest text a customer search will run on. Shared by the Customer Search page and the Dashboard search. */
 export const MIN_QUERY_LENGTH = 3;
@@ -107,6 +110,7 @@ export function CustomerSearchResults({
 }) {
   const navigate = useNavigate();
   const setActiveCustomer = useCustomerContext((s) => s.setActiveCustomer);
+  const personaId = usePersonaStore((s) => s.activePersonaId);
 
   const openCustomer = (result: CustomerSearchResult) => {
     setActiveCustomer(toActiveCustomerSummary(result.customer));
@@ -152,7 +156,12 @@ export function CustomerSearchResults({
             </button>
           ))}
         {!searching &&
-          results.map(({ customer, matchedOn, matchedDocumentNumber }) => (
+          results.map(({ customer, matchedOn, matchedDocumentNumber }) =>
+            // A customer in a protected segment the signed-in role may not see: nothing about them is drawn - no name, ID, number or segment - and
+            // the row cannot be opened. Decided here, on the same render that would have drawn the row, so it is never shown first.
+            !canViewCustomerSegment(personaId, customer.segment) ? (
+              <RestrictedCustomerNotice key={customer.customerId} compact />
+            ) : (
             <button type="button"
               key={customer.customerId}
               onClick={() => openCustomer({ customer, matchedOn })}
@@ -178,7 +187,8 @@ export function CustomerSearchResults({
                 ))}
               </div>
             </button>
-          ))}
+            )
+          )}
       </div>
   );
 }

@@ -1,4 +1,7 @@
 import { currentAgentId } from '../../../stores/authStore';
+import { accountTypeForJourney } from '../../../engines/creditLimit';
+import { saveLinkedIdDocument } from '../../new-connection/saveLinkedIdDocument';
+import { contactIdentityOrderFields } from '../../new-connection/contactIdentityOrderFields';
 import { saveCustomerSalutation } from '../../new-connection/saveCustomerSalutation';
 import { hrnAdvanceQar } from '../../../engines/hrnConfiguration';
 import { usePersonaStore } from '../../../stores/personaStore';
@@ -60,18 +63,22 @@ export async function submitPreToPostOrder(
   const billingProfileId = await persistBillingAccount(values.billingAccount as BillingAccountValue | undefined, {
     createRecord,
     updateRecord,
-    kind: 'Consumer Mobile Postpaid',
+    kind: accountTypeForJourney('postpaid'),
     customerId: eligibility?.customerId,
     idNumber: contact.idNumber,
     contactName: contact.moiResult?.name,
     contactEmail: contact.email,
     contactPhone: contact.moiResult?.phone,
     creditLimitQar: eligibility?.defaultCreditLimitQar,
+    nationality: eligibility?.nationality,
+    agentId: currentAgentId() ?? undefined,
   });
 
   const orderId = `ORD-${Date.now().toString().slice(-6)}`;
   // The salutation the agent entered is saved to the customer's profile (shown in Customer 360).
   await saveCustomerSalutation(eligibility?.customerId, contact.salutation, updateRecord);
+  // A QID linked to an existing customer through their Passport is added to that customer's documents (no duplicate customer).
+  await saveLinkedIdDocument(contact.moiResult?.linkedIdUpdate, createRecord);
   await createRecord('orders', {
     orderId,
     orderType: 'Plan Change',
@@ -85,6 +92,7 @@ export async function submitPreToPostOrder(
     idNumber: contact.idNumber,
     customerEmail: contact.email,
     customerSalutation: contact.salutation,
+    ...contactIdentityOrderFields(contact),
     customerWorkEmail: contact.workEmail,
     // A new customer's National Address as the NAS returned it: kept with the order, unchanged; the address the customer gave is `address`.
     nationalAddress: contact.moiResult?.nationalAddress,

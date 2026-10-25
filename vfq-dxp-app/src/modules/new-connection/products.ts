@@ -83,7 +83,6 @@ export const PRODUCT_OWNED_KEYS = [
   'installation', 'devices', 'appointment',
   'donorDetails', 'donorAttachment', 'comments',
   'checkoutTotals', 'cafSummary', 'legalFacts', 'caf', 'payment',
-  'discountSupportingId', 'discountProofDocument',
   'homeProduct',
 ] as const;
 

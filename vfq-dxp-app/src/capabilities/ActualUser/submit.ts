@@ -24,10 +24,26 @@ export function actualUserOrderFields(v: ActualUserValue | undefined): Record<st
   };
 }
 
-/** An actual user who is already a customer keeps the email the agent confirmed or changed on their own record. Returns whether anything was written. */
-export async function saveActualUserContact(v: ActualUserValue | undefined, updateRecord: UpdateRecord | undefined): Promise<boolean> {
+type ListContacts = () => Promise<{ contactRecordId: string; customerId: string }[]>;
+
+/**
+ * An actual user who is already a customer keeps the details confirmed here: the email on their customer record, the phone on their existing
+ * contact-level record (matched by customerId; one is never created). Returns whether anything was written.
+ */
+export async function saveActualUserContact(v: ActualUserValue | undefined, updateRecord: UpdateRecord | undefined, listContacts?: ListContacts): Promise<boolean> {
   const update = contactUpdateFor(v);
   if (!update || !updateRecord) return false;
-  await updateRecord('customers', 'customerId', update.customerId, update.patch);
-  return true;
+  let wrote = false;
+  if (Object.keys(update.patch).length) {
+    await updateRecord('customers', 'customerId', update.customerId, update.patch);
+    wrote = true;
+  }
+  if (update.contactPatch) {
+    const record = (await listContacts?.())?.find((c) => c.customerId === update.customerId);
+    if (record) {
+      await updateRecord('customer-contacts', 'contactRecordId', record.contactRecordId, update.contactPatch);
+      wrote = true;
+    }
+  }
+  return wrote;
 }

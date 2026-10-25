@@ -68,7 +68,7 @@ test('service actions: a fibre line gets the Fibre & Home journeys only, and FWA
 test('service actions: a role without the grant does not get the journey', () => {
   const noMnpOrSim = (k) => k !== 'numbers.sim-swap-queue';
   const ids = titles(base, noMnpOrSim);
-  assert.ok(!ids.includes('mob-sim-swap') && !ids.includes('mob-sim-replacement'));
+  assert.ok(!ids.includes('mob-sim-replacement'));
   assert.ok(ids.includes('mob-view-service'));
 });
 
@@ -78,4 +78,23 @@ test('service actions: a planned journey that applies is listed but not open', (
   assert.equal(suspend.open, false);
   const view = groups.flatMap((g) => g.actions).find((a) => a.journey.id === 'mob-view-service');
   assert.equal(view.open, true);
+});
+
+test('service actions: Gold Number is not a line action, SIM Replacement/Swap is one entry, FNP is fibre-only', () => {
+  const mobile = titles(base);
+  assert.ok(!mobile.includes('mob-gold-number'), 'assigning a number is not an action on this line');
+  assert.ok(!mobile.includes('mob-fnp-change') && !mobile.includes('fib-fnp-change'), 'FNP is not offered on a mobile line');
+  assert.ok(mobile.includes('mob-sim-replacement') && !mobile.includes('mob-sim-swap'));
+  const home = { ...base, kind: 'home', category: 'GigaHome Fibre' };
+  assert.ok(titles(home).includes('fib-fnp-change'));
+  assert.ok(!titles({ ...home, status: 'Suspended' }).includes('fib-fnp-change'));
+});
+
+test('service actions: every service-level journey has its own icon, none shared within a product line', async () => {
+  const icons = await load('/src/navigation/journeyIcons.ts');
+  for (const id of actions.SERVICE_ACTION_IDS) assert.ok(icons.JOURNEY_ICON_IDS.includes(id), `${id} has no icon`);
+  for (const prefix of ['mob-', 'fib-']) {
+    const paths = actions.SERVICE_ACTION_IDS.filter((id) => id.startsWith(prefix)).map((id) => icons.journeyIcon(id, ''));
+    assert.equal(new Set(paths).size, paths.length, `${prefix} journeys share an icon`);
+  }
 });

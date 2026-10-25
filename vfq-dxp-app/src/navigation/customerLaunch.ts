@@ -90,9 +90,9 @@ export function launchJourney(
       state: launch.serviceRef && launch.serviceTab ? { tab: launch.serviceTab, serviceRef: launch.serviceRef } : {},
     };
   }
-  // SIM Swap / Replacement: the request is raised from Global Search by MSISDN (the card itself opens the swap queue),
+  // SIM Replacement / Swap: the request is raised from Global Search by MSISDN (the card itself opens the swap queue),
   // so with a line known it opens that search with the number already entered.
-  if ((journey.id === 'mob-sim-swap' || journey.id === 'mob-sim-replacement') && launch.msisdn) {
+  if (journey.id === 'mob-sim-replacement' && launch.msisdn) {
     const search = pathOfScreen('SCR-195');
     if (search) return { to: `${search}?msisdn=${encodeURIComponent(launch.msisdn)}`, state: { startFresh: true, launch } };
   }

@@ -4,12 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/primitives/Button';
 import { Drawer } from '../../components/primitives/Drawer';
 import { Icon } from '../../components/primitives/Icon';
+import { IconTile } from './sections/C360Kit';
 import type { CustomerService } from '../../engines/customerServicesEngine';
 import { resolveNavFor } from '../../engines/navigationEngine';
 import type { NavItem } from '../../navigation/navManifest';
 import { canUseFeature } from '../../engines/personaEngine';
 import { getAllRoutes } from '../../engines/configEngine';
 import { resolveJourneyTarget } from '../../navigation/journeyTarget';
+import { journeyIcon } from '../../navigation/journeyIcons';
 import { serviceActionsFor, type ServiceFacts } from '../../navigation/serviceActions';
 import { reachableCategories, type Journey } from '../../navigation/journeyCatalogue';
 import { usePersonaStore } from '../../stores/personaStore';
@@ -161,7 +163,7 @@ function MenuPanel({
       aria-label={label}
       onKeyDown={onKeyDown}
       style={{ top: pos?.top ?? 0, left: pos?.left ?? 0, visibility: pos ? 'visible' : 'hidden' }}
-      className={`fixed z-[var(--z-popover)] w-60 card shadow-raised py-1 text-left ${className}`}
+      className={`fixed z-[var(--z-popover)] w-72 card shadow-raised py-1 text-left ${className}`}
     >
       {groups.map(({ key, label: groupLabel, children }, i) => (
         <div key={key} className={i > 0 ? 'border-t border-border-soft mt-1 pt-1' : ''}>
@@ -174,11 +176,13 @@ function MenuPanel({
               aria-disabled={child.disabled || undefined}
               title={child.disabled ? child.hint : undefined}
               onClick={() => !child.disabled && onPick(child)}
-              className={`w-full flex items-center gap-2.5 px-4 h-9 text-left text-[length:var(--fs-body)] focus:outline-none focus-visible:bg-surface focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--focus-outline)] ${
+              className={`w-full flex items-center gap-2.5 px-4 py-1.5 min-h-11 text-left text-[length:var(--fs-body)] focus:outline-none focus-visible:bg-surface focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--focus-outline)] ${
                 child.disabled ? 'text-muted cursor-default' : 'text-fg hover:bg-surface'
               }`}
             >
-              <Icon path={child.icon} className="w-4 h-4 shrink-0 text-fg-2" />
+              <span className={child.disabled ? 'opacity-50' : ''}>
+                <IconTile icon={child.icon} size="sm" />
+              </span>
               <span className="truncate">{child.label}</span>
               {child.disabled && child.hint && <span className="ml-auto shrink-0 text-[length:var(--fs-caption)]">{child.hint}</span>}
             </button>
@@ -317,7 +321,7 @@ export function ServiceActionsMenu({
                 }}
                 className="w-full flex items-start gap-3 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 text-left transition-colors hover:border-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)] focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
               >
-                <Icon path={NEW_CONNECTION_ICON} className="w-5 h-5 shrink-0 mt-0.5 text-fg-2" />
+                <IconTile icon={NEW_CONNECTION_ICON} />
                 <span className="min-w-0 flex-1">
                   <span className="block font-medium text-[length:var(--fs-body)] text-fg">Start a new connection</span>
                   <span className="block text-fg-2 text-[length:var(--fs-caption)]">New mobile or home connection, or add a line, for this customer</span>
@@ -339,7 +343,9 @@ export function ServiceActionsMenu({
                         onClick={() => run(journey)}
                         className="w-full flex items-start gap-3 rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg p-4 text-left transition-colors hover:border-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)] disabled:cursor-default disabled:border-dashed disabled:hover:border-[var(--field-card-border)] disabled:hover:bg-bg focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
                       >
-                        <Icon path={category.icon} className={`w-5 h-5 shrink-0 mt-0.5 ${reachable ? 'text-fg-2' : 'text-muted'}`} />
+                        <span className={reachable ? '' : 'opacity-50'}>
+                          <IconTile icon={journeyIcon(journey.id, category.icon)} />
+                        </span>
                         <span className="min-w-0 flex-1">
                           <span className={`block font-medium text-[length:var(--fs-body)] ${reachable ? 'text-fg' : 'text-fg-2'}`}>{journey.title}</span>
                           <span className="block text-fg-2 text-[length:var(--fs-caption)]">{journey.description}</span>

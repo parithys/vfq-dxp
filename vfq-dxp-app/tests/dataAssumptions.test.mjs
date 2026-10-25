@@ -101,7 +101,7 @@ test('a balance counts issued unsettled invoices only: not a hot bill, a simulat
 test('ticket statuses: a ticket is open unless Solved, Completed, Closed or Cancelled - over every ticket in the data', () => {
   const tickets = rows('trouble-tickets');
   const open = tickets.filter((t) => !tone.isClosedTicket(t.status));
-  assert.deepEqual(open.map((t) => t.status).sort(), ['Assigned', 'Assigned', 'Escalate', 'Not Solved', 'Not Solved']);
+  assert.deepEqual(open.map((t) => t.status).sort(), ['Assigned', 'Assigned', 'Escalate', 'Not Solved', 'Not Solved', 'Not Solved']); // incl. TT-40101, the protected-segment demo ticket
   assert.equal(tickets.length - open.length, 2);
 });
 

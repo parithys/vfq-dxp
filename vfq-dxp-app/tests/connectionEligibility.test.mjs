@@ -117,3 +117,54 @@ test('every submit that creates an activation order keeps the decision and route
     assert.match(src, /needsCreditControl\(/, f);
   }
 });
+
+// ---- one result for the ID type's approval: Credit Control ----------------------------------------------------------------------
+const passportChecks = async (idType, extraDecision = {}) => {
+  const lineDecision = await adapter.evaluateConnection({ customerId: undefined, nationality: 'Egyptian', idType, dob: '1990-01-01', requestedType: 'MOBILE_POSTPAID', now: NOW, ...extraDecision });
+  return {
+    lineDecision,
+    checks: checksModel.evaluateEligibilityChecks(
+      {
+        customer: { customerId: 'C1', idType, dob: '1990-01-01', blacklisted: false },
+        doc: { documentType: idType, expiryDate: '2030-01-01' },
+        deals: [], outstandingQar: 0, lineCapReached: lineDecision.outcome !== 'ALLOW', activeLinesDetail: '0/5 postpaid mobile lines used.', lineDecision,
+      },
+      NOW
+    ),
+  };
+};
+
+test('a passport on a postpaid line shows ONE approval result, Credit Control; the BAU passport approval is not repeated', async () => {
+  const { lineDecision, checks } = await passportChecks('Passport');
+  assert.deepEqual(types(lineDecision), ['BAU'], 'the rule engine still derives the passport BAU approval');
+  const routed = checks.filter((c) => c.outcome === 'approval-routing');
+  assert.deepEqual(routed.map((c) => c.id), ['id-type-routing'], 'exactly one routed result');
+  assert.equal(routed[0].label, 'Credit Control Approval Required');
+  assert.equal(routed[0].message, 'The selected ID type requires Credit Control approval. You may continue with the journey; the order will be automatically routed to Credit Control for approval upon submission.');
+  assert.equal(checks.find((c) => c.id === 'active-lines').outcome, 'pass');
+});
+
+test('another approval on the same line still shows: a passport 4th line adds a line-ordinal Credit Control approval (PP-02), which is not dropped', async () => {
+  const { lineDecision, checks } = await passportChecks('Passport', { customerId: 'CUST-3013', nationality: 'Egyptian' });
+  assert.ok(types(lineDecision).includes('CREDIT_CONTROL'));
+  const lines = checks.find((c) => c.id === 'active-lines');
+  assert.equal(lines.outcome, 'approval-routing');
+  assert.ok(!lines.approvalRuleIds.includes('PB-01'), 'the passport BAU is reported once, by the ID type result');
+  assert.deepEqual(lines.approvalRuleIds, ['PP-02'], 'only the line-ordinal Credit Control rule remains');
+});
+
+test('a QID is unaffected: no ID type result and no extra approval', async () => {
+  const { checks } = await passportChecks('QID');
+  assert.equal(checks.find((c) => c.id === 'id-type-routing').outcome, 'pass');
+  assert.equal(checks.find((c) => c.id === 'id-type-routing').label, 'ID Type');
+  assert.ok(!checks.some((c) => c.outcome === 'approval-routing'));
+});
+
+test('an order routed for its ID type goes to Credit Control, in New Connection and Prepaid', () => {
+  for (const f of ['src/modules/new-connection/submitNewConnectionOrder.ts', 'src/modules/mobile-prepaid/screens/submitPrepaidOrder.ts']) {
+    const src = fs.readFileSync(f, 'utf8');
+    assert.match(src, /ID type requires Credit Control approval - routed to Credit Control/, f);
+    assert.ok(!/ID type cannot be sold directly/.test(src), `${f} no longer words it as Back Office Fulfilment`);
+  }
+  assert.match(fs.readFileSync('src/modules/new-connection/submitNewConnectionOrder.ts', 'utf8'), /idTypeRouting \? COLLECTION_TEAM_ROLE/);
+});

@@ -99,6 +99,7 @@ export default defineConfig(({ command }) => {
     server: {
       port,
       strictPort: true,
+      allowedHosts: ['.devtunnels.ms'],
       // Make's public proxy duplicates WebSocket Upgrade response headers.
       // Disable its unusable socket; the preview client shim above preserves
       // the runtime exports needed by transformed modules.

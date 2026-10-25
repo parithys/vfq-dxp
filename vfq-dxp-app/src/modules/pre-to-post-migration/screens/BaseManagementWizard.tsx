@@ -1,4 +1,5 @@
 import { CUSTOMER_IDENTIFICATION_LABEL } from '../../../data/stepLabels';
+import { defaultCreditLimitFor } from '../../../engines/creditLimit';
 import { useNavigate } from 'react-router-dom';
 import * as sums from '../../../components/patterns/wizard/commonSummaries';
 import { attachSummaries } from '../../../components/patterns/wizard/stepSummary';
@@ -121,7 +122,8 @@ export function BaseManagementWizard() {
             msisdn: offer.serviceIdentifier,
             productId: offer.promotionId,
             billLimit: values.billLimit,
-            creditLimit: 1000,
+            // The credit limit the rules give this customer (HRN 50, Qatari 4,000, Expat 1,000), not a fixed figure.
+            creditLimit: defaultCreditLimitFor(qid.moiResult?.nationality),
             channel: values.channel ?? 'Appointment',
             comments: values.comments,
             status: 'Processing',

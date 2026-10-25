@@ -1,19 +1,20 @@
 import { useState } from 'react';
 import { Drawer } from '../../capabilities';
-import { Input } from '../../components/primitives/Input';
 import { ChoiceCards } from '../../components/primitives/ChoiceCards';
+import { Select } from '../../components/primitives/Select';
 import { Button } from '../../components/primitives/Button';
 import { useEntityStore } from '../../stores/entityStore';
 import { useProfileChangeTicket } from '../../engines/profileChangeTicket';
 import { useSubmit } from '../../hooks/useSubmit';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { currentAgentId } from '../../stores/authStore';
-import { defaultCreditLimitForSegment } from '../../engines/hrnConfiguration';
+import { creditLimitPolicy, defaultCreditLimitFor } from '../../engines/creditLimit';
+import { applyAgentCreditLimitChange, CREDIT_LIMIT_CHANGE_ORDER_TYPE } from './creditLimitChange';
 import { COLLECTION_TEAM_ROLE } from '../../capabilities/CustomerType/customerTypeModel';
-import { CREDIT_LIMIT_CHANGE_ORDER_TYPE } from './creditLimitChange';
+import { Input } from '../../components/primitives/Input';
+import * as mockDataEngine from '../../engines/mockDataEngine';
 import type { CustomerRecord } from '../../engines/customer360Engine';
 import { EDITABLE_ACCOUNT_STATUSES, diffAccountEdits } from './accountEditModel';
-import { ALL_SEGMENTS, SEGMENT_GROUPS } from '../../data/customerSegments';
 
 // Icon tiles of the choice cards (24px grid paths).
 const STATUS_ICON: Record<string, string> = {
@@ -23,11 +24,12 @@ const STATUS_ICON: Record<string, string> = {
 };
 // An account status reads at a glance: Active green, Suspended amber, Closed grey.
 const STATUS_TONE: Record<string, 'success' | 'warn' | 'danger' | 'neutral'> = { Active: 'success', Suspended: 'warn', Closed: 'neutral' };
-const SEGMENT_ICON = 'M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z';
 
 /**
- * Edit Account Details (Customer 360 > Account Information): only the account details an agent may change - Credit Limit, Account Status and
- * Customer Segment. Everything else on the account stays read-only. The caller has already verified the customer (the verification drawer).
+ * Edit Account Details (Customer 360 > Account Information): Credit Limit and Account Status. The Account Type and the Customer Segment of an
+ * existing account are shown but cannot be changed. The credit limit is chosen from the values that apply to the customer - and not at all for a
+ * Safwa / Safwa+ / Royal customer, an HRN customer, or a limit the Credit Control Team set. Every change is written to the audit trail. The caller has
+ * already verified the customer (the verification drawer).
  */
 export function AccountEditDrawer({
   open,
@@ -41,61 +43,97 @@ export function AccountEditDrawer({
   open: boolean;
   onClose: () => void;
   customer: CustomerRecord;
-  account: { accountId: string; status?: string } | undefined;
+  account: { accountId: string; status?: string; accountType?: string } | undefined;
   /** The credit-limit record on file for the customer, when there is one. */
-  creditLimit: { id?: string; creditLimitQar?: number } | undefined;
-  onSaved: (patch: { segment?: string; accountStatus?: string; creditLimitQar?: number }) => void;
+  creditLimit: { id?: string; creditLimitQar?: number; creditControlLimitQar?: number | null } | undefined;
+  onSaved: (patch: { accountStatus?: string; creditLimitQar?: number; selectedCreditLimitQar?: number | null }) => void;
   onTicketCreated: (ticket: Record<string, unknown>) => void;
 }) {
   const updateRecord = useEntityStore((s) => s.updateRecord);
   const createRecord = useEntityStore((s) => s.createRecord);
   const createChangeTicket = useProfileChangeTicket();
-  // The limit in force: the one on file, else the default for the customer's segment.
-  const effectiveCurrent = creditLimit?.creditLimitQar ?? defaultCreditLimitForSegment(customer.segment);
+  const nationality = (customer as { nationality?: string }).nationality;
+  const policy = creditLimitPolicy({ segment: customer.segment, nationality, creditControlLimitQar: creditLimit?.creditControlLimitQar });
+  // The limit in force: the one on file, else the default for the customer.
+  const effectiveCurrent = creditLimit?.creditLimitQar ?? defaultCreditLimitFor(nationality);
   const pushToast = useNotificationStore((s) => s.pushToast);
   const [limit, setLimit] = useState(String(effectiveCurrent));
   const [status, setStatus] = useState(account?.status ?? '');
-  const [segment, setSegment] = useState(customer.segment);
   const [error, setError] = useState<string | undefined>();
+  // A limit the agent asks the Credit Control Team to set (outside the options, or over one they set): an approval order, not a change.
+  const [request, setRequest] = useState('');
+  const [requestError, setRequestError] = useState<string | undefined>();
+  const canRequest = policy.lock !== 'protected-segment' && policy.lock !== 'hrn';
+  // The limit on file may not be one of today's options (an older record): it is still shown, as the current one.
+  const optionValues = [...new Set([...policy.options, effectiveCurrent])].sort((a, b) => a - b);
 
   const { run: save, pending: saving } = useSubmit(async () => {
     const { changed, edits, error: problem } = diffAccountEdits(
       { creditLimitQar: effectiveCurrent, accountStatus: account?.status, segment: customer.segment },
-      { creditLimit: limit, accountStatus: status, segment }
+      { creditLimit: limit, accountStatus: status, segment: customer.segment }
     );
     if (problem) {
       setError(problem);
       return;
     }
-    if (edits.segment) await updateRecord('customers', 'customerId', customer.customerId, { segment: edits.segment });
+    // The Credit Control request is checked BEFORE anything is saved, so a bad number never leaves the other changes half-applied.
+    const requested = request.trim();
+    let requestedQar: number | undefined;
+    if (requested !== '') {
+      const n = Number(requested);
+      if (!canRequest || !Number.isInteger(n) || n < 0) {
+        setRequestError('Enter the limit to request as a whole number of QAR, zero or more.');
+        return;
+      }
+      requestedQar = n;
+    }
     if (edits.accountStatus && account) await updateRecord('accounts', 'accountId', account.accountId, { status: edits.accountStatus });
-    // The credit limit is not changed here: it is requested, and Credit Control approves it (the order's approval applies it).
-    let requestId: string | undefined;
+    // The credit limit is applied by the policy: an agent may choose it only when it is theirs to change, from the values offered, and it is audited.
+    let savedLimit: number | undefined;
     if (edits.creditLimitQar !== undefined) {
-      requestId = `ORD-${Date.now().toString().slice(-6)}`;
-      await createRecord('orders', {
-        orderId: requestId,
-        orderType: CREDIT_LIMIT_CHANGE_ORDER_TYPE,
-        orderSubType: 'Credit Control',
-        status: 'Submitted for Approval',
-        approverRole: COLLECTION_TEAM_ROLE,
-        createdAt: new Date().toISOString(),
-        createdBy: currentAgentId(),
-        customerId: customer.customerId,
-        customerName: customer.name,
-        accountId: account?.accountId,
-        currentCreditLimitQar: effectiveCurrent,
-        requestedCreditLimitQar: edits.creditLimitQar,
-        approvalReason: `Credit limit change requested: QAR ${effectiveCurrent} to QAR ${edits.creditLimitQar}. Needs Credit Control approval.`,
-      });
-      pushToast('success', `Credit limit change requested (${requestId}) - it takes effect once ${COLLECTION_TEAM_ROLE} approves it.`);
+      const result = await applyAgentCreditLimitChange(
+        { customer: { customerId: customer.customerId, segment: customer.segment, nationality }, record: creditLimit, accountId: account?.accountId, toQar: edits.creditLimitQar, agentId: currentAgentId() ?? 'agent' },
+        {
+          list: (k) => mockDataEngine.list(k) as never,
+          updateRecord: updateRecord as never,
+          createRecord: createRecord as never,
+        }
+      );
+      if (!result.ok) {
+        setError(result.message);
+        return;
+      }
+      savedLimit = edits.creditLimitQar;
+      pushToast('success', `Credit limit changed to QAR ${savedLimit}.`);
+    }
+    // A Credit Control request: an order Credit Control approves; approving it sets THEIR limit (applyCreditLimitChange), which an agent cannot then change.
+    if (requestedQar !== undefined) {
+      const n = requestedQar;
+      if (n !== effectiveCurrent) {
+        const requestId = `ORD-${Date.now().toString().slice(-6)}`;
+        await createRecord('orders', {
+          orderId: requestId,
+          orderType: CREDIT_LIMIT_CHANGE_ORDER_TYPE,
+          orderSubType: 'Credit Control',
+          status: 'Submitted for Approval',
+          approverRole: COLLECTION_TEAM_ROLE,
+          createdAt: new Date().toISOString(),
+          createdBy: currentAgentId(),
+          customerId: customer.customerId,
+          customerName: customer.name,
+          accountId: account?.accountId,
+          currentCreditLimitQar: effectiveCurrent,
+          requestedCreditLimitQar: n,
+          approvalReason: `Credit limit change requested: QAR ${effectiveCurrent} to QAR ${n}. Needs Credit Control approval.`,
+        });
+        pushToast('success', `Credit limit request sent (${requestId}) - it takes effect once ${COLLECTION_TEAM_ROLE} approves it.`);
+      }
     }
     if (changed.length > 0) {
       const { record } = await createChangeTicket(customer.customerId, 'Account', changed);
       onTicketCreated(record);
     }
-    // The limit shown stays as it is until the change is approved.
-    onSaved({ segment: edits.segment, accountStatus: edits.accountStatus });
+    onSaved({ accountStatus: edits.accountStatus, creditLimitQar: savedLimit, selectedCreditLimitQar: savedLimit === undefined ? undefined : savedLimit === policy.defaultQar ? null : savedLimit });
     onClose();
   }, 'Could not save the account details. Please try again.');
 
@@ -116,42 +154,49 @@ export function AccountEditDrawer({
       }
     >
       <div className="space-y-4">
-        <Input
+        <dl className="divide-y divide-border-soft text-[length:var(--fs-body)]">
+          <div className="flex items-baseline justify-between gap-4 py-1.5">
+            <dt className="text-fg-2">Account Type</dt>
+            <dd className="text-fg font-medium">{account?.accountType ?? '-'}</dd>
+          </div>
+          <div className="flex items-baseline justify-between gap-4 py-1.5">
+            <dt className="text-fg-2">Customer Segment</dt>
+            <dd className="text-fg font-medium">{customer.segment}</dd>
+          </div>
+        </dl>
+        <p className="text-[length:var(--fs-caption)] text-muted">The account type and customer segment of an existing account cannot be changed.</p>
+        <Select
           label="Credit Limit (QAR)"
-          helperText="A change is sent to Credit Control for approval and takes effect once approved."
-          type="number"
-          min={0}
           value={limit}
+          disabled={!policy.editable}
           error={error}
+          helperText={policy.editable ? `Choose from the limits that apply to this customer (up to QAR ${policy.defaultQar}). The change is recorded in the audit trail.` : policy.message}
+          options={optionValues.map((v) => ({ value: String(v), label: `QAR ${v}` }))}
           onChange={(e) => {
             setLimit(e.target.value);
             setError(undefined);
           }}
         />
+        {canRequest && (
+          <Input
+            label="Request a different limit from Credit Control (QAR, optional)"
+            helperText="Sent to the Credit Control Team for approval. If approved it becomes their limit, which an agent cannot change."
+            type="number"
+            min={0}
+            value={request}
+            error={requestError}
+            onChange={(e) => {
+              setRequest(e.target.value);
+              setRequestError(undefined);
+            }}
+          />
+        )}
         <ChoiceCards
           legend="Account Status"
-          items={[...new Set([...(account?.status ? [account.status] : []), ...EDITABLE_ACCOUNT_STATUSES])].map((st) => ({ key: st, label: st, icon: STATUS_ICON[st] ?? STATUS_ICON.Active, tone: STATUS_TONE[st] }))}
+          items={[...new Set([...(account?.status ? [account.status] : []), ...EDITABLE_ACCOUNT_STATUSES])].map((st) => ({ key: st, label: st, icon: STATUS_ICON[st] ?? STATUS_ICON.Active, tone: STATUS_TONE[st] ?? 'neutral' }))}
           value={status}
           onChange={setStatus}
         />
-        {/* Customer Segment: one card group per segment group (Consumer, Enterprise); a segment on the record that is no longer on the list is kept, under its own heading. */}
-        {SEGMENT_GROUPS.map((g) => (
-          <ChoiceCards
-            key={g.group}
-            legend={g.group === 'Consumer' ? 'Customer Segment - Consumer' : 'Customer Segment - Enterprise'}
-            items={g.segments.map((sg) => ({ key: sg, label: sg, icon: SEGMENT_ICON }))}
-            value={g.segments.includes(segment) ? segment : undefined}
-            onChange={setSegment}
-          />
-        ))}
-        {!ALL_SEGMENTS.includes(customer.segment) && (
-          <ChoiceCards
-            legend="Customer Segment - Current"
-            items={[{ key: customer.segment, label: customer.segment, icon: SEGMENT_ICON }]}
-            value={segment === customer.segment ? segment : undefined}
-            onChange={setSegment}
-          />
-        )}
         <p className="pt-2 border-t border-border-soft text-[length:var(--fs-caption)] text-muted">
           Only these account details can be changed here. Saving creates a reference ticket for follow-up.
         </p>

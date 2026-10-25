@@ -1,4 +1,5 @@
 import { CloseButton } from '../../../components/primitives/CloseButton';
+import { overallCreditLimitOf } from '../creditLimitView';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Drawer } from '../../../capabilities';
@@ -114,9 +115,9 @@ export function QueryPreviewModal({
     'Billing Profile': () => text(billingProfile?.billingType) ?? text(billingProfile?.name),
     'Surepay Balance (Data, SMS, Voice, Text, QR Balance)': () => (balanceParts.length ? balanceParts.join(' | ') : undefined),
     'Asset Barring including OG/IC Bar (Y/N)': () => barring,
-    'Credit Limit': () => limit(billingProfile?.creditLimitQAR),
+    'Credit Limit': () => limit(overallCreditLimitOf(data) ?? billingProfile?.creditLimitQAR),
     'SIM State': () => (service ? (service.status ?? 'Active') : undefined),
-    'Bill Limit': () => limit(creditLimit?.creditLimitQar ?? creditLimit?.creditLimitQAR),
+    'Bill Limit': () => limit(overallCreditLimitOf(data) ?? creditLimit?.creditLimitQar ?? creditLimit?.creditLimitQAR),
     'In Progress Ticket (Y/N)': () => yn(openTickets.length > 0),
     'Open Order': () => yn(openOrders.length > 0),
     'Recent Payment amount & date': () => (latestPayment ? [qar(Number(latestPayment.amountQar)), date(latestPayment.capturedAt)].filter(Boolean).join(' on ') : undefined),

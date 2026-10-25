@@ -22,6 +22,13 @@ export interface EligibilityResult {
   /** The result is for an existing customer's record (not a new customer). */
   isExistingCustomer?: boolean;
   defaultCreditLimitQar: number;
+  /** HRN or Non-HRN, from the nationality MOI returned. */
+  customerCategory?: 'HRN' | 'Non-HRN';
+  /** Qatari or Expat, from the nationality. */
+  creditSegment?: 'Qatari' | 'Expat';
+  /** The credit risk in force (Big Data's input, else the customer record's) and the exemption that decides the HRN fee. */
+  creditRisk?: string;
+  creditRiskExemption?: string;
   customerId?: string;
   /**
    * The resolved customer's nationality, which the HRN row names.

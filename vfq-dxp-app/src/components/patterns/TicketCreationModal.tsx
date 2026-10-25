@@ -1,4 +1,8 @@
 import { useEffect, useState } from 'react';
+import { useRestrictedCustomers } from '../../hooks/useRestrictedCustomers';
+import { RestrictedCustomerNotice } from './RestrictedCustomerNotice';
+import { canViewCustomerSegment } from '../../engines/agentPrivilegeEngine';
+import { usePersonaStore } from '../../stores/personaStore';
 import { Drawer } from '../primitives/Drawer';
 import { Select } from '../primitives/Select';
 import { Textarea } from '../primitives/Textarea';
@@ -101,6 +105,9 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
   const [actualIssue, setActualIssue] = useState(initialActualIssue);
   const [queue, setQueue] = useState(initialQueue);
   const [customer, setCustomer] = useState<CustomerRecord | null>(null);
+  // A customer ID that belongs to a protected segment this role may not see: nothing about them is derived or shown, and no ticket can be raised.
+  const restrictedCustomers = useRestrictedCustomers();
+  const blocked = restrictedCustomers.ready && Boolean(customerId.trim()) && restrictedCustomers.isRestricted(customerId.trim());
   const [duplicates, setDuplicates] = useState<TicketRecord[]>([]);
   const pushToast = useNotificationStore((s) => s.pushToast);
 
@@ -120,7 +127,9 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
     let cancelled = false;
     mockDataEngine.list<CustomerRecord>('customers').then((all) => {
       if (cancelled) return;
-      setCustomer(all.find((c) => c.customerId === customerId.trim()) ?? null);
+      const found = all.find((c) => c.customerId === customerId.trim()) ?? null;
+      // Authorisation before anything is derived from the record (priority, SLA, segment text).
+      setCustomer(found && canViewCustomerSegment(usePersonaStore.getState().activePersonaId, found.segment) ? found : null);
     });
     return () => {
       cancelled = true;
@@ -132,7 +141,7 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
   // captured anywhere in this simplified schema, so this checks the two
   // matching fields the app's ticket schema actually has).
   useEffect(() => {
-    if (!customerId.trim() || !issueType) {
+    if (!customerId.trim() || !issueType || blocked) {
       setDuplicates([]);
       return;
     }
@@ -153,7 +162,7 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
     return () => {
       cancelled = true;
     };
-  }, [customerId, issueType, area]);
+  }, [customerId, issueType, area, blocked]);
 
   const areaOptions = TT_AREAS[issueType] ?? [];
   const derivedPriority = derivePriorityFromSegment(customer?.segment);
@@ -192,6 +201,7 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
           value={customerId}
           onChange={(e) => setCustomerId(e.target.value)}
         />
+        {blocked && <RestrictedCustomerNotice compact />}
         <Input
           label="Search ticket category"
           placeholder="Type at least 3 characters to filter…"
@@ -285,7 +295,7 @@ export function TicketCreationModal({ open, onClose, onSubmit, initialCustomerId
       </div>
       <div className="flex justify-end gap-2 mt-6">
         <Button variant="secondary" onClick={() => { reset(); onClose(); }}>Cancel</Button>
-        <Button variant="primary" onClick={submit} disabled={!gate.pass || !customerId || !queue || submitting}>
+        <Button variant="primary" onClick={submit} disabled={!gate.pass || !customerId || !queue || submitting || blocked || !restrictedCustomers.ready}>
           {submitting ? 'Saving…' : 'Save'}
         </Button>
       </div>

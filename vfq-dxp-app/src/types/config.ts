@@ -46,7 +46,12 @@ export type PersonaCapability =
   | 'ticket-reassign-queue'
   | 'ticket-audit-trail'
   | 'task-assign'
-  | 'agent-oversight';
+  | 'agent-oversight'
+  // Who may see a customer of a protected segment (Safwa, Safwa+, Royal): one grant per segment, checked before any of the customer's
+  // information is shown (see data/customerSegments.ts, engines/agentPrivilegeEngine.canViewCustomerSegment).
+  | 'view-safwa-customers'
+  | 'view-safwa-plus-customers'
+  | 'view-royal-customers';
 
 export interface PersonaFeatureGrant {
   key: string;

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { SCAN_DOCUMENT_TITLE } from '../../components/domain/scanDocumentLabels';
 import { Button } from '../../components/primitives/Button';
 import { Icon } from '../../components/primitives/Icon';
 import { Spinner } from '../../components/primitives/Spinner';
@@ -66,7 +67,6 @@ export function PassportScanSections({ value, onChange, onScan, error, canScan =
 
   const section = (side: 'front' | 'back') => {
     const done = Boolean(side === 'front' ? value.frontScanned : value.backScanned);
-    const title = side === 'front' ? 'Front Side' : 'Back Side';
     const n = retakes[side];
     const zone = 'rounded-[var(--radius-card)] border border-dashed border-border bg-[var(--surface-subtle)] px-4 py-6 flex flex-col items-center justify-center gap-4 text-center min-h-[var(--size-dropzone-min-h)]';
     return (
@@ -117,15 +117,11 @@ export function PassportScanSections({ value, onChange, onScan, error, canScan =
               <span aria-hidden="true" className="absolute right-2 top-2 w-4 h-4 border-r-2 border-t-2 border-accent" />
               <span aria-hidden="true" className="absolute left-2 bottom-2 w-4 h-4 border-l-2 border-b-2 border-accent" />
               <span aria-hidden="true" className="absolute right-2 bottom-2 w-4 h-4 border-r-2 border-b-2 border-accent" />
-              <span className="absolute left-6 top-4">Passport</span>
               <Icon path={SCAN_CORNERS} className="w-10 h-10 text-border" />
-              <span className="absolute left-6 bottom-4">{title}</span>
             </div>
             <div className="space-y-1">
-              <h4 className="text-fg font-bold text-[length:var(--fs-body)]">
-                {canScan ? `Place the passport ${side} side on the glass` : 'Card could not be read'}
-              </h4>
-              {canScan && <p className="text-fg-2 text-[length:var(--fs-caption)]">Close the lid and scan the {side === 'front' ? 'data page' : 'back cover'}.</p>}
+              {!canScan && <h4 className="text-fg font-bold text-[length:var(--fs-body)]">Card could not be read</h4>}
+              {canScan && <p className="text-fg-2 text-[length:var(--fs-caption)]">Scan the {side} side of the passport for verification.</p>}
             </div>
             {capture.scan && (
               <Button variant="primary" onClick={() => scanSide(side)}>
@@ -158,7 +154,7 @@ export function PassportScanSections({ value, onChange, onScan, error, canScan =
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
         <div className="flex items-center gap-3 min-w-0">
           <Icon path={SCAN_CORNERS} className="w-6 h-6 text-accent shrink-0" />
-          <span className="text-fg font-bold uppercase tracking-wide text-[length:var(--fs-body)] truncate">Flatbed Scanner</span>
+          <span className="text-fg font-bold uppercase tracking-wide text-[length:var(--fs-body)] truncate">{SCAN_DOCUMENT_TITLE}</span>
         </div>
         {/* The whole document in one go: two files, or one (both sides in a single image or PDF, or one side). */}
         {/* The two ways in, always available, in this order: the reader (the next side still to scan; the front again when both are in), then upload. */}

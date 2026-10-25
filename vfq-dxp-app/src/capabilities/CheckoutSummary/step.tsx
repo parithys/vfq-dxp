@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { effectiveCreditLimitQar } from '../../components/patterns/billingAccountModel';
 import { CHECKOUT_LABEL, SUBSCRIPTIONS_LABEL } from '../../data/stepLabels';
 import type { WizardStep } from '../../components/patterns/wizard/guidedWizardTypes';
 import { CheckoutSummary, PrepaidCheckout } from './CheckoutSummary';
@@ -56,6 +57,7 @@ export function checkoutSummaryStep(
           msisdn={opts.msisdn ? opts.msisdn(values) : (values.msisdn as string | undefined)}
           numberPriceQar={values.numberPriceQAR as number | undefined}
           eligibility={values.eligibility as EligibilityResult | undefined}
+          creditLimitQar={effectiveCreditLimitQar(values.eligibility as EligibilityResult | undefined, values.billingAccount as BillingAccountValue | undefined)}
           billLimit={values.billLimit as number | undefined}
           simType={values.simType as SimTypeValue | undefined}
           onTotalsComputed={(totals) => setValue('checkoutTotals', totals)}

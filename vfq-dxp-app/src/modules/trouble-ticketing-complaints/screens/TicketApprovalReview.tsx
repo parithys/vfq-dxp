@@ -1,4 +1,6 @@
 import { useKindPending } from '../../../stores/entityStore';
+import { useRestrictedCustomers } from '../../../hooks/useRestrictedCustomers';
+import { RestrictedCustomerNotice } from '../../../components/patterns/RestrictedCustomerNotice';
 import { EntityMissing } from '../../../components/patterns/EntityMissing';
 import { formatDateTime } from '../../../lib/format';
 import { useEffect, useRef, useState } from 'react';
@@ -99,9 +101,20 @@ export function TicketApprovalReview() {
   }, [ticketId, tickets]);
 
   const ticketsPending = useKindPending('trouble-tickets');
+  const restricted = useRestrictedCustomers();
   const ticket = tickets.find((t) => t.ticketId === ticketId);
   if (!ticket) {
     return <EntityMissing what="ticket" loading={ticketsPending} backTo="/trouble-ticketing-complaints/approval-queue" backLabel="Back to the approval queue" />;
+  }
+  // The customer is in a protected segment this role may not see: the record is not drawn at all - only the restriction (and nothing until the
+  // customers are known).
+  if (!restricted.ready) return <div className="p-8 text-fg-2" role="status">Loading…</div>;
+  if (restricted.isRestricted(ticket.customerId)) {
+    return (
+      <div className="p-8 max-w-2xl">
+        <RestrictedCustomerNotice backTo="/trouble-ticketing-complaints/approval-queue" backLabel="Back to the approval queue" />
+      </div>
+    );
   }
 
   // Mirrors OrderApprovalDetail's own access-denied guard - an unassigned

@@ -171,6 +171,8 @@ interface NotificationState {
   /** Clears every visible toast. History is untouched - the bell keeps them. */
   dismissAllToasts: () => void;
   markAllRead: () => void;
+  /** Removes every visible toast and history entry that mentions any of these strings (a customer's name or id): the bell must not keep naming them. */
+  purgeMentioning: (needles: readonly string[]) => void;
 }
 
 const HISTORY_LIMIT = 30;
@@ -184,6 +186,14 @@ const dismissTimers = new Map<string, ReturnType<typeof setTimeout>>();
 export const useNotificationStore = create<NotificationState>((set, get) => ({
   toasts: [],
   history: [],
+  purgeMentioning: (needles) =>
+    set((state) => {
+      const mentions = (entry: Toast) => {
+        const text = JSON.stringify([entry.message, entry.detail, entry.rows]).toLowerCase();
+        return needles.some((n) => n && text.includes(n.toLowerCase()));
+      };
+      return { toasts: state.toasts.filter((t) => !mentions(t)), history: state.history.filter((h) => !mentions(h)) };
+    }),
   pushToast: (kind, message, options) =>
     set((state) => {
       const key = options?.key;

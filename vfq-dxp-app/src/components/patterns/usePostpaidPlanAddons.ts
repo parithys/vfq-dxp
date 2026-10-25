@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { discountsForCustomer, type CustomerBenefit } from '../../engines/customerBenefitEngine';
 import { monthlyCharges } from '../../engines/postpaidPricing';
-import { closestPlans, SUPPORTING_ID_DISCOUNT_TYPES, PROOF_DOCUMENT_MAX_BYTES, formatDocSize, PLAN_GROUPS, SPECIAL_DISCOUNT_TYPE, planGroupOf } from './postpaidPlanModel';
+import { closestPlans, PLAN_GROUPS, SPECIAL_DISCOUNT_TYPE, discountsForSpecialType, SPECIAL_OFFERS_TAB_LABEL, planGroupOf } from './postpaidPlanModel';
 import type { PostpaidPlan, Discount, AddonProduct, PlanGroupKey, TabKey } from './postpaidPlanModel';
 
 interface UsePostpaidPlanAddonsArgs {
@@ -13,13 +13,9 @@ interface UsePostpaidPlanAddonsArgs {
   onAddonsChange: (ids: string[]) => void;
   /** Told which source the selected plan came from (OFFER / PLAN) and what an offer bundles, for the next step. */
   onSelectionChange?: (sel: { source: 'OFFER' | 'PLAN' | undefined; bundled: string[] }) => void;
-  discountSupportingId: string | undefined;
-  onDiscountSupportingIdChange: (id: string) => void;
   customerBenefit?: 'mada' | 'b2b2c' | 'retired' | 'none';
   specialDiscountType?: 'mada' | 'b2b2c' | 'retired';
   customerBenefits?: CustomerBenefit[];
-  discountProofDocument: { fileName: string; sizeBytes: number } | undefined;
-  onDiscountProofDocumentChange: (doc: { fileName: string; sizeBytes: number } | undefined) => void;
   /** A plan left out of the choices: the line's current plan, when the journey is changing it. */
   hiddenProductId?: string;
 }
@@ -31,21 +27,18 @@ export function usePostpaidPlanAddons({
   addonIds,
   onAddonsChange,
   onSelectionChange,
-  discountSupportingId,
-  onDiscountSupportingIdChange,
   customerBenefit,
   specialDiscountType,
   customerBenefits,
-  discountProofDocument,
-  onDiscountProofDocumentChange,
   hiddenProductId,
 }: UsePostpaidPlanAddonsArgs) {
   const [plans, setPlans] = useState<PostpaidPlan[]>([]);
   const [addonProducts, setAddonProducts] = useState<AddonProduct[]>([]);
   const [planDiscounts, setPlanDiscounts] = useState<Discount[]>([]);
+  // Of the three special types only the one chosen at Customer Identification is offered (a customer holds one).
   const discounts = useMemo(
-    () => discountsForCustomer(planDiscounts, customerBenefits, customerBenefit && customerBenefit !== 'none' ? customerBenefit : undefined),
-    [planDiscounts, customerBenefits, customerBenefit]
+    () => discountsForSpecialType(discountsForCustomer(planDiscounts, customerBenefits, customerBenefit && customerBenefit !== 'none' ? customerBenefit : undefined), specialDiscountType),
+    [planDiscounts, customerBenefits, customerBenefit, specialDiscountType]
   );
   // The plan whose details are open, or null. Holds the plan OBJECT rather
   // than an id, so the drawer cannot render a heading for one plan and
@@ -57,8 +50,6 @@ export function usePostpaidPlanAddons({
   // (click-outside close, listbox/option roles).
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
-  const [proofDocError, setProofDocError] = useState<string | null>(null);
-  const proofDocRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<TabKey>('specials');
   // Set once, the moment the catalogue first has something in it - not on
   // every load, which would snap the agent back to the first tab if the
@@ -100,7 +91,7 @@ export function usePostpaidPlanAddons({
   const hasSpecialTab = Boolean(special) && plans.some((p) => specialPlanIds.has(p.productId));
   const planGroupTabs = [
     ...PLAN_GROUPS.filter((g) => plans.some((p) => planGroupOf(p) === g.key)),
-    ...(hasSpecialTab && special ? [{ key: 'special' as PlanGroupKey, label: special.label }] : []),
+    ...(hasSpecialTab && special ? [{ key: 'special' as PlanGroupKey, label: SPECIAL_OFFERS_TAB_LABEL }] : []),
   ];
   const groupPlans = (key: PlanGroupKey) =>
     visiblePlans.filter((p) => (key === 'special' ? specialPlanIds.has(p.productId) : planGroupOf(p) === key));
@@ -196,18 +187,6 @@ export function usePostpaidPlanAddons({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [benefitType, selectedProductId, discounts, discountId]);
-  const requiresSupportingId = selectedDiscount ? SUPPORTING_ID_DISCOUNT_TYPES.has(selectedDiscount.addonType) : false;
-
-  // Switching to a discount that doesn't need one (or to no discount at all)
-  // invalidates whatever ID and proof document were captured for a previous
-  // MADA/B2B2C pick - the same "an edit invalidates a stale link" reasoning
-  // CompanySearchInput and IdLookupStep apply to their own committed values.
-  useEffect(() => {
-    if (requiresSupportingId) return;
-    if (discountSupportingId) onDiscountSupportingIdChange('');
-    if (discountProofDocument) onDiscountProofDocumentChange(undefined);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [discountId]);
 
   // Max ONE discount, and it is scoped to the plan it was picked against
   // (Discount.planId) - so a plan change retires whatever discount the
@@ -239,17 +218,6 @@ export function usePostpaidPlanAddons({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProductId]);
 
-  const handleProofDocFile = (file: File | undefined) => {
-    if (!file) return;
-    if (file.size > PROOF_DOCUMENT_MAX_BYTES) {
-      setProofDocError(`${file.name} is ${formatDocSize(file.size)}. The limit is 5 MB.`);
-      return;
-    }
-    setProofDocError(null);
-    onDiscountProofDocumentChange({ fileName: file.name, sizeBytes: file.size });
-    if (proofDocRef.current) proofDocRef.current.value = '';
-  };
-
   const selectedAddons = addonProducts.filter((a) => addonIds.includes(a.productId));
   const addonsMonthlyQar = selectedAddons.reduce((sum, a) => sum + a.mrcQAR, 0);
   // One itemisation, shared with Checkout and with the order payload - see
@@ -275,8 +243,6 @@ export function usePostpaidPlanAddons({
     searchOpen,
     setSearchOpen,
     searchRef,
-    proofDocError,
-    proofDocRef,
     activeTab,
     setActiveTab,
     planGroupTabs,
@@ -291,8 +257,6 @@ export function usePostpaidPlanAddons({
     discountsState,
     retryDiscounts,
     selectedDiscount,
-    requiresSupportingId,
-    handleProofDocFile,
     charges,
   };
 }

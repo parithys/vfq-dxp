@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { canViewCustomerSegment } from '../engines/agentPrivilegeEngine';
 import { useNavigate } from 'react-router-dom';
 import * as mockDataEngine from '../engines/mockDataEngine';
 import { useEntityStore } from '../stores/entityStore';
@@ -6,6 +7,7 @@ import { useNotificationStore } from '../stores/notificationStore';
 import { useCustomerContext } from '../stores/customerContextStore';
 import { useQnomyQueueStore } from '../stores/qnomyQueueStore';
 import { useAuthStore } from '../stores/authStore';
+import { ensureWalkInWaiting } from '../engines/qnomyWalkIns';
 import { nextTicketFor, waitingCountFor, queueLabelsForRole, mobileMatches } from '../engines/qnomyQueueEngine';
 import { usePersonaStore } from '../stores/personaStore';
 import { canSeeQnomyTicketNumber, canSeeCtiReferenceNumber } from '../engines/agentPrivilegeEngine';
@@ -124,12 +126,12 @@ export function SessionReferenceNumbers() {
       if (cancelled) return;
       const ticket = qTickets.find((t) => t.qTicketId === assignedQTicketId);
       setActiveQTicket(ticket);
-      setTicketFacts(ticket ? factsForKioskNumber(ticket.kioskMobileNumber, customers, sources) : undefined);
+      setTicketFacts(ticket ? factsForKioskNumber(ticket.kioskMobileNumber, customers, sources, (seg) => canViewCustomerSegment(activePersonaId, seg)) : undefined);
     });
     return () => {
       cancelled = true;
     };
-  }, [showQnomy, assignedQTicketId, refreshKey]);
+  }, [showQnomy, assignedQTicketId, refreshKey, activePersonaId]);
 
   useEffect(() => {
     if (!activeCustomer || !showCti) {
@@ -149,7 +151,8 @@ export function SessionReferenceNumbers() {
   useEffect(() => {
     if (!showQnomy) return;
     let cancelled = false;
-    mockDataEngine.list<QTicketRecord>('qtickets').then((qTickets) => {
+    // The queue is never empty: a kiosk walk-in is issued when the role's queue has been worked down.
+    ensureWalkInWaiting(activePersonaId).then(() => mockDataEngine.list<QTicketRecord>('qtickets')).then((qTickets) => {
       if (cancelled) return;
       setWaitingCount(waitingCountFor(activePersonaId, qTickets));
     });
@@ -277,7 +280,17 @@ export function SessionReferenceNumbers() {
     const matched =
       customers.find((c) => mobileMatches(waiting.kioskMobileNumber, c.phone))
       ?? customers.find((c) => c.customerId === waiting.customerId);
-    const facts = factsForKioskNumber(waiting.kioskMobileNumber, customers, serviceSources);
+    const canView = (seg: string | undefined) => canViewCustomerSegment(activePersonaId, seg);
+    const facts = factsForKioskNumber(waiting.kioskMobileNumber, customers, serviceSources, canView);
+
+    // A protected-segment customer this role may not see: nobody is made the active customer, the notification names no one, and the journey the
+    // ticket asks for is NOT launched - the agent is told, and stays on the dashboard.
+    if (matched && !canView(matched.segment)) {
+      clearActiveCustomer();
+      pushToast(...ticketToast(waiting, null, null, null, facts));
+      navigate('/');
+      return;
+    }
 
     if (matched) setActiveCustomer(toActiveCustomerSummary(matched));
     else clearActiveCustomer();

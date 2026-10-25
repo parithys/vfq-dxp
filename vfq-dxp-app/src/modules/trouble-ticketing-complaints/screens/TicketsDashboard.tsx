@@ -1,4 +1,6 @@
 import { currentAgentId } from '../../../stores/authStore';
+import { useRestrictedCustomers } from '../../../hooks/useRestrictedCustomers';
+import { RestrictedRowsNotice } from '../../../components/patterns/RestrictedRowsNotice';
 import { badgeVariantFor, isSlaStopped } from '../../../lib/statusTone';
 import { TabStrip } from '../../../components/primitives/TabStrip';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -67,7 +69,10 @@ interface TicketsDashboardProps {
 }
 
 export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
-  const tickets = (useEntityStore((s) => s.records['trouble-tickets']) ?? []) as unknown as Ticket[];
+  const allTickets = (useEntityStore((s) => s.records['trouble-tickets']) ?? []) as unknown as Ticket[];
+  // Tickets of a protected-segment customer this role may not see are left out (and counted), never drawn; nothing is listed until customers are known.
+  const guard = useRestrictedCustomers();
+  const { visible: tickets, hiddenCount } = guard.filter(allTickets, (t) => t.customerId);
   const loadKind = useEntityStore((s) => s.loadKind);
   const loading = useKindPending('trouble-tickets'); // true until the list has arrived, so the table never flashes "empty" first
   const loadError = useEntityStore((s) => s.errors['trouble-tickets']);
@@ -296,6 +301,7 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
       )}
 
       <ErrorBanner message={loadError} />
+      <RestrictedRowsNotice count={hiddenCount} />
       <DataTable<Ticket>
         columns={[
           {
@@ -334,7 +340,7 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
         rows={filtered}
         rowKey={(r) => r.ticketId}
         emptyMessage="No trouble tickets match the current filters."
-        loading={loading}
+        loading={loading || !guard.ready}
       />
 
       <TicketCreationModal open={modalOpen} onClose={() => setModalOpen(false)} onSubmit={createTicket} initialCustomerId={createForCustomer} />

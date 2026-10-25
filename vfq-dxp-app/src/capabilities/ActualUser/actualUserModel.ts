@@ -1,6 +1,6 @@
 import type { GuidedContactValue } from '../../components/patterns/guidedContactModel';
 import { isValidEmail, isValidAltPhone } from '../../components/patterns/guidedContactModel';
-import { ageOn, MINIMUM_AGE } from '../../engines/eligibilityEngine';
+import { ageOn, isIdExpired, MINIMUM_AGE } from '../../engines/eligibilityEngine';
 
 /**
  * ACTUAL USER - who will really use the line when it is not the customer who owns it (a parent buys, the daughter uses the SIM).
@@ -11,7 +11,9 @@ import { ageOn, MINIMUM_AGE } from '../../engines/eligibilityEngine';
  *
  * The eligibility checks are NOT run for an actual user, because the primary customer stays accountable for the MSISDN and the connection
  * counts against the primary customer's own limit: Number of Connections, HRN, and the Collections, Grey List and Security blacklists.
- * The one rule that applies to the actual user is age: only someone under 18 can be added (see actualUserAgeProblem).
+ * The one rule that applies to the actual user is age: a Secondary Contact must be 18 or over, so a minor cannot be added (see actualUserAgeProblem).
+ * Associating the actual user with the service does NOT count it as an active line against the actual user's ID: the line stays on the primary
+ * customer's ID (the order carries the primary's customerId; the actual user is only named on it).
  */
 export interface ActualUserValue {
   choice?: 'primary' | 'other';
@@ -31,15 +33,15 @@ export function actualUserIdentity(v: ActualUserValue | undefined): GuidedContac
 }
 
 /**
- * Why this person cannot be the actual user on age, or undefined when they can: only customers below 18 may be added; 18 and over are not
- * allowed. A date of birth that is not on record cannot be judged, so it blocks too (unknown stays unknown).
+ * Why this person cannot be the actual user on age, or undefined when they can: the actual user (the Secondary Contact) must be 18 or over;
+ * a minor cannot be added. A date of birth that is not on record cannot be judged, so it blocks too (unknown stays unknown).
  */
 export function actualUserAgeProblem(identity: GuidedContactValue | undefined, asOf: Date = new Date()): string | undefined {
   const dob = identity?.moiResult?.dob;
   if (!identity?.moiResult) return undefined;
   const age = ageOn(dob, asOf);
-  if (age === undefined) return 'The date of birth is not on record, so the age cannot be checked. An actual user must be under 18.';
-  return age >= MINIMUM_AGE ? `Only customers under ${MINIMUM_AGE} can be added as an actual user. This customer is ${age}.` : undefined;
+  if (age === undefined) return 'The date of birth is not on record, so the age cannot be checked. An actual user must be 18 or over.';
+  return age < MINIMUM_AGE ? `An actual user must be ${MINIMUM_AGE} or over; a minor cannot be added. This customer is ${age}.` : undefined;
 }
 
 /** The step may continue when the primary customer uses the line, or the actual user is fully identified and is not the primary themself. */
@@ -68,21 +70,37 @@ export function supplementaryRows(v: ActualUserValue | undefined): { label: stri
   ];
 }
 
+const phoneKey = (p: string | undefined) => (p ?? '').replace(/[\s-]/g, '').replace(/^\+?974/, '');
+
 /**
- * For an actual user who is already a customer: the contact details the agent confirmed or changed, to write back to their record so the
- * record and the Supplementary Form agree. Only what differs from the record is returned; nothing for a new person.
+ * Identifying an actual user who is already a customer pre-fills their phone from the customer record (their email already arrives with the
+ * MOI result). Only when a DIFFERENT person is resolved than before, so what the agent then edits is kept, and only a number that is a valid
+ * Qatar mobile (the field's own rule): an unknown or unusable value stays empty, never guessed. A new person has no record to read.
  */
-export function contactUpdateFor(v: ActualUserValue | undefined): { customerId: string; patch: { email?: string } } | undefined {
+export function withRecordPhone(prev: GuidedContactValue | undefined, next: GuidedContactValue): GuidedContactValue {
+  const m = next.moiResult;
+  if (!m?.customerId || m.isNewCustomer || m.customerId === prev?.moiResult?.customerId) return next;
+  return isValidAltPhone(m.phone) ? { ...next, altPhone: m.phone } : next;
+}
+
+/**
+ * For an actual user who is already a customer: what the agent confirmed or changed, to write back so their records and the Supplementary Form
+ * agree. `patch` is the email (the customer record holds it); `contactPatch` is the phone, for their existing contact-level record
+ * (`customer-contacts`, `cellNumber`). Only what differs from the record is returned; nothing for a new person, nothing for a cleared field.
+ */
+export function contactUpdateFor(v: ActualUserValue | undefined): { customerId: string; patch: { email?: string }; contactPatch?: { cellNumber: string } } | undefined {
   const i = actualUserIdentity(v);
   const m = i?.moiResult;
   if (!i || !m?.customerId || m.isNewCustomer) return undefined;
   const patch: { email?: string } = {};
   if (i.email && i.email !== m.email) patch.email = i.email;
-  return Object.keys(patch).length ? { customerId: m.customerId, patch } : undefined;
+  const contactPatch = i.altPhone && phoneKey(i.altPhone) !== phoneKey(m.phone) ? { cellNumber: i.altPhone } : undefined;
+  if (!Object.keys(patch).length && !contactPatch) return undefined;
+  return { customerId: m.customerId, patch, ...(contactPatch ? { contactPatch } : {}) };
 }
 
 /**
- * Which customer the simulated card reader presents for the actual user: the first customer under 18, other than the primary, holding an
+ * Which customer the simulated card reader presents for the actual user: the first customer aged 18 or over, other than the primary, holding an
  * unexpired QID with a real QID number (11-14 digits). By rule, not by name.
  */
 export function pickDemoReaderCustomer(
@@ -94,9 +112,9 @@ export function pickDemoReaderCustomer(
   return customers.find((c) => {
     if (c.customerId === primaryCustomerId) return false;
     const age = ageOn(c.dob, asOf);
-    if (age === undefined || age >= MINIMUM_AGE) return false;
+    if (age === undefined || age < MINIMUM_AGE) return false;
     return docs.some(
-      (d) => d.customerId === c.customerId && d.documentType === 'QID' && /^\d{11,14}$/.test(d.documentNumber) && (!d.expiryDate || new Date(d.expiryDate) >= asOf)
+      (d) => d.customerId === c.customerId && d.documentType === 'QID' && /^\d{11,14}$/.test(d.documentNumber) && (!d.expiryDate || !isIdExpired(d.expiryDate, asOf))
     );
   })?.customerId;
 }

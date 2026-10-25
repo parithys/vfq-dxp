@@ -1,4 +1,6 @@
 import { badgeVariantFor } from '../../lib/statusTone';
+import { useRestrictedCustomers } from '../../hooks/useRestrictedCustomers';
+import { RestrictedRowsNotice } from '../../components/patterns/RestrictedRowsNotice';
 import { formatDateTime } from '../../lib/format';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -49,7 +51,7 @@ export function MySalesOrders({ padded = true, query = '', filters }: MySalesOrd
   const activities = (useEntityStore((s) => s.records['customer-activities']) ?? []) as unknown as ActivityRow[];
   // Last updated = the newest approval-decision activity on the order, else when it was created. Most recent first;
   // orders with no timestamp go last. A header click still re-sorts.
-  const orders: Order[] = allOrders
+  const sortedOrders: Order[] = allOrders
     .map((o) => {
       const times = [o.createdAt, ...activities.filter((a) => a.orderId === o.orderId && a.actionTaken).map((a) => a.transactionDate)]
         .map((t) => (t ? new Date(t).getTime() : NaN))
@@ -57,6 +59,9 @@ export function MySalesOrders({ padded = true, query = '', filters }: MySalesOrd
       return { ...o, lastUpdatedMs: times.length ? Math.max(...times) : undefined };
     })
     .sort((a, b) => (b.lastUpdatedMs ?? 0) - (a.lastUpdatedMs ?? 0));
+  // Orders of a protected-segment customer this role may not see are left out (and counted), never drawn; nothing is listed until customers are known.
+  const guard = useRestrictedCustomers();
+  const { visible: orders, hiddenCount } = guard.filter(sortedOrders, (o) => o.customerId);
   const loadKind = useEntityStore((s) => s.loadKind);
   const loading = useEntityStore((s) => s.loading.orders);
   const loadError = useEntityStore((s) => s.errors.orders);
@@ -69,6 +74,7 @@ export function MySalesOrders({ padded = true, query = '', filters }: MySalesOrd
   return (
     <div className={padded ? 'p-8' : ''}>
       <ErrorBanner message={loadError} />
+      <RestrictedRowsNotice count={hiddenCount} />
       <DataTable<Order>
         fixedLayout
         columns={[
@@ -93,7 +99,7 @@ export function MySalesOrders({ padded = true, query = '', filters }: MySalesOrd
         // already opened the order.
         onRowClick={(r) => navigate(`/order-management/order-approval-detail-attachments-order-details-activities-a?id=${r.orderId}`)}
         emptyMessage={query.trim() || (filters && (filters.orderType !== 'all' || filters.status !== 'all')) ? 'No orders match your search or filters.' : 'No orders submitted yet - build one via a New Fixed Line/FWA/Postpaid wizard first.'}
-        loading={loading}
+        loading={loading || !guard.ready}
       />
     </div>
   );

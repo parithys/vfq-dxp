@@ -1,4 +1,6 @@
 import { useKindPending } from '../../stores/entityStore';
+import { useRestrictedCustomers } from '../../hooks/useRestrictedCustomers';
+import { RestrictedCustomerNotice } from '../../components/patterns/RestrictedCustomerNotice';
 import { EntityMissing } from '../../components/patterns/EntityMissing';
 import { DataTable } from '../../components/primitives/DataTable';
 import { formatDateTime } from '../../lib/format';
@@ -84,7 +86,7 @@ interface Order {
    * wizard (2026-09-28) - previously this tab showed one static paragraph
    * with no actual list, because nothing was ever saved onto the order
    * record for it to read (see NewPostpaidWizard's onSubmit, which now
-   * builds this array from the same values.caf/qidScans/discountProofDocument
+   * builds this array from the same values.caf/qidScans
    * data the wizard already collected). Not every order type populates
    * this yet - other journeys' onSubmit are unchanged - so it stays optional.
    */
@@ -98,6 +100,8 @@ interface Order {
   holdReason?: string | null;
   fulfillmentStatus?: string | null;
   customerEmail?: string;
+  customerSponsor?: string;
+  customerOccupation?: string;
   idNumber?: string;
   customerType?: string;
   companyName?: string;
@@ -213,6 +217,9 @@ function approvalReasonItems(reason: string | undefined): { title: string; detai
   if (!reason) return [];
   const describe = (r: string): { title: string; detail: string } => {
     if (r.startsWith('Active postpaid line limit reached')) return { title: 'Active line limit reached', detail: r };
+    if (r.startsWith('ID type requires Credit Control approval')) {
+      return { title: 'ID Type Requires Credit Control Approval', detail: 'The selected ID type requires Credit Control approval. The order was routed to Credit Control on submission.' };
+    }
     if (r.startsWith('ID type cannot be sold directly')) {
       return { title: 'ID Type Requires Back Office Fulfilment Approval', detail: 'Direct sale is not permitted for this ID type. The order will be routed to Back Office Fulfilment for approval.' };
     }
@@ -485,6 +492,8 @@ function OrderDetailsPanel({ order, lastUpdatedMs }: { order: Order; lastUpdated
           <DetailRow label="ID number" value={order.idNumber} />
           <DetailRow label="Customer type" value={order.customerType ? (CUSTOMER_TYPE_LABEL[order.customerType] ?? order.customerType) : undefined} />
           <DetailRow label="Company" value={order.companyName} />
+          <DetailRow label="Sponsor" value={order.customerSponsor} />
+          <DetailRow label="Occupation" value={order.customerOccupation} />
           <DetailRow label="Nationality" value={customer?.nationality} />
           <DetailRow label="Segment" value={customer?.segment} />
           <DetailRow
@@ -600,9 +609,20 @@ export function OrderApprovalDetail() {
   }, [loadKind]);
 
   const ordersPending = useKindPending('orders');
+  const restricted = useRestrictedCustomers();
   const order = orders.find((o) => o.orderId === orderId);
   if (!order) {
     return <EntityMissing what="order" loading={ordersPending} backTo="/orders" backLabel="Back to orders" />;
+  }
+  // The customer is in a protected segment this role may not see: the record is not drawn at all - only the restriction (and nothing until the
+  // customers are known).
+  if (!restricted.ready) return <div className="p-8 text-fg-2" role="status">Loading…</div>;
+  if (restricted.isRestricted(order.customerId)) {
+    return (
+      <div className="p-8 max-w-2xl">
+        <RestrictedCustomerNotice backTo="/orders" backLabel="Back to orders" />
+      </div>
+    );
   }
 
   // AAV-00 clause (b): "if the task is not assigned or accessible to the
@@ -654,7 +674,7 @@ export function OrderApprovalDetail() {
       if (lineChange) await applyLineChange(lineChange, updateRecord);
       // An approved credit limit change takes effect: the customer's limit becomes the one requested.
       const limitChange = nextStatus === 'Complete' ? creditLimitChangeOf(order as unknown as Record<string, unknown>) : undefined;
-      if (limitChange) await applyCreditLimitChange(limitChange, { list: (k) => mockDataEngine.list(k) as never, updateRecord: updateRecord as never, createRecord: createRecord as never });
+      if (limitChange) await applyCreditLimitChange({ ...limitChange, by: currentAgentId }, { list: (k) => mockDataEngine.list(k) as never, updateRecord: updateRecord as never, createRecord: createRecord as never });
       await logActivity('Approved', approveComment);
       pushToast(
         'success',

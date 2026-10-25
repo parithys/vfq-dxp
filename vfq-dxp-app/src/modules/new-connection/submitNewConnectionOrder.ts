@@ -1,4 +1,7 @@
 import { currentAgentId } from '../../stores/authStore';
+import { accountTypeForJourney } from '../../engines/creditLimit';
+import { saveLinkedIdDocument } from './saveLinkedIdDocument';
+import { contactIdentityOrderFields } from './contactIdentityOrderFields';
 import { saveCustomerSalutation } from './saveCustomerSalutation';
 import { actualUserOrderFields, saveActualUserContact } from '../../capabilities/ActualUser';
 import type { ActualUserValue } from '../../capabilities/ActualUser';
@@ -18,7 +21,7 @@ import type { CafType } from '../../components/patterns/cafTypes';
 import type { AdditionalDocument } from '../../components/domain/AdditionalDocumentsUpload';
 import type { CustomerTypeValue } from '../../capabilities';
 import type { CrossSalesValue } from '../../capabilities';
-import { STORE_MANAGER_ROLE, COLLECTION_TEAM_ROLE, ID_TYPE_APPROVER_ROLE } from '../../capabilities';
+import { STORE_MANAGER_ROLE, COLLECTION_TEAM_ROLE } from '../../capabilities';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { logActivity, newActivityId } from '../../engines/activityEngine';
 import type { ActivityInput } from '../../engines/activityEngine';
@@ -103,14 +106,12 @@ export async function submitNewConnectionOrder(
 
       // Attachments (2026-09-28) - built from data this wizard already
       // collected but, until now, discarded at submission: the CAF
-      // signature, any agent-defined Additional Documents, the MADA/
-      // B2B2C proof document, and the QID scans from Contact. Each entry
-      // only appears when the fact it names is actually true - an order
-      // with no discount proof document gets no row claiming one exists.
+      // signature, any agent-defined Additional Documents, and the QID scans
+      // from Contact. Each entry only appears when the fact it names is
+      // actually true.
       const caf = values.caf as
         | { cafType?: CafType; signatureDataUrl?: string; additionalDocuments?: AdditionalDocument[] }
         | undefined;
-      const discountProofDocument = values.discountProofDocument as { fileName: string } | undefined;
       const attachments = [
         ...idScanAttachments(contact.idType, contact.qidScans),
         ...(customerType?.officeId?.frontScanned && customerType.officeId.backScanned
@@ -122,9 +123,6 @@ export async function submitNewConnectionOrder(
             ]
           : []),
         ...(caf?.signatureDataUrl ? [{ label: 'Signed CAF', detail: `${caf.cafType ?? 'Digital'} signature`, previewUrl: caf.signatureDataUrl }] : []),
-        ...(discountProofDocument
-          ? [{ label: `${discount?.addonType ?? 'Discount'} supporting document`, detail: discountProofDocument.fileName }]
-          : []),
         ...(caf?.additionalDocuments ?? []).map((d) => ({ label: d.label, detail: d.fileName })),
       ];
 
@@ -139,7 +137,7 @@ export async function submitNewConnectionOrder(
       const billingProfileId = await persistBillingAccount(billingAccount, {
         createRecord,
         updateRecord,
-        kind: 'Consumer Mobile Postpaid',
+        kind: accountTypeForJourney('postpaid'),
         customerId: eligibility?.customerId,
         idNumber: contact.idNumber,
         contactName: contact.moiResult?.name,
@@ -147,19 +145,24 @@ export async function submitNewConnectionOrder(
         contactPhone: contact.moiResult?.phone,
         addressLine: [address?.zone && `Zone ${address.zone}`, address?.streetNo && `Street ${address.streetNo}`, address?.buildingNo && `Building ${address.buildingNo}`].filter(Boolean).join(', ') || undefined,
         creditLimitQar: eligibility?.defaultCreditLimitQar,
+        nationality: eligibility?.nationality,
+        agentId: currentAgentId() ?? undefined,
       });
 
       const orderId = `ORD-${Date.now().toString().slice(-6)}`;
       // The salutation the agent entered is saved to the customer's profile (shown in Customer 360).
       await saveCustomerSalutation(eligibility?.customerId, contact.salutation, updateRecord);
+      // A QID linked to an existing customer through their Passport is added to that customer's documents (no duplicate customer).
+      await saveLinkedIdDocument(contact.moiResult?.linkedIdUpdate, createRecord);
       // An actual user who is already a customer keeps the contact details confirmed here on their own record.
-      await saveActualUserContact(values.actualUser as ActualUserValue | undefined, updateRecord);
+      await saveActualUserContact(values.actualUser as ActualUserValue | undefined, updateRecord, () => mockDataEngine.list<{ contactRecordId: string; customerId: string }>('customer-contacts'));
       await createRecord('orders', {
         orderId,
         ...actualUserOrderFields(values.actualUser as ActualUserValue | undefined),
         // The email captured on Customer Identification, carried unchanged.
         customerEmail: contact.email,
         customerSalutation: contact.salutation,
+        ...contactIdentityOrderFields(contact),
         customerWorkEmail: contact.workEmail,
         // A new customer's National Address as the NAS returned it: kept with the order, unchanged; the address the customer gave is `address`.
         nationalAddress: contact.moiResult?.nationalAddress,
@@ -176,20 +179,22 @@ export async function submitNewConnectionOrder(
               approvalReason: [
                 lineLimitApproval ? (lineDecision ? `Line approval required - ${approvalMessages(lineDecision)}` : `Active postpaid line limit reached - ${activeLinesCheck?.message?.split('\nApproval Routing')[0]}`) : '',
                 manualIdEntry ? 'Identity manually entered - Store Manager approval required' : '',
-                idTypeRouting ? 'ID type cannot be sold directly - routed to Back Office Fulfilment approval workflow' : '',
+                idTypeRouting ? 'ID type requires Credit Control approval - routed to Credit Control' : '',
                 eligibility?.checks.some((c) => c.id === 'id-validity' && c.outcome === 'approval-routing') ? 'ID expiry date not on file - routed for approval' : '',
                 eligibility?.requiresHrnAdvance ? `HRN customer - QAR ${hrnAdvanceQar({ nationality: eligibility?.nationality, personaId: usePersonaStore.getState().activePersonaId })} advance payment applies` : '',
                 (Boolean(contact.isB2B2C) && !customerType?.rejected) || customerType?.type === 'b2b2c' ? 'B2B2C employee - Proof of Employment to be verified' : '',
                 discount && SUPPORTING_ID_DISCOUNT_TYPES.has(discount.addonType ?? '') ? `${discount.addonType} - supporting document to be verified` : '',
               ].filter(Boolean).join(' | '),
-              // Line-limit cases go to the Collection Team, a manual-entry order to the Store Manager, and an order
-              // routed only for its ID type to the Back Office Fulfilment Agent.
-              approverRole: creditControl ? COLLECTION_TEAM_ROLE : manualIdEntry ? STORE_MANAGER_ROLE : idTypeRouting ? ID_TYPE_APPROVER_ROLE : undefined,
+              // Line-limit cases go to the Collection Team (Credit Control), a manual-entry order to the Store Manager, and an order
+              // routed for its ID type to Credit Control as well.
+              approverRole: creditControl ? COLLECTION_TEAM_ROLE : manualIdEntry ? STORE_MANAGER_ROLE : idTypeRouting ? COLLECTION_TEAM_ROLE : undefined,
             }
           : {}),
         customerName: contact.moiResult?.name,
         customerId: eligibility?.customerId,
         idNumber: contact.idNumber,
+        // Identity evidence: what the scanned ID carried against what MOI returned, per attribute (absent when the journey took no scan).
+        idReconciliation: contact.moiResult ? contact.idReconciliation : undefined,
         productId: values.productId,
         discountId: values.discountId,
         addonIds,
@@ -242,7 +247,7 @@ export async function submitNewConnectionOrder(
             [
               lineLimitApproval ? (lineDecision ? 'Line approval required' : 'Active postpaid line limit reached') : '',
               manualIdEntry ? 'Identity entered manually' : '',
-              idTypeRouting ? 'ID type routed to Back Office Fulfilment approval' : '',
+              idTypeRouting ? 'ID type routed to Credit Control approval' : '',
               eligibility?.requiresHrnAdvance ? 'Upfront payment required' : '',
               customerType?.type === 'b2b2c' || contact.isB2B2C ? 'B2B2C order' : '',
             ]

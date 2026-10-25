@@ -1,4 +1,7 @@
 import { vipTagOf } from '../../data/customerSegments';
+import { overallCreditLimitOf } from './creditLimitView';
+import { useEntityStore } from '../../stores/entityStore';
+import { creditRiskPatch, type BigDataCreditRisk, type CreditRiskSource } from '../../engines/creditLimit';
 import { isClosedTicket } from '../../lib/statusTone';
 import { isSimSwapAwaitingDecision } from '../../engines/approvalAuthority';
 import { isBusinessSegment } from '../../engines/businessSegment';
@@ -10,6 +13,8 @@ import { listCustomerServices, type ServiceSources } from '../../engines/custome
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { useCustomerContext } from '../../stores/customerContextStore';
 import { usePersonaStore } from '../../stores/personaStore';
+import { RestrictedCustomerNotice } from '../../components/patterns/RestrictedCustomerNotice';
+import { canViewCustomerSegment } from '../../engines/agentPrivilegeEngine';
 import { getPersona } from '../../engines/configEngine';
 import { buildTelesalesTabs } from './telesales/TelesalesTabs';
 import { CustomerActionsMenu } from './CustomerActionsMenu';
@@ -94,6 +99,7 @@ const RAIL_ICONS: Record<string, string> = {
 export function Customer360Layout() {
   const { customerId } = useParams<{ customerId: string }>();
   const setActiveCustomer = useCustomerContext((s) => s.setActiveCustomer);
+  const clearActiveCustomer = useCustomerContext((s) => s.clearActiveCustomer);
   const activePersonaId = usePersonaStore((s) => s.activePersonaId);
   const [data, setData] = useState<Customer360Data | undefined | null>(null);
   const [demoDrawerOpen, setDemoDrawerOpen] = useState(false);
@@ -151,6 +157,8 @@ export function Customer360Layout() {
   // these four feed the service inventory only.
   const [serviceSources, setServiceSources] = useState<ServiceSources | undefined>(undefined);
   const [loadFailed, setLoadFailed] = useState(false);
+  // The loaded customer is in a protected segment this role may not see: the page shows the restriction and nothing about the customer.
+  const [blocked, setBlocked] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
@@ -178,13 +186,30 @@ export function Customer360Layout() {
   useEffect(() => {
     if (!customerId) return;
     setData(null);
+    setBlocked(false);
     setLoadFailed(false);
     // Cancelled when the customer changes (or the screen unmounts) so a slow earlier response cannot overwrite the
     // customer now on screen; a failed load shows the not-found state rather than "Loading" forever.
     let cancelled = false;
     getCustomer360(customerId)
-      .then((result) => {
+      .then(async (result) => {
         if (cancelled) return;
+        // Authorisation comes BEFORE anything is kept or drawn: a customer in a protected segment the signed-in role may not see is dropped here -
+        // never put in state, never in the active-customer context - and the page shows the access restriction in place of the customer.
+        if (result && !canViewCustomerSegment(activePersonaId, result.customer.segment)) {
+          setBlocked(true);
+          clearActiveCustomer();
+          return;
+        }
+        // Big Data's input updates the customer's Credit Risk: written to their record when it differs, and shown as it now is.
+        if (result) {
+          const patch = creditRiskPatch(result.customer as CreditRiskSource & { customerId?: string }, await mockDataEngine.list<BigDataCreditRisk>('big-data-credit-risk'));
+          if (cancelled) return;
+          if (patch) {
+            void useEntityStore.getState().updateRecord('customers', 'customerId', customerId, patch as Record<string, unknown>, { how: 'Big Data credit risk update', by: 'Big Data' });
+            result = { ...result, customer: { ...result.customer, ...patch } };
+          }
+        }
         setData(result ?? undefined);
         if (result) setActiveCustomer(toActiveCustomerSummary(result.customer));
       })
@@ -195,7 +220,7 @@ export function Customer360Layout() {
     return () => {
       cancelled = true;
     };
-  }, [customerId, setActiveCustomer, reloadKey]);
+  }, [customerId, setActiveCustomer, clearActiveCustomer, activePersonaId, reloadKey]);
 
   const { requireVerification, gate: verificationGate } = useVerificationGate(
     customerId ?? '',
@@ -205,6 +230,13 @@ export function Customer360Layout() {
   const coverageRoot = useRef<HTMLDivElement>(null);
   useRequirementCoverage(coverageRoot, activePersonaId, activeTab || 'overview', Boolean(data));
 
+  if (blocked) {
+    return (
+      <div className="p-8 max-w-2xl">
+        <RestrictedCustomerNotice backTo="/customer-search" backLabel="Back to Customer Search" />
+      </div>
+    );
+  }
   if (loadFailed) {
     return <EntityMissing what="customer" loading={false} error onRetry={() => setReloadKey((k) => k + 1)} backTo="/customer-search" backLabel="Back to Customer Search" />;
   }
@@ -561,6 +593,7 @@ export function Customer360Layout() {
           name={data.customer.name}
           belowFacts={<LinkedBusinessLine customerId={data.customer.customerId} />}
           tags={[
+            ...(data.customer.name ? [{ label: 'Primary', variant: 'tag-primary' as const }] : []),
             ...(vipTagOf(data.customer.segment) ? [{ label: vipTagOf(data.customer.segment) as string, variant: 'tag-amber' as const }] : []),
           ]}
           qid={data.customer.qid}
@@ -577,7 +610,7 @@ export function Customer360Layout() {
           phone={data.customer.phone}
           email={data.customer.email}
           totalConnections={services.length > 0 ? services.length : undefined}
-          creditLimit={data.creditLimits[0] ? `QAR ${String(data.creditLimits[0].creditLimitQar ?? data.creditLimits[0].creditLimitQAR ?? '-')}` : undefined}
+          creditLimit={data.creditLimits[0] ? `QAR ${String(overallCreditLimitOf(data) ?? data.creditLimits[0].creditLimitQar ?? data.creditLimits[0].creditLimitQAR ?? '-')}` : undefined}
           alerts={headerAlerts}
           onViewAlerts={tabs.some((t) => t.key === 'alerts-risks') ? () => setActiveTab('alerts-risks') : undefined}
           // Header-only layouts edit the profile from the Contact Information tab, so the header carries no button.
@@ -684,15 +717,14 @@ export function Customer360Layout() {
         onClose={() => setAccountDrawerOpen(false)}
         customer={data.customer}
         account={data.accounts[0]}
-        creditLimit={data.creditLimits[0] as { id?: string; creditLimitQar?: number } | undefined}
+        creditLimit={data.creditLimits[0] as { id?: string; creditLimitQar?: number; creditControlLimitQar?: number | null } | undefined}
         onSaved={(p) =>
           setData((prev) =>
             prev
               ? {
                   ...prev,
-                  customer: p.segment ? { ...prev.customer, segment: p.segment } : prev.customer,
                   accounts: p.accountStatus ? prev.accounts.map((a, i) => (i === 0 ? { ...a, status: p.accountStatus ?? a.status } : a)) : prev.accounts,
-                  creditLimits: p.creditLimitQar !== undefined ? (prev.creditLimits.length ? prev.creditLimits.map((c, i) => (i === 0 ? { ...c, creditLimitQar: p.creditLimitQar } : c)) : [{ creditLimitQar: p.creditLimitQar }]) : prev.creditLimits,
+                  creditLimits: p.creditLimitQar !== undefined ? (prev.creditLimits.length ? prev.creditLimits.map((c, i) => (i === 0 ? { ...c, creditLimitQar: p.creditLimitQar, selectedCreditLimitQar: p.selectedCreditLimitQar } : c)) : [{ creditLimitQar: p.creditLimitQar, selectedCreditLimitQar: p.selectedCreditLimitQar }]) : prev.creditLimits,
                 }
               : prev
           )

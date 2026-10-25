@@ -37,15 +37,21 @@ test('the advance payment: the category amount (QAR 100 today), zero for a non-H
   assert.equal(hrn.categoryAdvanceQar(cat), 100);
 });
 
-test('the default credit limit: the category\'s (QAR 50 today) for HRN, QAR 1000 for everyone else', () => {
+test('the default credit limit: HRN 50 (the category\'s), Qatari 4000, Expat 1000', () => {
   assert.equal(hrn.defaultCreditLimit({ nationality: 'Kenyan' }), 50);
-  assert.equal(hrn.defaultCreditLimit({ nationality: 'Qatari' }), 1000);
+  assert.equal(hrn.defaultCreditLimit({ nationality: 'Qatari' }), 4000);
+  assert.equal(hrn.defaultCreditLimit({ nationality: 'qatar' }), 4000);
+  assert.equal(hrn.defaultCreditLimit({ nationality: 'Indian' }), 1000);
   assert.equal(hrn.defaultCreditLimit({ hrn: true }), 50);
-  assert.equal(hrn.defaultCreditLimit({ hrn: false }), 1000);
+  assert.equal(hrn.defaultCreditLimit({ hrn: false }), 1000, 'nothing says Qatari: the Expat default stands');
   assert.equal(hrn.defaultCreditLimit(), 1000);
   assert.equal(hrn.NON_HRN_CREDIT_LIMIT_QAR, 1000);
+  assert.equal(hrn.QATARI_CREDIT_LIMIT_QAR, 4000);
   assert.equal(rules.defaultCreditLimitQar(true), 50, 'BR-076 reads the same configuration');
   assert.equal(rules.defaultCreditLimitQar(false), 1000);
+  assert.equal(rules.defaultCreditLimitQar(false, 'Qatari'), 4000);
+  assert.equal(rules.defaultCreditLimitQar(true, 'Qatari'), 50, 'HRN wins');
+  assert.match(rules.evaluateRule('BR-076', { hrnFlag: false, nationality: 'Qatari' }).message, /QAR 4000/);
 });
 
 test('several categories for one nationality: the most cautious applies unless one is named (supported, not configured)', () => {
