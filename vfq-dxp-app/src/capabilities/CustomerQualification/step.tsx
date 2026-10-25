@@ -7,6 +7,7 @@ import type { GuidedContactValue } from '../../components/patterns/guidedContact
 import { BillingAccountAutoResolver } from '../../components/patterns/BillingAccountAutoResolver';
 import type { BillingAccountValue } from '../../components/patterns/billingAccountModel';
 import { EligibilityGateStep } from '../EligibilityGate/EligibilityGateStep';
+import { accountTypeForJourney } from '../../engines/creditLimit';
 import type { EligibilityResult } from '../../components/domain/eligibilityTypes';
 import type { WizardStep } from '../../components/patterns/wizard/guidedWizardTypes';
 import type { RequestKind } from '../../domain/eligibility';
@@ -114,7 +115,8 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
                 ? { idNumber: contact.idNumber ?? '', idType: contact.idType, nationality: contact.moiResult.nationality, dob: contact.moiResult.dob, expiryDate: contact.moiResult.expiryDate }
                 : undefined
             }
-            skipLineLimit={skipLineLimit}
+            // A journey that has not chosen its product yet cannot judge the line count: the mobile limit would end a Fixed Line sale. Product Selection judges it.
+            skipLineLimit={skipLineLimit || productAgnostic}
             // MNP does not know its connection type until Plan Type: the approvals that depend on it (the ID type's, the line-count and
             // passport BAU ones - a prepaid line needs none of the ID-type approval) are announced there, for the plan type chosen.
             // A stop is still shown here, because it blocks Continue.
@@ -147,13 +149,20 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
               <BillingAccountAutoResolver
                 customerId={eligibility.customerId}
                 customerName={contact.moiResult.name}
+                accountType={accountTypeForJourney('postpaid')}
                 value={(values.billingAccount as BillingAccountValue) ?? {}}
                 onChange={(v) => setValue('billingAccount', v)}
               />
             )}
             <SpecialDiscountsIdentification
               value={(values.customerType as SpecialDiscountsValue) ?? {}}
-              onChange={(v) => setValue('customerType', v)}
+              onChange={(v) => {
+                // A different Special Discount type (or Standard) retires the discount chosen under the previous one: the plan step offers the new
+                // type's discount (and selects it once validated), so nothing from the old choice reaches Checkout or the order.
+                const before = values.customerType as SpecialDiscountsValue | undefined;
+                if (before && (before.type !== v.type || Boolean(before.rejected) !== Boolean(v.rejected))) setValue('discountId', undefined);
+                setValue('customerType', v);
+              }}
               onReject={() => {
                 // Decline the benefit: stay on this page with every Customer Type selection
                 // cleared (company, office ID scan, acceptance) back to Standard, no discount carried.

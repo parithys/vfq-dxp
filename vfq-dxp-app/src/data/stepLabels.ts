@@ -13,6 +13,8 @@ export const NUMBER_SELECTION_LABEL = 'Number Selection';
 export const BILLING_PROFILE_LABEL = 'Billing Profile';
 /** The address a service is activated at. */
 export const SERVICE_ADDRESS_LABEL = 'Address';
+/** The page after the plan: the plan's add-ons (by category, Free or Paid), the bill limit and the eligible discounts. */
+export const ADDONS_DISCOUNTS_LABEL = 'Addons & Discounts';
 /** Choose the plan the order is for. */
 export const PLAN_SELECTION_LABEL = 'Offers & Plans';
 /** The Customer Agreement Form and the customer's signature. */

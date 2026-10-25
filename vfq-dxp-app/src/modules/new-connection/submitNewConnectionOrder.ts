@@ -28,6 +28,7 @@ import type { ActivityInput } from '../../engines/activityEngine';
 import type { useEntityStore } from '../../stores/entityStore';
 import type { NewConnectionFlow, ConfirmedOrder } from './newConnectionModel';
 import { idScanAttachments } from './idScanAttachments';
+import { isB2B2COrder } from './approvalRouting';
 import { approvalMessages, decisionRecord, needsCreditControl } from '../../engines/connectionEligibility';
 
 type EntityStore = ReturnType<typeof useEntityStore.getState>;
@@ -98,8 +99,7 @@ export async function submitNewConnectionOrder(
       const idTypeRouting = eligibility?.checks.some((c) => c.id === 'id-type-routing' && c.outcome === 'approval-routing') ?? false;
       const pendingApproval =
         manualIdEntry ||
-        (Boolean(contact.isB2B2C) && !customerType?.rejected) ||
-        customerType?.type === 'b2b2c' ||
+        isB2B2COrder(contact, customerType) ||
         Boolean(eligibility?.requiresHrnAdvance) ||
         Boolean(eligibility?.checks.some((c) => c.outcome === 'approval-routing')) ||
         Boolean(discount && SUPPORTING_ID_DISCOUNT_TYPES.has(discount.addonType ?? ''));
@@ -146,6 +146,7 @@ export async function submitNewConnectionOrder(
         addressLine: [address?.zone && `Zone ${address.zone}`, address?.streetNo && `Street ${address.streetNo}`, address?.buildingNo && `Building ${address.buildingNo}`].filter(Boolean).join(', ') || undefined,
         creditLimitQar: eligibility?.defaultCreditLimitQar,
         nationality: eligibility?.nationality,
+        segment: eligibility?.segment,
         agentId: currentAgentId() ?? undefined,
       });
 
@@ -169,7 +170,7 @@ export async function submitNewConnectionOrder(
         orderType: 'New Postpaid Activation',
         ...decisionRecord(eligibility?.connectionDecision),
         createdAt: new Date().toISOString(),
-        orderSubType: (contact.isB2B2C && !customerType?.rejected) || customerType?.type === 'b2b2c' ? 'B2B2C' : eligibility?.requiresHrnAdvance ? 'HRN' : 'Consumer',
+        orderSubType: isB2B2COrder(contact, customerType) ? 'B2B2C' : eligibility?.requiresHrnAdvance ? 'HRN' : 'Consumer',
         status: pendingApproval ? 'Submitted for Approval' : 'Complete',
         ...(pendingApproval
           ? {
@@ -182,7 +183,7 @@ export async function submitNewConnectionOrder(
                 idTypeRouting ? 'ID type requires Credit Control approval - routed to Credit Control' : '',
                 eligibility?.checks.some((c) => c.id === 'id-validity' && c.outcome === 'approval-routing') ? 'ID expiry date not on file - routed for approval' : '',
                 eligibility?.requiresHrnAdvance ? `HRN customer - QAR ${hrnAdvanceQar({ nationality: eligibility?.nationality, personaId: usePersonaStore.getState().activePersonaId })} advance payment applies` : '',
-                (Boolean(contact.isB2B2C) && !customerType?.rejected) || customerType?.type === 'b2b2c' ? 'B2B2C employee - Proof of Employment to be verified' : '',
+                isB2B2COrder(contact, customerType) ? 'B2B2C employee - Proof of Employment to be verified' : '',
                 discount && SUPPORTING_ID_DISCOUNT_TYPES.has(discount.addonType ?? '') ? `${discount.addonType} - supporting document to be verified` : '',
               ].filter(Boolean).join(' | '),
               // Line-limit cases go to the Collection Team (Credit Control), a manual-entry order to the Store Manager, and an order
@@ -236,7 +237,7 @@ export async function submitNewConnectionOrder(
         trigger: 'completed',
         reason: pendingApproval
           ? `Order ${orderId} submitted and is awaiting approval.`
-          : `Order ${orderId} submitted and activated${payment?.reference ? ` (WinCash ref ${payment.reference})` : payment?.method === 'Cash' ? ' (cash received by the agent)' : ''}.`,
+          : `Order ${orderId} submitted and activated${payment?.zeroValue ? ` (zero-value receipt ${payment.reference ?? ''})` : payment?.reference ? ` (WinCash ref ${payment.reference})` : payment?.method === 'Cash' ? ' (cash received by the agent)' : ''}.`,
       };
       if (pendingApproval) {
         await logActivity({
@@ -249,7 +250,7 @@ export async function submitNewConnectionOrder(
               manualIdEntry ? 'Identity entered manually' : '',
               idTypeRouting ? 'ID type routed to Credit Control approval' : '',
               eligibility?.requiresHrnAdvance ? 'Upfront payment required' : '',
-              customerType?.type === 'b2b2c' || contact.isB2B2C ? 'B2B2C order' : '',
+              isB2B2COrder(contact, customerType) ? 'B2B2C order' : '',
             ]
               .filter(Boolean)
               .join('; ') || 'Order requires approval before it can complete.',

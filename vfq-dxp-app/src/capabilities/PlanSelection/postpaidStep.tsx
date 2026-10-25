@@ -1,4 +1,4 @@
-import { PLAN_SELECTION_LABEL } from '../../data/stepLabels';
+import { PLAN_SELECTION_LABEL, ADDONS_DISCOUNTS_LABEL } from '../../data/stepLabels';
 import type { GuidedContactValue } from '../../components/patterns/guidedContactModel';
 import { planChoiceSummary, planExtrasSummary } from './summary';
 import type { CustomerBenefit } from '../../engines/customerBenefitEngine';
@@ -39,11 +39,15 @@ export function postpaidExtrasStep(ctx: PostpaidPlanContext): WizardStep {
     key: 'planExtras',
     summary: planExtrasSummary,
     skip: ctx.skipWhen,
-    label: 'Add-Ons',
+    label: ADDONS_DISCOUNTS_LABEL,
     subheading: 'Personalise the plan with optional services and spending controls.',
     render: ({ values, setValue }) => renderPlanStep('extras', ctx, values, setValue),
     // Bill limit is the only gate; add-ons and discounts never block.
-    isValid: (values) => values.billLimitPass !== false,
+    isValid: (values) => {
+      const cap = (values.eligibility as EligibilityResult | undefined)?.defaultCreditLimitQar;
+      const limit = values.billLimit as number | undefined;
+      return values.billLimitPass !== false && !(cap !== undefined && limit !== undefined && limit > cap);
+    },
   };
 }
 
@@ -67,7 +71,7 @@ function renderPlanStep(
             idType: (values.contact as GuidedContactValue | undefined)?.idType,
           }}
           customerBenefits={customerBenefits}
-          specialDiscountType={((v) => (v?.type && v.type !== 'none' && !v.rejected ? v.type : undefined))(values.customerType as CustomerTypeValue | undefined)}
+          specialDiscountType={((v) => (v ? (v.type && v.type !== 'none' && !v.rejected ? v.type : 'none') : undefined))(values.customerType as CustomerTypeValue | undefined)}
           customerBenefit={((values.customerType as CustomerTypeValue | undefined)?.officeAccepted || isCustomerTypeValid(values.customerType as CustomerTypeValue | undefined) && (values.customerType as CustomerTypeValue | undefined)?.type === 'b2b2c') ? (values.customerType as CustomerTypeValue).type : undefined}
           selectedProductId={values.productId as string | undefined}
           onSelectProduct={(id) => setValue('productId', id)}
@@ -82,6 +86,7 @@ function renderPlanStep(
             setValue('bundledItems', bundled);
           }}
           billLimit={values.billLimit as number | undefined}
+          billLimitMax={eligibility?.defaultCreditLimitQar}
           onBillLimitChange={(amount, pass) => {
             setValue('billLimit', amount);
             setValue('billLimitPass', pass);

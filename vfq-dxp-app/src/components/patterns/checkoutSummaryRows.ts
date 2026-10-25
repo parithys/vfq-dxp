@@ -103,7 +103,7 @@ export function buildCafSummaryRows({
       ? [
           {
             label: 'Star Number Lock-In',
-            value: starTier ? `${starTier.lockInDurationMonths} months` : 'Not yet banded - confirm before signature',
+            value: starTier ? `${starTier.lockInDurationMonths} months` : 'To be confirmed',
           },
           {
             label: 'Star Number Charges',

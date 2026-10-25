@@ -65,14 +65,15 @@ export function AppRouter() {
           they are the same content at different scope. */}
       <Route path="/new-connections" element={<ProductLinePage lineKey="new-connections" />} />
       <Route path="/mobile" element={<ProductLinePage lineKey="mobile" />} />
-      <Route path="/mobile/start-connection" element={<NewConnectionWizard flow="new" />} />
-      <Route path="/mobile/start-connection/existing/:customerId" element={<NewConnectionWizard flow="existing" />} />
+      {/* The New Connection journeys are guarded by their grant like the journeys below: a typed or bookmarked URL is refused like the menu. */}
+      <Route path="/mobile/start-connection" element={<RequireFeature featureKey="postpaid.new-postpaid-wizard"><NewConnectionWizard flow="new" /></RequireFeature>} />
+      <Route path="/mobile/start-connection/existing/:customerId" element={<RequireFeature featureKey="postpaid.new-postpaid-wizard"><NewConnectionWizard flow="existing" /></RequireFeature>} />
       {/* Plans & Numbers journeys on an existing line (journeys of the Mobile Services line; the menu leads here). Guarded by their grant: a typed or bookmarked URL is refused like the menu. */}
       <Route path="/mobile/change-postpaid-plan" element={<RequireFeature featureKey="mobile.change-postpaid-plan"><ChangePostpaidPlanWizard /></RequireFeature>} />
       <Route path="/mobile/change-prepaid-pack" element={<RequireFeature featureKey="mobile.change-prepaid-pack"><ChangePrepaidPackWizard /></RequireFeature>} />
       <Route path="/mobile/add-addon" element={<RequireFeature featureKey="mobile.add-addon"><AddAddonWizard /></RequireFeature>} />
       <Route path="/mobile/:category" element={<ProductLinePage lineKey="mobile" />} />
-      <Route path="/fibre-home/start-connection/existing/:customerId" element={<NewConnectionWizard flow="existing" journey="home" />} />
+      <Route path="/fibre-home/start-connection/existing/:customerId" element={<RequireFeature featureKey="fixedline.new-fixed-line-wizard"><NewConnectionWizard flow="existing" journey="home" /></RequireFeature>} />
       <Route path="/fibre-home" element={<ProductLinePage lineKey="fibre-home" />} />
       <Route path="/fibre-home/:category" element={<ProductLinePage lineKey="fibre-home" />} />
       <Route path="/customer/:customerId" element={<CustomerOrBusiness360 />} />

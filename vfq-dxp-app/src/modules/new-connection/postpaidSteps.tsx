@@ -12,7 +12,9 @@ import {
   serviceAddressStep,
   simTypeStep,
   actualUserStep,
+  isSpecialDiscountsValid,
 } from '../../capabilities';
+import type { SpecialDiscountsValue } from '../../capabilities';
 import { starEntitlementQar } from '../../engines/postpaidPricing';
 import type { Product } from './newConnectionModel';
 import type { DeviceType } from '../../lib/deviceType';
@@ -29,6 +31,15 @@ export interface PostpaidStepContext {
 // accepted offer the full path runs.
 const offerAccepted = (values: Record<string, unknown>) => (values.crossSales as CrossSalesValue | undefined)?.decision === 'accepted';
 
+/** The customer holds a Special Discount that was validated at Customer Verification (Consumer B2B2C, Retiree or MADA, evidence accepted). */
+export const hasValidatedSpecialDiscount = (values: Record<string, unknown>): boolean => {
+  const t = values.customerType as SpecialDiscountsValue | undefined;
+  return Boolean(t && t.type && t.type !== 'none' && !t.rejected && isSpecialDiscountsValid(t));
+};
+
+/** The Addons & Discounts step is skipped for an accepted offer - unless a validated Special Discount may still apply to the offer's plan, which the agent then sees. */
+const extrasSkip = (values: Record<string, unknown>) => offerAccepted(values) && !hasValidatedSpecialDiscount(values);
+
 /**
  * The New Postpaid steps, after Customer Verification and Product Selection: Address, Billing Profile (resolved for the
  * agent), Plan and Add-ons, Number, SIM, Checkout, the full CAF and Payment, which submits.
@@ -39,7 +50,7 @@ export function postpaidSteps({ products, customerBenefits, device }: PostpaidSt
     serviceAddressStep({ mode: 'structured', autoPass: true }),
     billingAccountStep(),
     postpaidPlanStep(planContext),
-    postpaidExtrasStep(planContext),
+    postpaidExtrasStep({ ...planContext, skipWhen: extrasSkip }),
     numberSelectionStep({
       priceField: 'numberPriceQAR',
       // Refresh sits at the right of the title row and reloads the number inventory on every tab.
@@ -60,6 +71,6 @@ export function postpaidSteps({ products, customerBenefits, device }: PostpaidSt
     cafSignatureStep({ variant: 'full' }),
     // "On successful WinCash confirmation, return to DXP, submit the order, and create the interaction activity"
     // (2026-09-28): Payment is the last step, so Continue here would only ever mean "submit".
-    paymentStep({ submitOnPaid: true }),
+    paymentStep({ zeroValueReceipt: true, submitOnPaid: true }),
   ];
 }

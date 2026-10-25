@@ -42,6 +42,7 @@ export function numberSelectionStep(
         value={values.msisdn as string | undefined}
         refreshKey={opts.refresh ? (values.numberRefresh as number | undefined) : undefined}
         plan={opts.plan?.(values)}
+        customerIdNumber={(values.contact as { idNumber?: string } | undefined)?.idNumber}
         prePaired={
           opts.prePairedOption
             ? {

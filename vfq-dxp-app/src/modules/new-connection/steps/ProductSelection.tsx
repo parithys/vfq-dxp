@@ -180,13 +180,16 @@ export function ProductSelection({
       </section>
 
       {/* What depends on the product: its eligibility rules, judged for the product chosen. Silent on a clean pass. */}
-      <ProductEligibility
-        values={values}
-        setValue={setValue}
-        flow={ctx.flow}
-        existingCustomerId={ctx.existingCustomerId}
-        onSwitchToPrepaid={product === 'prepaid' ? undefined : () => chooseProduct('prepaid')}
-      />
+      {/* The eligibility outcomes (collections, line limits, approval routing) are the agent's: not part of the customer's pop-up. */}
+      <div className="agent-only">
+        <ProductEligibility
+          values={values}
+          setValue={setValue}
+          flow={ctx.flow}
+          existingCustomerId={ctx.existingCustomerId}
+          onSwitchToPrepaid={product === 'prepaid' ? undefined : () => chooseProduct('prepaid')}
+        />
+      </div>
     </div>
   );
 }

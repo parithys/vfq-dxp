@@ -123,7 +123,7 @@ export function CheckoutSummaryStep({
     });
     return (
       <div className="space-y-6">
-        <p className="text-fg-2 text-[length:var(--fs-caption)]">Review with the customer before generating the CAF.</p>
+        <p className="agent-only text-fg-2 text-[length:var(--fs-caption)]">Review with the customer before generating the CAF.</p>
         <SummaryTables tables={tables} />
       </div>
     );

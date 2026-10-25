@@ -28,6 +28,10 @@ export interface Product {
   productId: string;
   name: string;
   mrcQAR: number;
+  /** The catalogue's product type ('Postpaid Plan', 'Add-on', ...). */
+  type?: string;
+  /** A nationality promotion: offered only to these nationalities (see isPlanOfferedTo). */
+  eligibleNationalities?: string[];
   starNumberEntitlementQar?: number;
   /** See PostpaidPlanAddonsStep's PostpaidPlan.preBundledOffer for what this
    * drives - the 'plan' step's autoAdvanceWhen below is the other half. */

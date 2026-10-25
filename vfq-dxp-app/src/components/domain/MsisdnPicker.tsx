@@ -52,6 +52,8 @@ interface MsisdnPickerProps {
   portalMode?: boolean;
   /** Portal only: the numbers reserved in this portal session (after a customer was identified), which its Reserved tab lists. */
   reservedHere?: string[];
+  /** Journey: the customer's ID number. The Reserved tab lists only this agent's holds placed for that ID; with none given, every hold of the agent. */
+  customerIdNumber?: string;
   /** Portal only: puts an Unreserve button on each card of the Reserved tab; called with the number to release. */
   onUnreserve?: (msisdn: string) => void;
   /** No longer read: the Reserved tab always shows its green "Reserved" pill (2026-10-04 design). Kept so existing callers still compile. */
@@ -73,7 +75,7 @@ const SEARCH_DEBOUNCE_MS = 300;
 // Anything below the Star band (QAR 0 - 1,499) is free of charge whatever its catalogue price; QAR 1,500 and above is a Star Number.
 const chargeFor = (priceQar: number) => (priceQar >= FREE_NUMBER_PRICE_CEILING_QAR ? priceQar : 0);
 
-export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, planMrcQar, starEntitlementQar: starEntitlementProp, inlineToolbar = false, portalMode = false, reservedHere = [], onUnreserve }: MsisdnPickerProps) {
+export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, planMrcQar, starEntitlementQar: starEntitlementProp, inlineToolbar = false, portalMode = false, reservedHere = [], onUnreserve, customerIdNumber }: MsisdnPickerProps) {
   const entitlementQar = starEntitlementProp ?? (planMrcQar !== undefined ? planMrcQar * STAR_NUMBER_ENTITLEMENT_MULTIPLIER : undefined);
   // Star tab filter: only numbers priced within the customer's entitlement (no extra charge).
   const [withinEntitlementOnly, setWithinEntitlementOnly] = useState(false);
@@ -150,7 +152,9 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
   // later in this same session (choose below) must not yank the agent
   // back to a tab they have since navigated away from.
   const hasAutoSelectedTab = useRef(false);
-  const heldReservations = numbers.filter((n) => n.status === 'Reserved' && n.reservedBy === agentName).length;
+  const isHeldForCustomer = (n: { status?: string; reservedBy?: string; reservedForQid?: string }) =>
+    n.status === 'Reserved' && n.reservedBy === agentName && (!customerIdNumber || n.reservedForQid === customerIdNumber);
+  const heldReservations = numbers.filter(isHeldForCustomer).length;
   useEffect(() => {
     if (hasAutoSelectedTab.current || !numbersLoaded || portalMode) return;
     hasAutoSelectedTab.current = true;
@@ -191,7 +195,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
   // used to list all five reservations in the dataset, including four held by
   // other agents that this one cannot use - a list where most rows were
   // unusable and nothing on screen said why.
-  const heldByAgent = numbers.filter((n) => n.status === 'Reserved' && n.reservedBy === agentName);
+  const heldByAgent = numbers.filter(isHeldForCustomer);
   // The portal's Reserved tab lists what was reserved in this session, not the holds the agent already had.
   const myReserved = portalMode ? numbers.filter((n) => reservedHere.includes(n.msisdn)) : heldByAgent;
   const inTab =

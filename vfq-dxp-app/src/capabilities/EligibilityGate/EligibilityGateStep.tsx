@@ -138,7 +138,7 @@ export function EligibilityGateStep({
   // A cached result for THIS identity. Computed during render rather than in
   // an effect so the first paint on re-entry already shows the rows.
   const cached =
-    result && idNumber && result.idNumber === idNumber && (result.scope ?? 'product') === scope && (result.journeyType ?? 'postpaid') === journeyType && Boolean(result.portIn) === portIn && (result.connectionType ?? (journeyType === 'prepaid' ? 'MOBILE_PREPAID' : 'MOBILE_POSTPAID')) === requestedType && (result.requestKind ?? 'NEW_ACTIVATION') === requestKind
+    result && idNumber && result.idNumber === idNumber && (result.scope ?? 'product') === scope && (result.journeyType ?? 'postpaid') === journeyType && Boolean(result.portIn) === portIn && Boolean(result.lineLimitSkipped) === skipLineLimit && (result.connectionType ?? (journeyType === 'prepaid' ? 'MOBILE_PREPAID' : 'MOBILE_POSTPAID')) === requestedType && (result.requestKind ?? 'NEW_ACTIVATION') === requestKind
       ? result
       : undefined;
 
@@ -371,6 +371,7 @@ export function EligibilityGateStep({
         blacklistReason: match.blacklistReason,
         lineCapExceeded: decision ? decision.outcome !== 'ALLOW' : !lineCap.pass,
         connectionType: requestedType,
+        lineLimitSkipped: skipLineLimit,
         requestKind,
         connectionDecision: decision ?? undefined,
         requiresHrnAdvance: hrnFlag,

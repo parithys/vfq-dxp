@@ -91,6 +91,7 @@ export async function submitMnpOrder(
         addressLine: [address?.zone && `Zone ${address.zone}`, address?.streetNo && `Street ${address.streetNo}`, address?.buildingNo && `Building ${address.buildingNo}`].filter(Boolean).join(', ') || undefined,
         creditLimitQar: eligibility?.defaultCreditLimitQar,
         nationality: eligibility?.nationality,
+        segment: eligibility?.segment,
         agentId: currentAgentId() ?? undefined,
       });
 

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { overallCreditLimitOf } from '../creditLimitView';
 import type { ReactNode } from 'react';
-import { useStartNewConnection } from '../useStartNewConnection';
+import { useCanStartNewConnection, useStartNewConnection } from '../useStartNewConnection';
 import { RevealValue, useFieldAccess } from '../fieldAccess';
 import { Icon } from '../../../components/primitives/Icon';
 import type { Customer360Data } from '../../../engines/customer360Engine';
@@ -65,6 +65,7 @@ function Field({ label, value }: { label: string; value: ReactNode | undefined |
  */
 export function C360ProductsServices({ data, services }: { data: Customer360Data; services: CustomerService[]; goToTab?: (key: string) => void }) {
   const startNewConnection = useStartNewConnection(data.customer.customerId);
+  const canStartNewConnection = useCanStartNewConnection();
   const [query, setQuery] = useState('');
   // Set by clicking a Service Types tile; the list shows only that type until the tile is clicked again.
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
@@ -214,7 +215,7 @@ export function C360ProductsServices({ data, services }: { data: Customer360Data
       subtitle="View and manage all customer connections, plans, add-ons, devices and services"
       actions={
         <>
-          <ActionButton primary icon={IC.plus} onClick={startNewConnection}>
+          <ActionButton primary icon={IC.plus} onClick={startNewConnection} disabled={!canStartNewConnection}>
             Add Service
           </ActionButton>
         </>

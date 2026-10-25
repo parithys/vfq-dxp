@@ -71,6 +71,7 @@ export async function submitPreToPostOrder(
     contactPhone: contact.moiResult?.phone,
     creditLimitQar: eligibility?.defaultCreditLimitQar,
     nationality: eligibility?.nationality,
+    segment: eligibility?.segment,
     agentId: currentAgentId() ?? undefined,
   });
 

@@ -10,7 +10,9 @@ test('the chosen plan or pack figure uses the shared selected highlight, not a w
   const { SelectedPlanFigure, CARD_SELECTED } = await load('/src/components/primitives/offerCardParts.tsx');
   const html = renderToStaticMarkup(React.createElement(SelectedPlanFigure, { label: 'Monthly plan' }, 'QAR 145'));
   assert.ok(html.includes(CARD_SELECTED.split(' ')[0]) && html.includes('Monthly plan'));
-  for (const f of ['src/components/patterns/PostpaidPlanAddonsStep.tsx', 'src/components/patterns/PrepaidPlanStep.tsx']) {
+  // The Add-ons page no longer repeats the selected plan (name, tag, price, benefits); the pack step still shows its figure.
+  assert.doesNotMatch(fs.readFileSync('src/components/patterns/PostpaidPlanAddonsStep.tsx', 'utf8'), /SelectedPlanFigure|Selected Plan</);
+  for (const f of ['src/components/patterns/PrepaidPlanStep.tsx']) {
     const src = fs.readFileSync(f, 'utf8');
     assert.match(src, /<SelectedPlanFigure label=/, f);
     assert.doesNotMatch(src, /card px-4 py-2\.5 text-right/, `${f}: no hand-made white figure card`);

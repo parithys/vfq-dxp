@@ -73,7 +73,7 @@ export function buildDetailedTables({
         { label: 'Number Discount Value', value: q(discountValueQar) },
         { label: 'Number Lock-in Value:', value: q(lockInValueQar) },
         ...(isStarNumber
-          ? [{ label: 'Star Number Lock-In', value: starTier ? `${starTier.lockInDurationMonths} months` : 'Not yet banded - confirm before signature' }]
+          ? [{ label: 'Star Number Lock-In', value: starTier ? `${starTier.lockInDurationMonths} months` : 'To be confirmed' }]
           : []),
         { label: 'Plan', value: plan?.name ?? '-' },
         { label: 'Lock-In Period', value: plan?.commitmentMonths ? `${plan.commitmentMonths} months` : 'No lock-in' },
@@ -81,8 +81,8 @@ export function buildDetailedTables({
         { label: 'SIM Type', value: simType?.simType ?? '-' },
         ...(creditLimitQar !== undefined
           ? [
-              { label: 'Credit Limit', value: `QAR ${creditLimitQar}`, boldLabel: true },
-              { label: 'Bill Limit', value: billLimit !== undefined || plan?.mrcQAR !== undefined ? `QAR ${billLimit ?? plan?.mrcQAR}` : `Up to QAR ${creditLimitQar}`, boldLabel: true },
+              { label: 'Credit Limit', value: `QAR ${creditLimitQar}`, boldLabel: true, agentOnly: true },
+              { label: 'Bill Limit', value: billLimit !== undefined || plan?.mrcQAR !== undefined ? `QAR ${billLimit ?? plan?.mrcQAR}` : `Up to QAR ${creditLimitQar}`, boldLabel: true, agentOnly: true },
             ]
           : []),
       ],
@@ -92,7 +92,7 @@ export function buildDetailedTables({
       title: 'Upfront Charges',
       rows: [
         { label: 'Number Charge After Discount', value: q(numberChargeQar) },
-        { label: 'HRN Advance', value: q(hrnAdvance) },
+        { label: 'Advance Payment', value: q(hrnAdvance) },
         { label: 'Total Payable Today', value: q(dueTodayQar), boldLabel: true, boldValue: true },
       ],
     },

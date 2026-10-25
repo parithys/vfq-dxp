@@ -1,9 +1,12 @@
 import { Button } from '../../components/primitives/Button';
 import { useEffect, useState } from 'react';
 import { Icon } from '../../components/primitives/Icon';
+import { TabStrip } from '../../components/primitives/TabStrip';
+import { SegmentedTabs } from '../../components/primitives/SegmentedTabs';
 import { CARD_IDLE, CARD_SELECTED, SelectedCardTexture } from '../../components/primitives/offerCardParts';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { isAddonEligible, type AddonEligibilityContext, type AddonEligibilityRule } from '../../engines/addonEligibility';
+import { ADDON_CATEGORIES, ADDON_PRICING_FILTERS, DEFAULT_ADDON_PRICING, addonsFor, selectedPerCategory, type AddonCategory, type AddonPricing } from '../../engines/addonCategories';
 
 interface AddonProduct {
   productId: string;
@@ -13,6 +16,13 @@ interface AddonProduct {
   description?: string;
   /** Optional conditions for being offered this add-on - see addonEligibility.ts. */
   eligibility?: AddonEligibilityRule;
+  /** The add-on's category on the Add-ons page (see addonCategories.ts). */
+  addonCategory?: string;
+  pricing?: 'free' | 'paid';
+  /** The catalogue's own wording for a price that is not a plain QAR amount (TBC, Plan-based, QR 10 after promotional period ...). */
+  priceLabel?: string;
+  /** The catalogue's status (Confirmed, Demo Only / TBC ...). Kept with the data; not displayed. */
+  addonStatus?: string;
 }
 
 interface AddonsPickerProps {
@@ -39,6 +49,11 @@ interface AddonsPickerProps {
    * the prepaid pack carries (addons-discounts for `eligibilityContext.planId`), priced as a one-off charge.
    */
   source?: 'catalogue' | 'prepaid';
+  /**
+   * The dedicated Add-ons page: two levels of navigation - the category tabs (Local Data, Local Minutes, International, Roaming, Combo, Others) and, under
+   * them, the Free / Paid filter, which applies to the category selected. Rows layout, catalogue add-ons.
+   */
+  categorized?: boolean;
 }
 
 // "Plan & Add-ons" (reference flow step 5) - optional, non-gating multi-select
@@ -48,7 +63,9 @@ const CHEVRON = 'M9 18l6-6-6-6';
 
 const PHONE_ICON = 'M7 2h10a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z M11 18h2';
 
-export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityContext, emptyMessage, layout = 'cards', source = 'catalogue' }: AddonsPickerProps) {
+export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityContext, emptyMessage, layout = 'cards', source = 'catalogue', categorized = false }: AddonsPickerProps) {
+  const [category, setCategory] = useState<AddonCategory>(ADDON_CATEGORIES[0]);
+  const [pricing, setPricing] = useState<AddonPricing>(DEFAULT_ADDON_PRICING);
   const [allAddons, setAllAddons] = useState<AddonProduct[]>([]);
   const [status, setStatus] = useState<'loading' | 'error' | 'ready'>('loading');
   const [attempt, setAttempt] = useState(0);
@@ -115,6 +132,10 @@ export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityCon
     ) : null;
   }
 
+  // The add-ons on screen: all of them, or - on the Add-ons page - the selected category's, narrowed by Free / Paid.
+  const useTabs = categorized && layout === 'rows' && source === 'catalogue';
+  const shown = useTabs ? addonsFor(addons, category, pricing) : addons;
+  const perCategory = selectedPerCategory(addons, selectedIds);
   const toggle = (id: string) => onChange(selectedIds.includes(id) ? selectedIds.filter((i) => i !== id) : [...selectedIds, id]);
 
   return (
@@ -139,10 +160,23 @@ export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityCon
           </h3>
         </button>
       )}
+      {useTabs && (
+        <div className="space-y-3">
+          {/* Level 1: the category (navigation) - the underline tabs, with how many of the chosen add-ons each holds. */}
+          <TabStrip
+            label="Add-On Categories"
+            items={ADDON_CATEGORIES.map((c) => ({ key: c, label: c, count: perCategory[c] > 0 ? perCategory[c] : undefined }))}
+            active={category}
+            onChange={setCategory}
+          />
+          {/* Level 2: Free / Paid (a filter of the same list) - applies to the category selected above. */}
+          <SegmentedTabs label="Free or Paid Add-Ons" items={ADDON_PRICING_FILTERS} active={pricing} onChange={setPricing} />
+        </div>
+      )}
       {/* Add-on cards share the plan cards' standard (shared idle / selected states, selected texture, tick).
           Multi-select: each card toggles only itself, so choosing one never clears another. */}
-      <div className={layout === 'rows' ? `space-y-3 ${open || hideHeader ? '' : 'hidden'}` : `grid grid-cols-[repeat(auto-fill,minmax(max(15rem,calc((100%-2rem)/3)),1fr))] gap-4 ${open || hideHeader ? '' : 'hidden'}`}>
-        {addons.map((a) => {
+      <div className={layout === 'rows' ? `grid grid-cols-1 gap-3 md:grid-cols-2 ${open || hideHeader ? '' : 'hidden'}` : `grid grid-cols-[repeat(auto-fill,minmax(max(15rem,calc((100%-2rem)/3)),1fr))] gap-4 ${open || hideHeader ? '' : 'hidden'}`}>
+        {shown.map((a) => {
           const selected = selectedIds.includes(a.productId);
           if (layout === 'rows') {
             return (
@@ -166,18 +200,24 @@ export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityCon
                   <Icon path={PHONE_ICON} className="w-5 h-5" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-fg font-semibold text-[length:var(--fs-body)]">{a.name}</p>
+                  <p className="text-fg font-semibold text-[length:var(--fs-body)]">
+                    {a.name}
+                  </p>
                   {a.description && <p className="text-fg-2 text-[length:var(--fs-caption)]">{a.description}</p>}
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className={`text-[length:var(--fs-tag)] font-semibold uppercase tracking-wide ${selected ? 'text-accent' : 'text-muted'}`}>
-                    {selected ? 'Added' : 'Optional'}
-                  </p>
-                  <p className="text-fg">
-                    <span className="text-[length:var(--fs-caption)]">QAR </span>
-                    <span className="text-[length:var(--fs-h4)] font-bold">{a.mrcQAR}</span>
-                    <span className="text-fg-2 text-[length:var(--fs-caption)]">{source === 'prepaid' ? ' one-off' : ' /mo'}</span>
-                  </p>
+                  {a.pricing === 'free' || (!a.pricing && a.mrcQAR === 0) ? (
+                    <p className="text-fg text-[length:var(--fs-h4)] font-bold">Free</p>
+                  ) : a.priceLabel && /QR\s*\d/.test(a.priceLabel) ? (
+                    // Only wording that states a QAR amount ("QR 50 per additional SIM") is shown; open prices (TBC, Plan-based, Plan-dependent) are not displayed.
+                    <p className="text-fg text-[length:var(--fs-body)] font-bold max-w-48">{a.priceLabel}</p>
+                  ) : a.priceLabel ? null : (
+                    <p className="text-fg">
+                      <span className="text-[length:var(--fs-caption)]">QAR </span>
+                      <span className="text-[length:var(--fs-h4)] font-bold">{a.mrcQAR}</span>
+                      <span className="text-fg-2 text-[length:var(--fs-caption)]">{source === 'prepaid' ? ' one-off' : ' /mo'}</span>
+                    </p>
+                  )}
                 </div>
               </div>
             );
@@ -216,6 +256,11 @@ export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityCon
           );
         })}
       </div>
+      {useTabs && shown.length === 0 && (
+        <p className="rounded-[var(--radius-card)] border border-border-soft bg-surface px-4 py-6 text-center text-fg-2 text-[length:var(--fs-body)]">
+          {`No ${pricing === 'free' ? 'free' : 'paid'} add-ons in ${category}.`}
+        </p>
+      )}
     </div>
   );
 }

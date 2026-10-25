@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { discountsForCustomer, type CustomerBenefit } from '../../engines/customerBenefitEngine';
 import { monthlyCharges } from '../../engines/postpaidPricing';
-import { closestPlans, PLAN_GROUPS, SPECIAL_DISCOUNT_TYPE, discountsForSpecialType, SPECIAL_OFFERS_TAB_LABEL, planGroupOf } from './postpaidPlanModel';
+import { closestPlans, PLAN_GROUPS, SPECIAL_DISCOUNT_TYPE, discountsForSpecialType, specialDiscountToPreselect, isPlanOfferedTo, SPECIAL_OFFERS_TAB_LABEL, planGroupOf } from './postpaidPlanModel';
 import type { PostpaidPlan, Discount, AddonProduct, PlanGroupKey, TabKey } from './postpaidPlanModel';
 
 interface UsePostpaidPlanAddonsArgs {
@@ -14,8 +14,11 @@ interface UsePostpaidPlanAddonsArgs {
   /** Told which source the selected plan came from (OFFER / PLAN) and what an offer bundles, for the next step. */
   onSelectionChange?: (sel: { source: 'OFFER' | 'PLAN' | undefined; bundled: string[] }) => void;
   customerBenefit?: 'mada' | 'b2b2c' | 'retired' | 'none';
-  specialDiscountType?: 'mada' | 'b2b2c' | 'retired';
+  /** The Special Discount chosen at Customer Verification; 'none' = Standard (or rejected): no Special Discount is offered. Omitted: the journey has no such choice. */
+  specialDiscountType?: 'mada' | 'b2b2c' | 'retired' | 'none';
   customerBenefits?: CustomerBenefit[];
+  /** The customer's nationality: a nationality promotion plan is offered only to its nationality (isPlanOfferedTo). */
+  customerNationality?: string;
   /** A plan left out of the choices: the line's current plan, when the journey is changing it. */
   hiddenProductId?: string;
 }
@@ -30,6 +33,7 @@ export function usePostpaidPlanAddons({
   customerBenefit,
   specialDiscountType,
   customerBenefits,
+  customerNationality,
   hiddenProductId,
 }: UsePostpaidPlanAddonsArgs) {
   const [plans, setPlans] = useState<PostpaidPlan[]>([]);
@@ -71,7 +75,7 @@ export function usePostpaidPlanAddons({
   // active tab's matches doesn't also make its own tab disappear out from
   // under it. Each tab's CONTENT still reads the filtered list below.
   // The Special Discount selected on Customer Verification adds a third tab listing only the plans that discount applies to.
-  const special = specialDiscountType ? SPECIAL_DISCOUNT_TYPE[specialDiscountType] : undefined;
+  const special = specialDiscountType && specialDiscountType !== 'none' ? SPECIAL_DISCOUNT_TYPE[specialDiscountType] : undefined;
   // planDiscounts holds only the SELECTED plan's discounts, so the tab reads the whole catalogue of this discount type.
   const [specialDiscountRows, setSpecialDiscountRows] = useState<Discount[]>([]);
   useEffect(() => {
@@ -87,7 +91,11 @@ export function usePostpaidPlanAddons({
       cancelled = true;
     };
   }, [special]);
-  const specialPlanIds = useMemo(() => new Set(specialDiscountRows.map((d) => d.planId)), [specialDiscountRows]);
+  // The plans a Special Discount can actually be taken on: an Offers-tab plan is pre-bundled (its discounts are locked), so it is not listed here.
+  const specialPlanIds = useMemo(
+    () => new Set(specialDiscountRows.filter((d) => { const plan = plans.find((p) => p.productId === d.planId); return plan && planGroupOf(plan) !== 'specials'; }).map((d) => d.planId)),
+    [specialDiscountRows, plans]
+  );
   const hasSpecialTab = Boolean(special) && plans.some((p) => specialPlanIds.has(p.productId));
   const planGroupTabs = [
     ...PLAN_GROUPS.filter((g) => plans.some((p) => planGroupOf(p) === g.key)),
@@ -122,10 +130,10 @@ export function usePostpaidPlanAddons({
 
   useEffect(() => {
     mockDataEngine.list<PostpaidPlan & AddonProduct>('products').then((all) => {
-      setPlans(all.filter((p) => p.type === 'Postpaid Plan' && p.listed !== false && p.productId !== hiddenProductId).sort((a, b) => a.mrcQAR - b.mrcQAR));
+      setPlans(all.filter((p) => p.type === 'Postpaid Plan' && p.listed !== false && p.productId !== hiddenProductId && isPlanOfferedTo(p, customerNationality)).sort((a, b) => a.mrcQAR - b.mrcQAR));
       setAddonProducts(all.filter((p) => p.type === 'Add-on'));
     });
-  }, [hiddenProductId]);
+  }, [hiddenProductId, customerNationality]);
 
   // Discounts are loaded for the selected plan only; a failed load can be retried and never blocks the step.
   const [discountsState, setDiscountsState] = useState<'loading' | 'error' | 'ready'>('ready');
@@ -154,6 +162,13 @@ export function usePostpaidPlanAddons({
     };
   }, [selectedProductId, discountsAttempt]);
   const retryDiscounts = () => setDiscountsAttempt((n) => n + 1);
+  // A discount chosen earlier that this customer is no longer offered (the Special Discount type changed, or Standard was chosen) is dropped: it never
+  // survives as a hidden 25% on the order. Only once this plan's discounts have loaded, so a resumed draft is not cleared while they load.
+  useEffect(() => {
+    if (!discountId || discountsState !== 'ready' || planDiscounts.length === 0) return;
+    if (!discounts.some((d) => d.addonDiscountId === discountId)) onSelectDiscount(undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [discountId, discounts, discountsState, planDiscounts]);
 
   const selectedPlan = plans.find((p) => p.productId === selectedProductId);
   // "Offers" is the specials group (2026-09-30 rule): every plan there is
@@ -180,7 +195,7 @@ export function usePostpaidPlanAddons({
   const benefitAppliedFor = useRef<string | undefined>(undefined);
   useEffect(() => {
     if (!benefitType || discountId || !selectedProductId || benefitAppliedFor.current === selectedProductId) return;
-    const match = discounts.find((d) => d.addonType === benefitType);
+    const match = specialDiscountToPreselect(discounts, customerBenefit);
     if (match) {
       benefitAppliedFor.current = selectedProductId; // once per plan: choosing "No discount" afterwards sticks
       onSelectDiscount(match.addonDiscountId);

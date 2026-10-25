@@ -1,5 +1,6 @@
 import type { WizardStep } from '../../components/patterns/wizard/guidedWizardTypes';
 import type { ServiceJourney } from '../../capabilities';
+import type { ConnectionType } from '../../domain/eligibility';
 
 // New Connection is ONE journey: Customer Verification once, then the product the agent chooses by the customer's intent,
 // and that product's steps continue in the same wizard (same draft, same customer lock). This is the product model.
@@ -61,6 +62,10 @@ export function eligibilityJourney(values: Record<string, unknown>): 'postpaid' 
   const product = values.product as ConnectionProduct | undefined;
   return product === 'prepaid' || (product === 'mnp' && values.mnpType === 'prepaid') ? 'prepaid' : 'postpaid';
 }
+
+/** The line the product adds, for the line-count rules: Fixed Line is Fixed/FWA; MNP is the mobile line of the plan type it ports onto. */
+export const connectionOf = (values: Record<string, unknown>): ConnectionType =>
+  values.product === 'fixed-line' ? 'FIXED_FWA' : eligibilityJourney(values) === 'prepaid' ? 'MOBILE_PREPAID' : 'MOBILE_POSTPAID';
 
 /** Whether the product keeps a billing account (a prepaid line has none; MNP onto a prepaid plan has none either). */
 /** Whether New Connection's shared Billing Profile step (before Recommended Offers) applies: until a product is chosen, and for a product that has one. */

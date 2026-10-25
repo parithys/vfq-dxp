@@ -53,8 +53,9 @@ export function PostpaidDiscountsPanel({
       ) : (
         <div className="space-y-2">
           {/* Same card standard as the plan and add-on cards (shared idle / selected states, texture, tick).
-              Single choice: "No discount" is selected whenever no discount is, and clicking a selected
-              discount again clears it back to "No discount" - the same outcomes the radios gave. */}
+              Eligible Discounts always has one selection: "No Discount" when no Special Discount applies (and whenever no discount is
+              chosen), the Special Discount once a validated Consumer B2B2C / Retiree / MADA applies (the plan step selects it). Choosing
+              another card replaces the choice; choosing the selected card changes nothing. */}
           {discounts.length === 0 ? (
             <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface px-4 py-6 text-center">
               <p className="text-fg-2 text-[length:var(--fs-body)]">No discounts available for this plan</p>
@@ -75,7 +76,7 @@ export function PostpaidDiscountsPanel({
                 description={d.description}
                 value={`${Math.round(d.price * 100)}%`}
                 selected={discountId === d.addonDiscountId}
-                onToggle={() => onSelectDiscount(discountId === d.addonDiscountId ? undefined : d.addonDiscountId)}
+                onToggle={() => onSelectDiscount(d.addonDiscountId)}
               />
             ))}
           </div>

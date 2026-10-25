@@ -17,6 +17,8 @@ interface BillLimitEditorProps {
   layout?: 'default' | 'row';
   /** No box around it (no border, fill or padding): it sits directly on the page, e.g. under a separator line. */
   bare?: boolean;
+  /** The credit limit: a bill limit above it cannot be applied. */
+  maxLimit?: number;
 }
 
 // Pattern 8: Plan/Promotion Detail Modal with Limit Editing - "Edit Bill Limit"
@@ -25,7 +27,7 @@ interface BillLimitEditorProps {
 // implementation named in frontend-architecture.md §5, reused here via the
 // same BR-AGENT-MIN-THRESHOLD rule already exercised by the field-inventory's
 // evidenced Bill Limit Agent Minimum behavior.
-export function BillLimitEditor({ product, value, onChange, layout = 'default', bare = false }: BillLimitEditorProps) {
+export function BillLimitEditor({ product, value, onChange, layout = 'default', bare = false, maxLimit }: BillLimitEditorProps) {
   const row = layout === 'row';
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(String(value ?? ''));
@@ -39,13 +41,15 @@ export function BillLimitEditor({ product, value, onChange, layout = 'default', 
     if (!editing) setDraft(String(value ?? ''));
   }, [value, editing]);
   const agentMinimum = AGENT_MINIMUMS[product];
+  const overCredit = (amount: number | undefined) => amount !== undefined && maxLimit !== undefined && amount > maxLimit;
+  const overMessage = `The bill limit cannot exceed the credit limit (QAR ${maxLimit}).`;
   const result = value !== undefined ? evaluateRule('BR-AGENT-MIN-THRESHOLD', { limitAmount: value, agentMinimum }) : null;
 
   const apply = () => {
     const amount = Number(draft);
     if (Number.isNaN(amount)) return;
     const r = evaluateRule('BR-AGENT-MIN-THRESHOLD', { limitAmount: amount, agentMinimum });
-    onChange(amount, r.pass);
+    onChange(amount, r.pass && !overCredit(amount));
     setEditing(false);
   };
 
@@ -76,7 +80,7 @@ export function BillLimitEditor({ product, value, onChange, layout = 'default', 
           <Button variant="secondary" compact className="h-[var(--size-btn-compact-h)]" aria-label="Decrease by 50 QR" onClick={() => step(-50)}>
             −50
           </Button>
-          <Input label={`QAR (Agent Min ${agentMinimum})`} type="number" value={draft} onChange={(e) => setDraft(e.target.value)} />
+          <Input label={maxLimit !== undefined ? `QAR (Agent Min ${agentMinimum}, Max ${maxLimit})` : `QAR (Agent Min ${agentMinimum})`} type="number" value={draft} onChange={(e) => setDraft(e.target.value)} />
           <Button variant="secondary" compact className="h-[var(--size-btn-compact-h)]" aria-label="Increase by 50 QR" onClick={() => step(50)}>
             +50
           </Button>
@@ -87,6 +91,7 @@ export function BillLimitEditor({ product, value, onChange, layout = 'default', 
       ) : (
         !row && value !== undefined && <div className="text-fg mt-1">QAR {value}</div>
       )}
+      {overCredit(value) && <p className="text-danger text-[length:var(--fs-caption)] mt-2">{overMessage}</p>}
       {result && !result.pass && <p className="text-danger text-[length:var(--fs-caption)] mt-2">{result.message}</p>}
     </div>
   );

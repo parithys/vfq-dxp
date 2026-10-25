@@ -29,11 +29,13 @@ export interface NumberSelectionProps {
   prePaired?: { checked: boolean; onChange: (checked: boolean) => void };
   /** Portal only: the numbers reserved in this portal session, listed on its Reserved tab. */
   reservedHere?: string[];
+  /** Journey: the customer's ID number; the Reserved tab lists only holds placed for it. */
+  customerIdNumber?: string;
   /** Portal only: an Unreserve button on each Reserved Numbers card. */
   onUnreserve?: (msisdn: string) => void;
 }
 
-export function NumberSelection({ value, onChange, variant = 'journey', plan, refreshKey, prePaired, reservedHere, onUnreserve }: NumberSelectionProps) {
+export function NumberSelection({ value, onChange, variant = 'journey', plan, refreshKey, prePaired, reservedHere, onUnreserve, customerIdNumber }: NumberSelectionProps) {
   const inJourney = variant === 'journey';
   const picker = (
     <MsisdnPicker
@@ -50,6 +52,7 @@ export function NumberSelection({ value, onChange, variant = 'journey', plan, re
       // The portal alone has its own tab order (Star, Free, Reserved) and shows no number that was already held.
       portalMode={!inJourney}
       reservedHere={reservedHere}
+      customerIdNumber={inJourney ? customerIdNumber : undefined}
       onUnreserve={inJourney ? undefined : onUnreserve}
     />
   );
