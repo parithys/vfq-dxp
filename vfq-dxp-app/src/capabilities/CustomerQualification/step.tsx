@@ -33,7 +33,7 @@ export interface QualificationContext {
   /** Typed ID entry from the start (a keyboard device); the scanner stays beside it. Off, the scanner leads. */
   manualEntry?: boolean;
   /**
-   * The step is the shared Customer Identification of a journey that offers several products: the product is not
+   * The step is the shared Customer Verification of a journey that offers several products: the product is not
    * chosen yet, so eligibility reports only the checks common to every product (hard stops), the product-specific
    * ones are judged when the product is chosen, and nothing here is prepaid- or postpaid-only.
    */
@@ -121,7 +121,7 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
             showRow={values.product === 'mnp' ? (row) => !((row.id === 'active-lines' || row.id === 'id-type-routing') && row.tone === 'approval-routing') : undefined}
             requestKind={requestKind}
             journeyType={journeyType}
-            // The customer's full set of checks, as the single-product journeys always showed them at Customer Identification: ID type
+            // The customer's full set of checks, as the single-product journeys always showed them at Customer Verification: ID type
             // approval, the active-line limit, collections and the rest. (Prepaid and MNP judge a few of them differently once the product
             // is chosen; Product Selection re-judges those.)
             scope="product"

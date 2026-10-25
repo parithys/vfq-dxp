@@ -32,7 +32,7 @@ export function TicketDrawers({ s, escalate, resolve, cancel, reopen, closeTicke
     <>
     <Drawer open={escalateOpen} onClose={() => setEscalateOpen(false)} title="Escalate Ticket">
       <div className="space-y-3">
-        <Select label="Escalation Reason (mandatory)" value={escalateReason} onChange={(e) => setEscalateReason(e.target.value)} placeholder="Select a reason" options={ESCALATION_REASONS.map((r) => ({ value: r, label: r }))} />
+        <Select label="Escalation Reason (Mandatory)" value={escalateReason} onChange={(e) => setEscalateReason(e.target.value)} placeholder="Select a reason" options={ESCALATION_REASONS.map((r) => ({ value: r, label: r }))} />
         {!escalateReason && <p className="text-[length:var(--fs-caption)] text-danger">An escalation without a selected reason is rejected (ESC-05).</p>}
       </div>
       <div className="flex justify-end gap-2 mt-6">
@@ -43,7 +43,7 @@ export function TicketDrawers({ s, escalate, resolve, cancel, reopen, closeTicke
 
     <Drawer open={resolveOpen} onClose={() => setResolveOpen(false)} title="Resolve Ticket">
       <div className="space-y-3">
-        <Select label="Resolution Code (mandatory, RES-01/02)" value={resolutionCode} onChange={(e) => setResolutionCode(e.target.value)} placeholder="Select one code" options={RESOLUTION_CODES.map((r) => ({ value: r, label: r }))} />
+        <Select label="Resolution Code (Mandatory, RES-01/02)" value={resolutionCode} onChange={(e) => setResolutionCode(e.target.value)} placeholder="Select one code" options={RESOLUTION_CODES.map((r) => ({ value: r, label: r }))} />
         <div>
           <div className="text-[length:var(--fs-caption)] text-muted mb-1">Hashtags (mandatory, at least one - RES-03)</div>
           <div className="flex flex-wrap gap-2">
@@ -67,7 +67,7 @@ export function TicketDrawers({ s, escalate, resolve, cancel, reopen, closeTicke
     </Drawer>
 
     <Drawer open={cancelOpen} onClose={() => setCancelOpen(false)} title="Cancel Ticket">
-      <Select label="Cancellation Reason (required)" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder="Select a reason" options={CANCELLATION_REASONS.map((r) => ({ value: r, label: r }))} />
+      <Select label="Cancellation Reason (Required)" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder="Select a reason" options={CANCELLATION_REASONS.map((r) => ({ value: r, label: r }))} />
       <div className="flex justify-end gap-2 mt-6">
         <Button variant="secondary" onClick={() => setCancelOpen(false)}>Back</Button>
         <Button variant="destructive" onClick={cancel} disabled={!cancelReason}>Cancel Ticket</Button>
@@ -75,7 +75,7 @@ export function TicketDrawers({ s, escalate, resolve, cancel, reopen, closeTicke
     </Drawer>
 
     <Drawer open={reopenOpen} onClose={() => setReopenOpen(false)} title="Reopen Ticket">
-      <Textarea label="Reopen Reason (required)" value={reopenReason} onChange={(e) => setReopenReason(e.target.value)} placeholder="Why is this ticket being reopened?" />
+      <Textarea label="Reopen Reason (Required)" value={reopenReason} onChange={(e) => setReopenReason(e.target.value)} placeholder="Why is this ticket being reopened?" />
       <div className="flex justify-end gap-2 mt-6">
         <Button variant="secondary" onClick={() => setReopenOpen(false)}>Cancel</Button>
         <Button variant="primary" onClick={reopen} disabled={!reopenReason.trim()}>Reopen</Button>

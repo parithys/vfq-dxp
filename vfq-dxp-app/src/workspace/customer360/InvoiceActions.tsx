@@ -44,13 +44,13 @@ export function InvoiceActions({ bill, customerName }: { bill: Record<string, un
   return (
     <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
       <Tooltip content="Download invoice" placement="top">
-        <IconButton onClick={download} label="Download invoice" icon={DOWNLOAD_ICON} />
+        <IconButton onClick={download} label="Download Invoice" icon={DOWNLOAD_ICON} />
       </Tooltip>
       <Tooltip content="Print invoice" placement="top">
-        <IconButton onClick={print} label="Print invoice" icon={PRINT_ICON} />
+        <IconButton onClick={print} label="Print Invoice" icon={PRINT_ICON} />
       </Tooltip>
       <Tooltip content="Resend invoice" placement="top">
-        <IconButton onClick={resend} label="Resend invoice" icon={RESEND_ICON} />
+        <IconButton onClick={resend} label="Resend Invoice" icon={RESEND_ICON} />
       </Tooltip>
     </div>
   );

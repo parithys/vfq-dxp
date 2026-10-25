@@ -189,7 +189,7 @@
     "customerName": "Ahmed Abdulla Hassan Al-Sulaiti",
     "idNumber": "28456701234",
     "demoTitle": "Saved draft",
-    "demoDetail": "Order was saved during Customer Identification. Eligibility checks will run again when the order is resumed."
+    "demoDetail": "Order was saved during Customer Verification. Eligibility checks will run again when the order is resumed."
   },
   {
     "orderId": "ORD-90021",
@@ -257,7 +257,7 @@
     "customerName": "Fatima Saud Hamad Al-Kuwari",
     "idNumber": "27798765432",
     "demoTitle": "Saved draft",
-    "demoDetail": "Order was saved during Customer Identification. Eligibility checks will run again when the order is resumed."
+    "demoDetail": "Order was saved during Customer Verification. Eligibility checks will run again when the order is resumed."
   },
   {
     "_note": "Customer-Inventory seed (2026-10-02)",

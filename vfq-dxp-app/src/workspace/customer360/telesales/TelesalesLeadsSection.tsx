@@ -53,8 +53,8 @@ export function LeadsSection({ ctx }: { ctx: Ctx }) {
           <Card title={`Leads List (${leads.length})`} icon={ICON.search}>
             <div className="px-4 py-3 flex gap-2 border-b border-[var(--field-card-border)]">
               <SearchField value={query} onChange={(e) => setQuery(e.target.value)} onClear={() => setQuery('')} placeholder="Search by lead type, MSISDN, status or comments..." aria-label="Search leads" wrapperClassName="flex-1 min-w-48" />
-              <FilterSelect label="Lead type" value={type} options={types.map((x) => ({ value: x, label: x }))} onChange={(v) => setType(v)} />
-              <FilterSelect label="Lead status" value={status} options={statuses.map((x) => ({ value: x, label: x }))} onChange={(v) => setStatus(v)} />
+              <FilterSelect label="Lead Type" value={type} options={types.map((x) => ({ value: x, label: x }))} onChange={(v) => setType(v)} />
+              <FilterSelect label="Lead Status" value={status} options={statuses.map((x) => ({ value: x, label: x }))} onChange={(v) => setStatus(v)} />
             </div>
             <Table
               rows={shown}
@@ -111,7 +111,7 @@ export function LeadsSection({ ctx }: { ctx: Ctx }) {
               items={[
                 { title: 'Create New Lead', sub: 'Capture a new sales opportunity', icon: ICON.star },
                 { title: 'Convert to Sales Order', sub: 'Proceed with eligible journey', icon: ICON.check },
-                { title: 'Add Follow-up', sub: 'Schedule a follow-up reminder', icon: ICON.refresh },
+                { title: 'Add Follow-Up', sub: 'Schedule a follow-up reminder', icon: ICON.refresh },
                 { title: 'View Lead History', sub: 'See all lead activities for this customer', icon: ICON.search },
               ]}
             />

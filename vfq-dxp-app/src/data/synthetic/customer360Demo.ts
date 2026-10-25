@@ -56,7 +56,7 @@ const outstanding = (c: DemoCtx) => outstandingBalance(c.data.bills, c.data.paym
 
 /** The customer's single discount (one per order): Retired, MADA, B2B2C, else Loyalty. */
 const discountName = (c: DemoCtx) =>
-  benefits(c).includes('retired') ? 'Retired Discount 10%' : benefits(c).includes('mada') ? 'MADA Discount 10%' : benefits(c).includes('b2b2c') ? 'B2B2C Discount 10%' : benefits(c).includes('loyalty') ? 'Loyalty Discount 15%' : 'None';
+  benefits(c).includes('retired') ? 'Retired Discount 25%' : benefits(c).includes('mada') ? 'MADA Discount 25%' : benefits(c).includes('b2b2c') ? 'B2B2C Discount 25%' : benefits(c).includes('loyalty') ? 'Loyalty Discount 15%' : 'None';
 /** The next bill due date after today, on the customer's monthly cycle. */
 const nextDue = (c: DemoCtx) => {
   let d = dueDate(c);

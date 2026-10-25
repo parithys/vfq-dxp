@@ -36,7 +36,7 @@ export function Checkbox({ className = '', ...rest }: CheckboxProps) {
         type="checkbox"
         className="peer appearance-none m-0 w-[var(--size-choice-box)] h-[var(--size-choice-box)] rounded-[var(--radius-checkbox)] border border-[var(--field-border)] bg-bg cursor-pointer
           checked:bg-[var(--field-checkbox-selected)] checked:border-[var(--field-checkbox-selected)]
-          disabled:cursor-not-allowed disabled:border-[var(--field-border-disabled)] disabled:bg-surface
+          disabled:cursor-not-allowed disabled:border-[var(--field-border-disabled)] disabled:bg-[var(--field-bg-disabled)]
           focus:outline-none focus-visible:border-[var(--field-focus-border)]! focus-visible:shadow-[var(--field-focus-ring)]"
         {...rest}
       />

@@ -13,7 +13,7 @@ import type { ConnectionType, RequestKind } from '../../domain/eligibility';
 import { callService, ServiceError, type FailureKind, type ServiceName } from '../../engines/serviceCall';
 import { TechnicalFailure } from '../../components/patterns/ValidationStatus';
 import type { EligibilityResult, CustomerRecord, IdentityDocRecord } from '../../components/domain/eligibilityTypes';
-import { buildEligibilityRows } from '../../components/domain/eligibilityRowsModel';
+import { buildEligibilityRows, isUpfrontPaymentRow, UPFRONT_PAYMENT_TITLE } from '../../components/domain/eligibilityRowsModel';
 import { EligibilityChecksList } from '../../components/domain/EligibilityRows';
 import { useActedForCustomer } from '../../components/patterns/useActedForCustomer';
 
@@ -76,7 +76,7 @@ interface EligibilityGateStepProps {
   // (MPRA_001_CAM_03) - it's just never displayed as a payment prompt here.
   journeyType?: 'postpaid' | 'prepaid';
   /**
-   * 'common' (Customer Identification, before a product is chosen): only the checks that are the same for every product.
+   * 'common' (Customer Verification, before a product is chosen): only the checks that are the same for every product.
    * 'product' (default): the full set for `journeyType`, once the agent has chosen the product.
    */
   scope?: 'common' | 'product';
@@ -84,15 +84,15 @@ interface EligibilityGateStepProps {
   portIn?: boolean;
   /**
    * Narrows which of the rows that did not pass are shown (the checks are judged in full either way). A journey that already showed
-   * the customer's checks at Customer Identification uses this at Product Selection to show only what the product adds or blocks.
+   * the customer's checks at Customer Verification uses this at Product Selection to show only what the product adds or blocks.
    */
   showRow?: (row: { id: string; tone: string; approvalRuleIds?: string[] }) => boolean;
   /**
-   * A customer the agent CREATED at Customer Identification (no registry knows the ID): the identity they entered, which stands in for the
+   * A customer the agent CREATED at Customer Verification (no registry knows the ID): the identity they entered, which stands in for the
    * registry record the checks would otherwise read. Only used when no registry record matches the ID.
    */
   newIdentity?: { idNumber: string; idType: string; nationality: string; dob: string; expiryDate?: string };
-  /** A QID that Customer Identification linked to an EXISTING customer (through their Passport): the QID is not on file yet, so it stands in for the customer's own document. */
+  /** A QID that Customer Verification linked to an EXISTING customer (through their Passport): the QID is not on file yet, so it stands in for the customer's own document. */
   linkedIdDocument?: { customerId: string; documentNumber: string; documentType: string; expiryDate?: string };
 }
 
@@ -355,6 +355,12 @@ export function EligibilityGateStep({
         });
       }
 
+      // The upfront (HRN advance) payment is an advisory the agent only needs to be told once: it is announced as an info toast, which follows them
+      // on to the next step, instead of a row they have to read past. Every other check keeps the treatment its outcome calls for (the rows below).
+      const upfront = buildEligibilityRows(resolvedChecks, hrnFlag, match.nationality, journeyType, isExistingCustomer, scope === 'product').find(isUpfrontPaymentRow);
+      if (upfront && (showRow?.(upfront) ?? true)) {
+        pushToast('info', UPFRONT_PAYMENT_TITLE, { key: `eligibility-upfront-${idNumber}`, detail: upfront.detail });
+      }
       onResult({
         // Soft stop blocks too - see the note on EligibilityResult.pass.
         pass: !hardStop && !softStop,
@@ -456,7 +462,8 @@ export function EligibilityGateStep({
   // stops. Routing is not a failure, but it IS a diversion the agent must know
   // about - an under-18 applicant silently proceeding behind an approval task
   // nobody mentioned would be worse than one extra screen.
-  const unresolved = rows.filter((row) => row.tone !== 'pass' && (showRow?.(row) ?? true));
+  // (The upfront payment advisory is not listed here: it was announced as an info toast when the result was computed.)
+  const unresolved = rows.filter((row) => row.tone !== 'pass' && !isUpfrontPaymentRow(row) && (showRow?.(row) ?? true));
 
   // NOTHING rendered on a clean pass (2026-09-28: "advance automatically
   // without showing pass indicators"). This panel now lives inside the

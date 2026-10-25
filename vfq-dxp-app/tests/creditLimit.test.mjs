@@ -66,7 +66,7 @@ test('4. default credit limit: Expat 1000, Qatari 4000, HRN 50; the amount payab
   assert.equal(cl.payableAtActivationQar('Kenyan'), 100, 'an HRN customer pays the advance');
   assert.equal(cl.payableAtActivationQar('Qatari'), 0);
   assert.equal(cl.payableAtActivationQar('Indian'), 0);
-  assert.match(read('src/components/patterns/CreditLimitCard.tsx'), /Amount payable/);
+  assert.match(read('src/components/patterns/CreditLimitCard.tsx'), /Amount Payable/);
 });
 
 test('5. only the limits that apply to the segment are offered; the agent chooses; HRN has no choice', () => {
@@ -179,7 +179,7 @@ test('7. the four figures under Credit Limit: overall, default, Credit Control T
   }
   for (const f of ['src/workspace/customer360/sections/C360AccountInformation.tsx', 'src/workspace/customer360/sections/C360Overview.tsx']) {
     const src = read(f);
-    for (const label of ['Default', 'Credit Control Team', 'Credit Limit increased due to Deposit']) assert.ok(src.includes(`"${label}"`), `${f}: ${label}`);
+    for (const label of ['Default', 'Credit Control Team', 'Credit Limit Increased Due to Deposit']) assert.ok(src.includes(`"${label}"`), `${f}: ${label}`);
     assert.match(src, /creditBreakdownOf\(data\)/);
   }
 });

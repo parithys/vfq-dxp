@@ -140,7 +140,7 @@ export function C360AddressService({
         >
           <p className="text-fg-2 text-[length:var(--fs-body)] mb-3">{primary ? addressLine(primary) : 'No address selected'}</p>
           <OsmEmbed
-            title="Map of the customer's address"
+            title="Map of the Customer's Address"
             fill
             latitude={(primary as unknown as { latitude?: number } | undefined)?.latitude}
             longitude={(primary as unknown as { longitude?: number } | undefined)?.longitude}
@@ -162,7 +162,7 @@ export function C360AddressService({
                         <Icon path={IC.check} className="w-3 h-3" />
                       </span>
                       <span className="w-36 min-w-0">
-                        <span className="block text-success font-medium leading-tight">In service</span>
+                        <span className="block text-success font-medium leading-tight">In Service</span>
                         <span className="block text-muted text-[length:var(--fs-caption)] truncate">{has.length} line{has.length === 1 ? '' : 's'}</span>
                       </span>
                     </>

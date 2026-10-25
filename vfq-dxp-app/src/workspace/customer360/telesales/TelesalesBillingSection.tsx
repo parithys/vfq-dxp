@@ -94,7 +94,7 @@ export function BillingSection({ ctx }: { ctx: Ctx }) {
             items={[
               { title: 'Make a Payment', sub: 'Process a customer payment' },
               { title: 'View Bill', sub: 'Download and view bills' },
-              { title: 'Set up Payment Arrangement', sub: 'Check PTP eligibility' },
+              { title: 'Set Up Payment Arrangement', sub: 'Check PTP eligibility' },
               { title: 'Update Billing Email', sub: 'Add or modify billing recipients' },
               { title: 'View Billing Profile', sub: 'See all billing profiles' },
               { title: 'Request Adjustment', sub: 'Submit an adjustment request' },

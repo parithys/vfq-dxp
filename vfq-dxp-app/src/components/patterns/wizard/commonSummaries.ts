@@ -18,7 +18,7 @@ export const identitySummary = (key: string): SummaryField[] => [
   { key: 'nationality', label: 'Nationality', type: 'text', value: (v) => at(v, key, 'moiResult', 'nationality') },
 ];
 
-/** The Customer Identification form (GuidedContactStep). */
+/** The Customer Verification form (GuidedContactStep). */
 export const contactFormSummary = (key = 'contact'): SummaryField[] => [
   ...identitySummary(key).slice(0, 2),
   { key: 'firstName', label: 'First Name', type: 'text', value: (v) => at(v, key, 'firstName') },
@@ -51,13 +51,13 @@ export const planSummary = (productKey = 'productId'): SummaryField[] => [
 /** A prepaid pack's chosen discount and add-ons (the Add-ons step after the pack). */
 export const prepaidExtrasSummary: SummaryField[] = [
   { key: 'discount', label: 'Discount', type: 'select', optional: true, labelFrom: { kind: 'addons-discounts', idField: 'addonDiscountId', labelField: 'name' }, value: (v) => v.discountId },
-  { key: 'addons', label: 'Add-ons', type: 'multi', optional: true, labelFrom: { kind: 'addons-discounts', idField: 'addonDiscountId', labelField: 'name' }, value: (v) => v.addonIds },
+  { key: 'addons', label: 'Add-Ons', type: 'multi', optional: true, labelFrom: { kind: 'addons-discounts', idField: 'addonDiscountId', labelField: 'name' }, value: (v) => v.addonIds },
 ];
 
 /** Postpaid plan with its add-ons, discount and bill limit. */
 export const planDetailSummary: SummaryField[] = [
   ...planSummary(),
-  { key: 'addons', label: 'Add-ons', type: 'multi', optional: true, labelFrom: PRODUCT, value: (v) => at(v, 'addonIds') },
+  { key: 'addons', label: 'Add-Ons', type: 'multi', optional: true, labelFrom: PRODUCT, value: (v) => at(v, 'addonIds') },
   { key: 'discount', label: 'Discount', type: 'select', optional: true, labelFrom: { kind: 'addons-discounts', idField: 'addonDiscountId', labelField: 'name' }, value: (v) => at(v, 'discountId') },
   { key: 'billLimit', label: 'Bill Limit', type: 'text', optional: true, value: (v) => qar(at(v, 'billLimit')) },
 ];
@@ -89,7 +89,7 @@ export const appointmentSummary: SummaryField[] = [
 ];
 
 export const donorSummary: SummaryField[] = [
-  { key: 'port', label: 'Port-in Number', type: 'text', value: (v) => at(v, 'donorDetails', 'portInNumber') },
+  { key: 'port', label: 'Port-In Number', type: 'text', value: (v) => at(v, 'donorDetails', 'portInNumber') },
   { key: 'donorId', label: 'Donor ID', type: 'text', sensitive: true, value: (v) => at(v, 'donorDetails', 'donorId') },
   { key: 'donorIdType', label: 'Donor ID Type', type: 'text', value: (v) => at(v, 'donorDetails', 'donorIdType') },
   { key: 'donorCustomerType', label: 'Donor Customer Type', type: 'text', value: (v) => at(v, 'donorDetails', 'donorCustomerType') },
@@ -105,8 +105,8 @@ export const donorAttachmentSummary: SummaryField[] = [
 ];
 
 export const idImagesSummary = (key = 'qidImages'): SummaryField[] => [
-  { key: 'front', label: 'Front captured', type: 'toggle', value: (v) => Boolean(at(v, key, 'frontScanned')) },
-  { key: 'back', label: 'Back captured', type: 'toggle', value: (v) => Boolean(at(v, key, 'backScanned')) },
+  { key: 'front', label: 'Front Captured', type: 'toggle', value: (v) => Boolean(at(v, key, 'frontScanned')) },
+  { key: 'back', label: 'Back Captured', type: 'toggle', value: (v) => Boolean(at(v, key, 'backScanned')) },
 ];
 
 export const paymentSummary: SummaryField[] = [

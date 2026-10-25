@@ -34,7 +34,7 @@ export type AttachmentShape =
 export function attachmentShape(doc: OrderAttachment): AttachmentShape {
   const scan = doc.label.match(ID_SCAN);
   if (scan) return { kind: 'id-scan', documentType: SCAN_TYPE[scan[1]], name: scan[1], side: scan[2] === 'Back' ? 'back' : 'front' };
-  if (doc.label === 'Office ID card') {
+  if (/^Office ID card$/i.test(doc.label)) {
     const v = /B2B2C/i.test(doc.detail ?? '') ? 'b2b2c' : /Retired/i.test(doc.detail ?? '') ? 'retired' : 'mada';
     return { kind: 'office-id', variant: v };
   }
@@ -127,10 +127,10 @@ export function AttachmentPreview({ doc, order }: { doc: OrderAttachment; order:
     return (
       <Sheet title="Customer Application Form">
         <Row label="Customer" value={order.customerName} />
-        <Row label="ID number" value={order.idNumber} />
+        <Row label="ID Number" value={order.idNumber} />
         <Row label="Order" value={order.orderId} />
         <Row label="Signed" value={created} />
-        <p className="mt-3 text-muted text-[length:var(--fs-caption)]">Customer signature</p>
+        <p className="mt-3 text-muted text-[length:var(--fs-caption)]">Customer Signature</p>
         <div className="mt-1 flex h-24 items-center justify-center rounded-[var(--radius-sm)] border border-dashed border-border bg-surface">
           {doc.previewUrl ? (
             <img src={doc.previewUrl} alt={`Signature of ${order.customerName ?? 'the customer'}`} className="max-h-full max-w-full object-contain" />

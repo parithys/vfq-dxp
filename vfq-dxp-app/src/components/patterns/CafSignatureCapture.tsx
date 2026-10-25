@@ -283,7 +283,7 @@ export function CafSignatureCapture({
               </div>
               <dl>
                 <div className="flex justify-between gap-4 py-1 border-b border-border-soft text-[length:var(--fs-caption)]">
-                  <dt className="text-fg">Primary customer</dt>
+                  <dt className="text-fg">Primary Customer</dt>
                   <dd className="text-fg text-right">{customerName ?? '-'}</dd>
                 </div>
                 {supplementaryForm.rows.map((row) => (
@@ -349,12 +349,12 @@ export function CafSignatureCapture({
         {signed && supplementaryForm && (
           <section id="supplementary-form-secondary" aria-label="Supplementary Form - secondary contact" className="card p-4 space-y-3">
             <div className="flex items-center justify-between text-[length:var(--fs-caption)] text-muted">
-              <h3 className="text-fg font-semibold text-[length:var(--fs-body)]">Vodafone Supplementary Form: secondary contact</h3>
+              <h3 className="text-fg font-semibold text-[length:var(--fs-body)]">Vodafone Supplementary Form: Secondary Contact</h3>
               <span dir="rtl">النموذج التكميلي</span>
             </div>
             <dl>
               <div className="flex justify-between gap-4 py-1 border-b border-border-soft text-[length:var(--fs-caption)]">
-                <dt className="text-fg">Primary customer</dt>
+                <dt className="text-fg">Primary Customer</dt>
                 <dd className="text-fg text-right">{customerName ?? '-'}</dd>
               </div>
               {supplementaryForm.rows.map((row) => (
@@ -379,7 +379,7 @@ export function CafSignatureCapture({
                     </button>
                     .</span>
                 </label>
-                <p className="text-fg text-[length:var(--fs-body)] font-semibold">Secondary contact: please sign</p>
+                <p className="text-fg text-[length:var(--fs-body)] font-semibold">Secondary Contact: Please Sign</p>
                 <SignatureCapture disabled={!value.secondaryAgreed} onSave={(dataUrl) => onChange({ ...value, secondarySignatureDataUrl: dataUrl })} />
               </>
             )}
@@ -533,7 +533,7 @@ export function CafSignatureCapture({
           they sign. */}
       {orderSummary && orderSummary.length > 0 && (
         <div className="card card-surface p-4 space-y-2">
-          <h4 className="text-fg font-medium text-[length:var(--fs-body)]">What the customer is agreeing to</h4>
+          <h4 className="text-fg font-medium text-[length:var(--fs-body)]">What the Customer Is Agreeing To</h4>
           <dl className="text-[length:var(--fs-caption)]">
             {orderSummary.map((row) => (
               <div key={row.label} className="flex justify-between gap-4 py-1.5 border-b border-border-soft last:border-0">

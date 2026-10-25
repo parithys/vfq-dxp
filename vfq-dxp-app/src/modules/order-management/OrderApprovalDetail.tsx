@@ -156,7 +156,7 @@ function HistoryPreview({ history }: { history: ApprovalHistoryEntry[] }) {
   if (history.length === 0) return null;
   return (
     <div className="overflow-hidden rounded-[var(--radius-card)] border border-[var(--field-card-border)] divide-y divide-border-soft">
-      <p className="px-3 py-2 text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted">Task history</p>
+      <p className="px-3 py-2 text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted">Task History</p>
       {history.map((entry) => {
         const tone = decisionTone(entry.actionTaken);
         return (
@@ -216,16 +216,16 @@ const ALERT_ICON = 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 8v5 M12 16h.01';
 function approvalReasonItems(reason: string | undefined): { title: string; detail: string }[] {
   if (!reason) return [];
   const describe = (r: string): { title: string; detail: string } => {
-    if (r.startsWith('Active postpaid line limit reached')) return { title: 'Active line limit reached', detail: r };
+    if (r.startsWith('Active postpaid line limit reached')) return { title: 'Active Line Limit Reached', detail: r };
     if (r.startsWith('ID type requires Credit Control approval')) {
       return { title: 'ID Type Requires Credit Control Approval', detail: 'The selected ID type requires Credit Control approval. The order was routed to Credit Control on submission.' };
     }
     if (r.startsWith('ID type cannot be sold directly')) {
       return { title: 'ID Type Requires Back Office Fulfilment Approval', detail: 'Direct sale is not permitted for this ID type. The order will be routed to Back Office Fulfilment for approval.' };
     }
-    if (r.startsWith('Identity manually entered')) return { title: 'Identity entered manually', detail: r };
-    if (r.startsWith('ID expiry date not on file')) return { title: 'ID expiry not on file', detail: r };
-    if (r.startsWith('HRN customer')) return { title: 'HRN advance payment', detail: r };
+    if (r.startsWith('Identity manually entered')) return { title: 'Identity Entered Manually', detail: r };
+    if (r.startsWith('ID expiry date not on file')) return { title: 'ID Expiry Not on File', detail: r };
+    if (r.startsWith('HRN customer')) return { title: 'HRN Advance Payment', detail: r };
     if (r.startsWith('B2B2C employee')) {
       return { title: 'B2B2C Employment Proof Required', detail: 'Proof of Employment must be verified for the B2B2C employee.' };
     }
@@ -233,7 +233,7 @@ function approvalReasonItems(reason: string | undefined): { title: string; detai
     if (doc) {
       return { title: `${doc[1]} Document Required`, detail: `The supporting document for the ${doc[1]} must be verified.` };
     }
-    return { title: 'Approval reason', detail: r };
+    return { title: 'Approval Reason', detail: r };
   };
   return reason.split(' | ').map(describe);
 }
@@ -275,7 +275,7 @@ function ApprovalSummary({
 
       <dl className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 text-[length:var(--fs-body)]">
         <div>
-          <dt className="text-[length:var(--fs-caption)] text-fg">Approver role</dt>
+          <dt className="text-[length:var(--fs-caption)] text-fg">Approver Role</dt>
           <dd className="text-fg">{requiredRole ?? '-'}</dd>
         </div>
         <div>
@@ -336,7 +336,7 @@ function ActivitiesPanel({ history }: { history: ApprovalHistoryEntry[] }) {
           <span className="flex h-16 w-16 items-center justify-center rounded-[var(--radius-pill)] bg-surface text-muted">
             <Icon path={HISTORY_ICON} className="w-8 h-8" strokeWidth={1.5} />
           </span>
-          <p className="mt-2 text-fg font-semibold text-[length:var(--fs-body-lg)]">No approval activity yet</p>
+          <p className="mt-2 text-fg font-semibold text-[length:var(--fs-body-lg)]">No Approval Activity Yet</p>
           <p className="max-w-md text-fg-2 text-[length:var(--fs-body)]">
             Approval actions will appear here once they are recorded. Review this history before confirming a decision.
           </p>
@@ -474,23 +474,23 @@ function OrderDetailsPanel({ order, lastUpdatedMs }: { order: Order; lastUpdated
   return (
     <div className="grid gap-4 lg:grid-cols-2 items-start">
       <div className="space-y-4 min-w-0">
-        <DetailSection title="Order information">
-          <DetailRow label="Order type" value={order.orderType} />
-          <DetailRow label="Sub-type" value={order.orderSubType} />
-          <DetailRow label="Source channel" value={order.sourceChannel} />
+        <DetailSection title="Order Information">
+          <DetailRow label="Order Type" value={order.orderType} />
+          <DetailRow label="Sub-Type" value={order.orderSubType} />
+          <DetailRow label="Source Channel" value={order.sourceChannel} />
           <DetailRow label="Status" value={order.status} />
           <DetailRow label="Created" value={order.createdAt ? formatDateTime(order.createdAt) : undefined} />
-          <DetailRow label="Created by" value={createdByName} />
-          <DetailRow label="Last updated" value={lastUpdatedMs ? formatDateTime(lastUpdatedMs) : undefined} />
-          <DetailRow label="Plan source" value={order.planSource} />
+          <DetailRow label="Created By" value={createdByName} />
+          <DetailRow label="Last Updated" value={lastUpdatedMs ? formatDateTime(lastUpdatedMs) : undefined} />
+          <DetailRow label="Plan Source" value={order.planSource} />
         </DetailSection>
 
         <DetailSection title="Customer">
           <DetailRow label="Name" value={order.customerName} />
           <DetailRow label="Customer ID" value={order.customerId} />
           <DetailRow label="Email" value={order.customerEmail} />
-          <DetailRow label="ID number" value={order.idNumber} />
-          <DetailRow label="Customer type" value={order.customerType ? (CUSTOMER_TYPE_LABEL[order.customerType] ?? order.customerType) : undefined} />
+          <DetailRow label="ID Number" value={order.idNumber} />
+          <DetailRow label="Customer Type" value={order.customerType ? (CUSTOMER_TYPE_LABEL[order.customerType] ?? order.customerType) : undefined} />
           <DetailRow label="Company" value={order.companyName} />
           <DetailRow label="Sponsor" value={order.customerSponsor} />
           <DetailRow label="Occupation" value={order.customerOccupation} />
@@ -502,25 +502,25 @@ function OrderDetailsPanel({ order, lastUpdatedMs }: { order: Order; lastUpdated
           />
         </DetailSection>
 
-        <DetailSection title="Customer standing">
-          <DetailRow label="Active postpaid lines" value={customer?.activePostpaidLines} />
-          <DetailRow label="Active prepaid lines" value={customer?.activePrepaidLines} />
-          {lineApproval ? <DetailRow label="Line approval" value={lineApproval} /> : <DetailRow label="Postpaid line limit" value={lineLimit} />}
+        <DetailSection title="Customer Standing">
+          <DetailRow label="Active Postpaid Lines" value={customer?.activePostpaidLines} />
+          <DetailRow label="Active Prepaid Lines" value={customer?.activePrepaidLines} />
+          {lineApproval ? <DetailRow label="Line Approval" value={lineApproval} /> : <DetailRow label="Postpaid Line Limit" value={lineLimit} />}
         </DetailSection>
 
       </div>
 
       <div className="space-y-4 min-w-0">
-        <DetailSection title="Plan & connection">
+        <DetailSection title="Plan & Connection">
           <DetailRow
             label={planIds.length > 1 ? 'Products' : 'Plan'}
             value={planNames.length > 0 ? planNames.map((n, i) => <div key={planIds[i]}>{n} <span className="text-muted">({planIds[i]})</span></div>) : undefined}
           />
           <DetailRow label="MSISDN" value={order.msisdn} />
-          <DetailRow label="SIM type" value={order.simType} />
-          <DetailRow label="Add-ons" value={addonNames.length > 0 ? addonNames.join(', ') : undefined} />
+          <DetailRow label="SIM Type" value={order.simType} />
+          <DetailRow label="Add-Ons" value={addonNames.length > 0 ? addonNames.join(', ') : undefined} />
           <DetailRow label="Discount" value={discountName} />
-          <DetailRow label="SIM serial" value={order.simSerial} />
+          <DetailRow label="SIM Serial" value={order.simSerial} />
         </DetailSection>
 
         {(hasCharges || order.numberPriceQAR !== undefined || order.nrcTotalQAR !== undefined || order.totalQAR !== undefined) && (
@@ -529,31 +529,31 @@ function OrderDetailsPanel({ order, lastUpdatedMs }: { order: Order; lastUpdated
             {hasCharges && (
               <div className="grid grid-cols-2 divide-x divide-border-soft border-b border-border-soft pb-4 mb-4">
                 <div className="pr-4">
-                  <p className="text-[length:var(--fs-caption)] text-muted">Monthly recurring</p>
+                  <p className="text-[length:var(--fs-caption)] text-muted">Monthly Recurring</p>
                   <p className="text-fg font-bold text-[length:var(--fs-h5)]">{qar(monthly) ?? '-'}</p>
                 </div>
                 <div className="pl-4">
-                  <p className="text-[length:var(--fs-caption)] text-muted">Due today</p>
+                  <p className="text-[length:var(--fs-caption)] text-muted">Due Today</p>
                   <p className="text-fg font-bold text-[length:var(--fs-h5)]">{qar(order.dueTodayQAR) ?? '-'}</p>
                 </div>
               </div>
             )}
             <dl className="grid grid-cols-1 gap-y-3 text-[length:var(--fs-body)]">
-              <DetailRow label="Number price" value={qar(order.numberPriceQAR)} />
-              <DetailRow label="One-time charges" value={qar(order.nrcTotalQAR)} />
-              <DetailRow label="Order total" value={qar(order.totalQAR)} />
+              <DetailRow label="Number Price" value={qar(order.numberPriceQAR)} />
+              <DetailRow label="One-Time Charges" value={qar(order.nrcTotalQAR)} />
+              <DetailRow label="Order Total" value={qar(order.totalQAR)} />
             </dl>
           </section>
         )}
 
         <DetailSection title="Billing">
-          <DetailRow label="Billing profile" value={order.billingProfileId ?? order.newBillingProfileName} />
+          <DetailRow label="Billing Profile" value={order.billingProfileId ?? order.newBillingProfileName} />
           <DetailRow label="Card" value={order.billCardLast4 ? `Ending ${order.billCardLast4}` : undefined} />
         </DetailSection>
 
-        <DetailSection title="Status & fulfilment">
-          <DetailRow label="Hold reason" value={order.holdReason ?? undefined} />
-          <DetailRow label="Fulfilment status" value={order.fulfillmentStatus ?? undefined} />
+        <DetailSection title="Status & Fulfilment">
+          <DetailRow label="Hold Reason" value={order.holdReason ?? undefined} />
+          <DetailRow label="Fulfilment Status" value={order.fulfillmentStatus ?? undefined} />
         </DetailSection>
       </div>
     </div>
@@ -859,11 +859,11 @@ export function OrderApprovalDetail() {
         <div className="space-y-3">
           <HistoryPreview history={history} />
           <p className="text-fg-2 text-[length:var(--fs-body)]">Tell the approver what you corrected. The order returns to the approval queue it was routed to.</p>
-          <Textarea label="What was corrected (required)" value={resubmitComment} onChange={(e) => setResubmitComment(e.target.value)} />
+          <Textarea label="What Was Corrected (Required)" value={resubmitComment} onChange={(e) => setResubmitComment(e.target.value)} />
         </div>
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button>
-          <Button variant="primary" onClick={resubmit} disabled={!resubmitComment.trim() || submitting}>Resubmit order</Button>
+          <Button variant="primary" onClick={resubmit} disabled={!resubmitComment.trim() || submitting}>Resubmit Order</Button>
         </div>
       </Drawer>
 
@@ -878,7 +878,7 @@ export function OrderApprovalDetail() {
         </div>
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button>
-          <Button variant="primary" onClick={approve} disabled={!ackApprove || submitting}>Submit approval</Button>
+          <Button variant="primary" onClick={approve} disabled={!ackApprove || submitting}>Submit Approval</Button>
         </div>
       </Drawer>
 
@@ -892,7 +892,7 @@ export function OrderApprovalDetail() {
             placeholder="Select a reason"
             options={reasons.map((r) => ({ value: r.reasonCode, label: r.reasonLabel }))}
           />
-          <Textarea label="Comments (required)" value={rejectComment} onChange={(e) => setRejectComment(e.target.value)} />
+          <Textarea label="Comments (Required)" value={rejectComment} onChange={(e) => setRejectComment(e.target.value)} />
         </div>
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button>

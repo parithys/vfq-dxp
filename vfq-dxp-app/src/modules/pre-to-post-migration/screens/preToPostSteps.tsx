@@ -14,7 +14,7 @@ import type { PostpaidStepContext } from '../../new-connection/postpaidSteps';
 import { resetChoices } from '../../mobile-service-changes/serviceChangeSteps';
 
 /**
- * Prepaid to Postpaid Conversion, on the same shared steps as New Mobile Postpaid: Customer Identification (the
+ * Prepaid to Postpaid Conversion, on the same shared steps as New Mobile Postpaid: Customer Verification (the
  * eligibility checks and the customer lock), the customer's prepaid line (Line Selection), Billing Profile, Offers & Plans, Add-ons, Checkout, the full
  * CAF & Signature, and Payment, which submits. The line already exists, so there is no address, number or SIM step.
  */

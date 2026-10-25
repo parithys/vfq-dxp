@@ -7,7 +7,7 @@ import { ActionList, BarChart, HeaderButton, ICON, PillTabs, SectionHeader, Stat
 import { rowDate, type Rec } from './shared';
 import { strOrEmpty as str } from '../../../lib/values';
 import { PAGE } from './listShared';
-import { Pager } from './TelesalesPager';
+import { Pagination } from '../../../capabilities';
 
 export function OrdersTicketsSection({ ctx }: { ctx: Ctx }) {
   const { data } = ctx;
@@ -64,8 +64,8 @@ export function OrdersTicketsSection({ ctx }: { ctx: Ctx }) {
       <Card title={`Orders ({orders.length})`} icon={ICON.card} link="View All Orders" onLink={() => ctx.goToTab('ts-history')}>
         <div className="px-4 py-3 flex gap-2 border-b border-[var(--field-card-border)]">
           <SearchField value={oq} onChange={(e) => { setOq(e.target.value); setOp(0); }} onClear={() => { setOq(''); setOp(0); }} placeholder="Search by order number, product or status..." aria-label="Search orders" wrapperClassName="flex-1 min-w-48" />
-          <FilterSelect label="Order type" value={ot} options={oTypes.map((x) => ({ value: x, label: x }))} onChange={(v) => { setOt(v); setOp(0); }} />
-          <FilterSelect label="Order status" value={os} options={oStats.map((x) => ({ value: x, label: x }))} onChange={(v) => { setOs(v); setOp(0); }} />
+          <FilterSelect label="Order Type" value={ot} options={oTypes.map((x) => ({ value: x, label: x }))} onChange={(v) => { setOt(v); setOp(0); }} />
+          <FilterSelect label="Order Status" value={os} options={oStats.map((x) => ({ value: x, label: x }))} onChange={(v) => { setOs(v); setOp(0); }} />
           <HeaderButton primary>+ New Order</HeaderButton>
         </div>
         <Table
@@ -81,15 +81,15 @@ export function OrdersTicketsSection({ ctx }: { ctx: Ctx }) {
             { header: 'Actions', render: () => <span className="text-accent font-bold">···</span> },
           ]}
         />
-        <Pager page={op} pages={Math.ceil(fo.length / PAGE)} onChange={setOp} />
+        <Pagination className="m-4" page={op + 1} total={fo.length} pageSize={PAGE} onPage={(p) => setOp(p - 1)} />
       </Card>
       </WideBlock>
       <WideBlock className="">
         <Card title={`Trouble Tickets (${tickets.length})`} icon={ICON.help} link="View All Tickets" onLink={() => ctx.goToTab('ts-history')}>
           <div className="px-4 py-3 flex gap-2 border-b border-[var(--field-card-border)]">
             <SearchField value={tq} onChange={(e) => { setTq(e.target.value); setTp(0); }} onClear={() => { setTq(''); setTp(0); }} placeholder="Search by ticket number, issue or status..." aria-label="Search tickets" wrapperClassName="flex-1 min-w-48" />
-            <FilterSelect label="Ticket category" value={tc} options={tCats.map((x) => ({ value: x, label: x }))} onChange={(v) => { setTc(v); setTp(0); }} />
-            <FilterSelect label="Ticket status" value={ts} options={tStats.map((x) => ({ value: x, label: x }))} onChange={(v) => { setTs(v); setTp(0); }} />
+            <FilterSelect label="Ticket Category" value={tc} options={tCats.map((x) => ({ value: x, label: x }))} onChange={(v) => { setTc(v); setTp(0); }} />
+            <FilterSelect label="Ticket Status" value={ts} options={tStats.map((x) => ({ value: x, label: x }))} onChange={(v) => { setTs(v); setTp(0); }} />
             <HeaderButton primary>+ Create Ticket</HeaderButton>
           </div>
           <Table
@@ -105,7 +105,7 @@ export function OrdersTicketsSection({ ctx }: { ctx: Ctx }) {
               { header: 'Actions', render: () => <span className="text-accent font-bold">···</span> },
             ]}
           />
-          <Pager page={tp} pages={Math.ceil(ft.length / PAGE)} onChange={setTp} />
+          <Pagination className="m-4" page={tp + 1} total={ft.length} pageSize={PAGE} onPage={(p) => setTp(p - 1)} />
         </Card>
       </WideBlock>
       <div className="contents">

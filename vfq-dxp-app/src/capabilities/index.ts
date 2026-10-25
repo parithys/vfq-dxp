@@ -13,6 +13,7 @@ export * from './AppointmentBooking';
 export * from './ActivityComments';
 export * from './ActivationComplete';
 export * from './SelectableCard';
+export * from './Pagination';
 export * from './SideDrawer';
 export * from './Toasts';
 export * from './GuidedActivationWizard';

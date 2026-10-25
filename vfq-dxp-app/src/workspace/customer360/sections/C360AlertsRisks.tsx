@@ -11,7 +11,7 @@ import {
   IC,
   IconTile,
   LinkAction,
-  Pager,
+  Pagination,
   Panel,
   Pill,
   StatusPill,
@@ -161,8 +161,6 @@ export function C360AlertsRisks({ data, goToTab }: { data: Customer360Data; serv
     return true;
   });
   const paging = usePaging(rows, PAGE_SIZE);
-  const first = rows.length === 0 ? 0 : (paging.page - 1) * PAGE_SIZE + 1;
-  const last = Math.min(paging.page * PAGE_SIZE, rows.length);
 
   const typeOptions = [{ value: 'all', label: 'All' }, ...Array.from(new Set(alerts.map((a) => a.type))).map((v) => ({ value: v, label: v }))];
   const statusOptions = [{ value: 'all', label: 'All' }, ...Array.from(new Set(alerts.map((a) => a.status))).map((v) => ({ value: v, label: v }))];
@@ -212,7 +210,7 @@ export function C360AlertsRisks({ data, goToTab }: { data: Customer360Data; serv
             rowKey={(a) => a.id}
             empty="No alerts or risks match the current filters."
             cols={[
-              { key: 'n', header: '#', render: (_a, i) => first + i },
+              { key: 'n', header: '#', render: (_a, i) => paging.from + i },
               {
                 key: 'type',
                 header: 'Alert Type',
@@ -235,12 +233,7 @@ export function C360AlertsRisks({ data, goToTab }: { data: Customer360Data; serv
               },
             ]}
           />
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <span className="text-fg-2 text-[length:var(--fs-body)]">
-              Showing {first}&ndash;{last} of {rows.length} alerts
-            </span>
-            <Pager page={paging.page} pages={paging.pages} onPage={paging.setPage} />
-          </div>
+          <Pagination page={paging.page} total={rows.length} pageSize={PAGE_SIZE} onPage={paging.setPage} />
         </section>
 
         <div className="grid grid-cols-1 @4xl:grid-cols-2 gap-4 items-start">
@@ -250,7 +243,7 @@ export function C360AlertsRisks({ data, goToTab }: { data: Customer360Data; serv
                 { label: 'Blacklist Status', value: <Pill tone={blacklisted ? 'red' : 'green'}>{blacklisted ? 'Blacklisted' : 'Clear'}</Pill> },
                 { label: 'Credit Score', value: <Dv k="creditScore" /> },
                 { label: 'Eligibility for PTP', value: <Dv k="eligibilityPtp" /> },
-                { label: 'About to be Barred', value: barring === '-' ? '-' : <Pill tone={/^yes/i.test(barring) ? 'red' : 'green'}>{barring}</Pill> },
+                { label: 'About to Be Barred', value: barring === '-' ? '-' : <Pill tone={/^yes/i.test(barring) ? 'red' : 'green'}>{barring}</Pill> },
                 { label: 'OG Barring Date', value: <Dv k="ogBarringDate" /> },
                 { label: 'IC Barring Date', value: <Dv k="icBarringDate" /> },
                 { label: 'Amount Required to Avoid Barring', value: /^yes/i.test(barring) && outstanding > 0 ? qar(outstanding) : <Dv k="amountAvoidBarring" /> },

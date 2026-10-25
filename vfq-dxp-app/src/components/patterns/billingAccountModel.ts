@@ -109,7 +109,7 @@ export function ordinal(day: number): string {
 
 /** Billing modes, as the billing-profiles records name them; arrears is the default. */
 export const BILLING_MODES = [
-  { value: 'Arrears', label: 'In arrears' },
+  { value: 'Arrears', label: 'In Arrears' },
   { value: 'Hybrid (PIA + Arrears)', label: 'Hybrid (PIA + Arrears)' },
 ];
 export const DEFAULT_BILLING_MODE = 'Arrears';

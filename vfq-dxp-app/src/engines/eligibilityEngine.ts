@@ -87,7 +87,7 @@ export interface EligibilityContext {
   journeyType?: 'postpaid' | 'prepaid';
   /**
    * 'common' returns only the checks that read the same for every product - ID validity, age, security and unclassified
-   * blacklist, deals - so Customer Identification, which happens before the agent has chosen a product, can report them.
+   * blacklist, deals - so Customer Verification, which happens before the agent has chosen a product, can report them.
    * 'product' (default) is the full set, judged for `journeyType`: the ID-type routing, collections block and line cap
    * differ by product and are only meaningful once one is chosen.
    */

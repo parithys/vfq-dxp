@@ -131,7 +131,7 @@ test('the milestone toast: success, the milestone\'s own text, a polite status, 
   assert.equal(toasts.length, 1);
   assert.equal(toasts[0].kind, 'success');
   assert.equal(MILESTONE_TOAST_MS, 4000);
-  assert.equal(toasts[0].message, 'Customer verified');
+  assert.equal(toasts[0].message, 'Customer Verified');
   assert.equal(toasts[0].detail, 'Customer identified and eligibility confirmed.');
   // How the container presents a success toast (react-dom/server cannot render it: it reads the store's initial state, and the app has
   // no DOM test environment), so it is checked in the source: a polite status, with a dismiss button, Escape and click-away clearing.
@@ -166,7 +166,7 @@ test('auto-dismiss: a toast with autoDismissMs closes itself', async () => {
 
 test('the step summary marks a milestone step with a flag in place of the tick, and only that step', async () => {
   const { StepSummarySection } = await load('/src/components/patterns/wizard/StepSummarySection.tsx');
-  const row = (milestone) => html(h(StepSummarySection, { title: 'Customer Identification', open: false, onToggle() {}, milestone }, null));
+  const row = (milestone) => html(h(StepSummarySection, { title: 'Customer Verification', open: false, onToggle() {}, milestone }, null));
   const plain = row(false);
   const flagged = row(true);
   assert.match(plain, /M7\.5 12\.5l3 3 6-6\.5/, 'the tick');
@@ -247,7 +247,7 @@ test('amending a completed stage re-reaches its milestone; only looking at it ch
   const reReached = run(newProfile(7), amended.state);
   assert.deepEqual(ids(reReached.events, 'reached'), ['billing']);
   assert.notEqual(reReached.state.billing.evidence, first.state.billing.evidence);
-  // Changing the customer's ID amends Customer Identification, and everything after it re-earns.
+  // Changing the customer's ID amends Customer Verification, and everything after it re-earns.
   const other = run({ ...identified, contact: { idNumber: '28800000000', moiResult: { name: 'B' } }, eligibility: { ...clean, idNumber: '28800000000' } }, reReached.state);
   assert.deepEqual(ids(other.events, 'invalidated'), ['identified', 'billing']);
   assert.equal(upTo(carted).state.identified.evidence, '29001234567');
@@ -263,6 +263,6 @@ test('Customer verified reads "New Customer" when MOI validated the ID but no cu
     return useNotificationStore.getState().toasts[0];
   };
   assert.deepEqual([toastFor(false).message, toastFor(false).detail], ['New Customer', 'MOI validated; no existing customer record found.']);
-  assert.deepEqual([toastFor(true).message, toastFor(true).detail], ['Customer verified', 'Customer identified and eligibility confirmed.']);
-  assert.equal(toastFor(undefined).message, 'Customer verified', 'unknown is not assumed to be new');
+  assert.deepEqual([toastFor(true).message, toastFor(true).detail], ['Customer Verified', 'Customer identified and eligibility confirmed.']);
+  assert.equal(toastFor(undefined).message, 'Customer Verified', 'unknown is not assumed to be new');
 });

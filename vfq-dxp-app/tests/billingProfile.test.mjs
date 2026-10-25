@@ -144,3 +144,11 @@ test('a salutation the agent enters is saved to the customer profile; none enter
   }
   assert.match(fsm.readFileSync('src/workspace/customer360/sections/C360ContactIdentity.tsx', 'utf8'), /label: 'Salutation'/);
 });
+
+test('Continue passes over the Billing Profile for every customer, including a new account being created; it stays reachable from the rail', async () => {
+  const { billingAccountStep } = await load('/src/capabilities/BillingAccount/step.tsx');
+  const step = billingAccountStep();
+  assert.equal(step.autoPass({}), true);
+  assert.equal(step.autoPass({ billingAccount: { creatingNew: true } }), true, 'a new account no longer stops the journey');
+  assert.equal(step.autoPass({ billingAccount: { selectedProfileId: 'BILL-7001' } }), true);
+});

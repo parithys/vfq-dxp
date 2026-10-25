@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 // One place that turns "something went wrong calling a system" into a TYPED
-// failure, so Customer Identification and everything that depends on it can tell
+// failure, so Customer Verification and everything that depends on it can tell
 // apart:
 //   - a BUSINESS result (the system answered: not found, expired ID, retired
 //     status not confirmed, not eligible) - handled by each caller as before, and
@@ -67,17 +67,17 @@ export function describeFailure(service: ServiceName, kind: FailureKind): { titl
     case 'unavailable':
       return { title: `${who} is unavailable`, message: `${who} is not available right now. The check has not been completed - try again shortly.` };
     case 'network':
-      return { title: 'Connection problem', message: 'The connection was lost before the check could finish. Check the connection and try again.' };
+      return { title: 'Connection Problem', message: 'The connection was lost before the check could finish. Check the connection and try again.' };
     case 'api':
       return { title: `${who} returned an error`, message: `${who} could not process the request. The check has not been completed - try again.` };
     case 'partial':
       return { title: `${who} returned incomplete information`, message: `${who} answered with incomplete details, so the result cannot be relied on. Try again.` };
     case 'expired':
-      return { title: 'Validation has expired', message: 'This validation is no longer current. Validate again to continue.' };
+      return { title: 'Validation Has Expired', message: 'This validation is no longer current. Validate again to continue.' };
     case 'interrupted':
-      return { title: 'Validation was interrupted', message: 'The check was interrupted before it finished. Try again.' };
+      return { title: 'Validation Was Interrupted', message: 'The check was interrupted before it finished. Try again.' };
     default:
-      return { title: 'Something went wrong', message: 'An unexpected problem stopped the check. Nothing has been decided - try again.' };
+      return { title: 'Something Went Wrong', message: 'An unexpected problem stopped the check. Nothing has been decided - try again.' };
   }
 }
 

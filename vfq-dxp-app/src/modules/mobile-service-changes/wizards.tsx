@@ -3,7 +3,7 @@ import { addAddonSteps, changePostpaidPlanSteps, changePrepaidPackSteps } from '
 import { submitServiceChangeOrder } from './submitServiceChangeOrder';
 
 // The three Plans & Numbers journeys that change a line the customer already has. Each is the shared journey shell on its own steps
-// (serviceChangeSteps.tsx), built from the Capability Library: Customer Identification, Line Selection, Offers & Plans / Add-ons,
+// (serviceChangeSteps.tsx), built from the Capability Library: Customer Verification, Line Selection, Offers & Plans / Add-ons,
 // Checkout, CAF & Signature and Payment. Routed directly (router.tsx); the Plans & Numbers menu leads here.
 
 export function ChangePostpaidPlanWizard() {

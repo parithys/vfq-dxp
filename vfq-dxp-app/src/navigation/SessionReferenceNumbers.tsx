@@ -395,7 +395,7 @@ export function SessionReferenceNumbers() {
           </Tooltip>
           {/* A walk-in with no record is a normal outcome, not an error - the
               agent needs to see it, keep the number, and start an activation. */}
-          {!activeCustomer && <Badge variant="warning">New customer</Badge>}
+          {!activeCustomer && <Badge variant="warning">New Customer</Badge>}
           <Button variant="primary" compact disabled={finishing || abandoning} onClick={handleFinish}>
             {finishing ? 'Finishing…' : 'Finish'}
           </Button>

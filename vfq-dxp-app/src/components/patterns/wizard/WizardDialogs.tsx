@@ -30,7 +30,7 @@ export function AbandonDialog({
         <>
           {!noKeep && (
             <Button variant="secondary" onClick={onClose}>
-              Keep working
+              Keep Working
             </Button>
           )}
           <Button
@@ -50,7 +50,7 @@ export function AbandonDialog({
       {!noKeep && (
         <div className="mt-4">
           <Textarea
-            label="Comments (required)"
+            label="Comments (Required)"
             rows={3}
             value={comments}
             onChange={(e) => onCommentsChange(e.target.value)}
@@ -85,7 +85,7 @@ export function SaveExitDialog({
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
-            Keep working
+            Keep Working
           </Button>
           <Button variant="primary" onClick={onConfirm}>
             Save as Draft
@@ -96,7 +96,7 @@ export function SaveExitDialog({
       <p className="text-fg-2 text-[length:var(--fs-body)]">This order is saved as a draft and can be resumed from Draft Orders.</p>
       <div className="mt-4">
         <Textarea
-          label="Comments (optional)"
+          label="Comments (Optional)"
           rows={3}
           value={comments}
           onChange={(e) => onCommentsChange(e.target.value)}

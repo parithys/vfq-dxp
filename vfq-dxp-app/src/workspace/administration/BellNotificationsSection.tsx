@@ -108,7 +108,7 @@ export function BellNotificationsSection() {
     <div>
       {canConfigure ? (
         <div className="card p-5 mb-6">
-          <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Configure a notification</h2>
+          <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Configure a Notification</h2>
           <p className="text-fg-2 text-[length:var(--fs-caption)] mb-4">
             Notifications appear as a banner on the customer's Customer 360 screen until they expire - agents cannot dismiss them
             manually (BIN-06).
@@ -116,7 +116,7 @@ export function BellNotificationsSection() {
           <div className="grid grid-cols-2 gap-3">
             <Input label="Customer ID" placeholder="e.g. CUST-1001" value={customerId} onChange={(e) => setCustomerId(e.target.value)} />
             <Input
-              label="Expiry date"
+              label="Expiry Date"
               type="date"
               value={expiresAt}
               onChange={(e) => setExpiresAt(e.target.value)}
@@ -153,7 +153,7 @@ export function BellNotificationsSection() {
         </div>
       ) : (
         <div className="card p-5 mb-6">
-          <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Configure a notification</h2>
+          <h2 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-1">Configure a Notification</h2>
           <p className="text-fg-2 text-[length:var(--fs-caption)]">
             Restricted to Backoffice and privileged staff roles (Agent 360 BIN-01). This persona does not have
             configuration access.
@@ -161,7 +161,7 @@ export function BellNotificationsSection() {
         </div>
       )}
 
-      <h3 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-2">All notifications</h3>
+      <h3 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-2">All Notifications</h3>
       <div className="card divide-y divide-border-soft">
         {notifications.length === 0 && <p className="px-4 py-6 text-center text-muted">No notifications configured yet.</p>}
         {notifications.map((n) => (

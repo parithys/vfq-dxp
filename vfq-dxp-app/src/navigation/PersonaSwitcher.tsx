@@ -257,7 +257,7 @@ export function PersonaSwitcher() {
               <p className="px-4 py-3 text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-fg border-b border-border-soft">Notifications</p>
               {inbox.items.length > 0 && (
                 <div className="border-b border-border-soft">
-                  <p className="px-4 pt-3 pb-1 text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-fg">Workflow updates</p>
+                  <p className="px-4 pt-3 pb-1 text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-fg">Workflow Updates</p>
                   {inbox.items.map((i) => (
                     <button
                       key={i.id}
@@ -356,7 +356,7 @@ export function PersonaSwitcher() {
                 Edit profile
               </Link>
               <div className="px-4 py-3 border-t border-border-soft">
-                <label className="text-[length:var(--fs-caption)] text-fg mb-1 block">Switch role</label>
+                <label className="text-[length:var(--fs-caption)] text-fg mb-1 block">Switch Role</label>
                 <Select
                   aria-label="Switch role"
                   value={activePersonaId}

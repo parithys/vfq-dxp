@@ -12,7 +12,7 @@ import {
   IconTile,
   KpiGrid,
   KpiTile,
-  Pager,
+  Pagination,
   Panel,
   Pill,
   SearchBox,
@@ -31,10 +31,10 @@ const ORDER_DETAIL_ROUTE = '/order-management/order-approval-detail-attachments-
 const DAY = 86_400_000;
 
 const RANGES = [
-  { value: '30d', label: 'Last 30 days', days: 30 },
-  { value: '6m', label: 'Last 6 months', days: 183 },
-  { value: '12m', label: 'Last 12 months', days: 365 },
-  { value: 'all', label: 'All time', days: 0 },
+  { value: '30d', label: 'Last 30 Days', days: 30 },
+  { value: '6m', label: 'Last 6 Months', days: 183 },
+  { value: '12m', label: 'Last 12 Months', days: 365 },
+  { value: 'all', label: 'All Time', days: 0 },
 ];
 
 type ActType = 'Customer Interaction' | 'Order' | 'Ticket' | 'Account Change' | 'Payment' | 'OOB Charge' | 'System Activity';
@@ -236,8 +236,6 @@ export function C360Activities({ data }: { data: Customer360Data; services: Cust
 
   const paging = usePaging(rows, pageSize);
   const selected = all.find((a) => a.id === pickedId) ?? rows[0];
-  const firstShown = paging.total === 0 ? 0 : (paging.page - 1) * pageSize + 1;
-  const lastShown = Math.min(paging.page * pageSize, paging.total);
 
   const reset = <T,>(set: (v: T) => void) => (v: T) => {
     set(v);
@@ -314,12 +312,7 @@ export function C360Activities({ data }: { data: Customer360Data; services: Cust
                 })}
               </ul>
             )}
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-fg-2 text-[length:var(--fs-caption)]">
-                {firstShown}&ndash;{lastShown} of {paging.total}
-              </span>
-              <Pager page={paging.page} pages={paging.pages} onPage={paging.setPage} />
-            </div>
+            <Pagination page={paging.page} total={paging.total} pageSize={pageSize} onPage={paging.setPage} />
           </div>
         </Panel>
 

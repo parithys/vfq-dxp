@@ -71,6 +71,68 @@ export function toLocalMsisdn(msisdn: string): string {
   return /^\d{8}$/.test(local) ? `${local.slice(0, 4)} ${local.slice(4)}` : msisdn;
 }
 
+/** How the search box matches a number: Any (no pattern: the number or a value tier), XXYY (repeating pairs), Contains, Starts With, Ends With. */
+export type SearchMode = 'any' | 'xxyy' | 'contains' | 'starts' | 'ends';
+
+export const SEARCH_MODE_OPTIONS: { value: SearchMode; label: string }[] = [
+  { value: 'any', label: 'Any' },
+  { value: 'xxyy', label: 'XXYY' },
+  { value: 'contains', label: 'Contains' },
+  { value: 'starts', label: 'Starts With' },
+  { value: 'ends', label: 'Ends With' },
+];
+
+/** The mode the box opens in: no pattern filter. */
+export const DEFAULT_SEARCH_MODE: SearchMode = 'any';
+
+/** The bare 8 local digits of a Qatar number (no country code, no spaces). */
+export const localDigits = (msisdn: string): string => toLocalMsisdn(msisdn).replace(/\s/g, '');
+
+/** A repeating-pair pattern: 2, 4, 6 or 8 digits, each pair being one digit twice (3344, 1133, 2299, 77224455). */
+export function isRepeatingPairs(digits: string): boolean {
+  if (!/^\d+$/.test(digits) || digits.length % 2 !== 0 || digits.length > 8) return false;
+  for (let i = 0; i < digits.length; i += 2) if (digits[i] !== digits[i + 1]) return false;
+  return true;
+}
+
+/** Whether the number has an XXYY pattern anywhere: four consecutive digits that are two repeating pairs (3300, 3311, 4488). The same family XXYY search accepts. */
+export function hasRepeatingPairPattern(msisdn: string): boolean {
+  const d = localDigits(msisdn);
+  for (let i = 0; i + 3 < d.length; i++) if (d[i] === d[i + 1] && d[i + 2] === d[i + 3]) return true;
+  return false;
+}
+
+/**
+ * What is wrong with the typed text for the chosen mode, or undefined when it is fine (or empty). Any takes a number or a value-tier name; XXYY,
+ * Contains, Starts With and Ends With take digits only, and XXYY must also be repeating pairs. Never more than 8 characters.
+ */
+export function searchError(text: string, mode: SearchMode): string | undefined {
+  const t = text.replace(/\s/g, '');
+  if (!t) return undefined;
+  if (mode === 'any') return undefined;
+  if (!/^\d+$/.test(t)) return 'Enter digits only.';
+  if (mode === 'xxyy' && !isRepeatingPairs(t)) return 'Enter repeating pairs of digits, such as 3344 or 77224455.';
+  return undefined;
+}
+
+/**
+ * Whether a number matches the search text in the chosen mode, over the 8-digit local number: Starts With and Ends With match exactly at that end,
+ * Contains and XXYY match the typed digits exactly and consecutively anywhere (XXYY's text being a repeating-pair pattern, a full 8 digits finds
+ * only that number). Any applies no pattern: typed digits anywhere in the number, or a value-tier name when the text is not digits. Text the mode
+ * does not accept matches nothing.
+ */
+export function matchesNumberSearch(n: { msisdn: string; valueTier?: string }, text: string, mode: SearchMode): boolean {
+  const q = text.trim();
+  if (!q) return true;
+  const digits = q.replace(/\s/g, '');
+  if (searchError(text, mode)) return false;
+  const local = localDigits(n.msisdn);
+  if (mode === 'starts') return local.startsWith(digits);
+  if (mode === 'ends') return local.endsWith(digits);
+  if (/^\d+$/.test(digits)) return local.includes(digits);
+  return (n.valueTier ?? '').toLowerCase().includes(q.toLowerCase());
+}
+
 /**
  * How many numbers one agent may hold at a time (2026-09-28 direction).
  * Applied to the action that creates a hold, not to selecting one already
@@ -80,8 +142,8 @@ export const MAX_RESERVATIONS_PER_AGENT = 2;
 
 /** How many numbers are shown at once before Next/Previous: 20, four rows of five (was 10, 2026-10-04). */
 export const PAGE_SIZE = 20;
-/** Free numbers are compact one-line cards in three columns: 20 rows of 3 per page. */
-export const FREE_PAGE_SIZE = 60;
+/** Free numbers are compact one-line cards: 20 per page, so the 60 Free Numbers fill 3 pages. */
+export const FREE_PAGE_SIZE = 20;
 
 /**
  * Sort orders, offered on Free and Star, NOT Reserved.
@@ -106,10 +168,10 @@ export type SortKey = 'price-desc' | 'price-asc' | 'number-asc' | 'number-desc';
 // had two directions and number one - so the menu implied number order was
 // somehow one-way.
 export const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: 'price-desc', label: 'Price: high to low' },
-  { value: 'price-asc', label: 'Price: low to high' },
-  { value: 'number-asc', label: 'Number: ascending' },
-  { value: 'number-desc', label: 'Number: descending' },
+  { value: 'price-desc', label: 'Price: High to Low' },
+  { value: 'price-asc', label: 'Price: Low to High' },
+  { value: 'number-asc', label: 'Number: Ascending' },
+  { value: 'number-desc', label: 'Number: Descending' },
 ];
 
 /**

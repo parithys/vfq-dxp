@@ -30,6 +30,7 @@ import { Payment } from './Payment';
 import { PlanSelection } from './PlanSelection';
 import { ServiceAddress } from './ServiceAddress';
 import { SimType } from './SimType';
+import { Pagination, usePagination } from './Pagination';
 
 // Live previews for the Capability Library page: the REAL capability component with throwaway local state, so what
 // the library shows is exactly what every journey renders - a change to the capability shows here and there.
@@ -89,7 +90,6 @@ function PostpaidPlan({ mode }: { mode: 'plan' | 'extras' }) {
       onAddonsChange={setA}
       billLimit={limit}
       onBillLimitChange={(amount) => setLimit(amount)}
-      requiresHrnAdvance={false}
     />
   );
 }
@@ -107,11 +107,11 @@ function Plan() {
   return (
     <Variants
       items={[
-        { key: 'postpaid', label: 'Postpaid plan' },
-        { key: 'postpaid-extras', label: 'Postpaid add-ons' },
-        { key: 'prepaid', label: 'Prepaid pack' },
-        { key: 'prepaid-extras', label: 'Prepaid add-ons' },
-        { key: 'fixed', label: 'Fixed / fibre' },
+        { key: 'postpaid', label: 'Postpaid Plan' },
+        { key: 'postpaid-extras', label: 'Postpaid Add-Ons' },
+        { key: 'prepaid', label: 'Prepaid Pack' },
+        { key: 'prepaid-extras', label: 'Prepaid Add-Ons' },
+        { key: 'fixed', label: 'Fixed / Fibre' },
       ]}
       render={(k) =>
         k === 'postpaid' ? <PostpaidPlan mode="plan" /> : k === 'postpaid-extras' ? <PostpaidPlan mode="extras" /> : k === 'prepaid' ? <PrepaidPlan mode="plan" /> : k === 'prepaid-extras' ? <PrepaidPlan mode="extras" /> : <FixedPlan />
@@ -121,8 +121,8 @@ function Plan() {
 }
 const SAMPLE_ORDER_ROWS = [
   { label: 'Plan', value: 'Postpaid Essential' },
-  { label: 'Monthly charge', value: 'QAR 200 / month' },
-  { label: 'Due today', value: 'QAR 0' },
+  { label: 'Monthly Charge', value: 'QAR 200 / month' },
+  { label: 'Due Today', value: 'QAR 0' },
 ];
 function Caf() {
   const [standard, setStandard] = useState({});
@@ -130,7 +130,7 @@ function Caf() {
   return (
     <Variants
       items={[
-        { key: 'full', label: 'Full (postpaid journeys)' },
+        { key: 'full', label: 'Full (Postpaid Journeys)' },
         { key: 'standard', label: 'Standard' },
       ]}
       render={(k) =>
@@ -159,8 +159,8 @@ function Checkout() {
   return (
     <Variants
       items={[
-        { key: 'postpaid', label: 'Postpaid read-back' },
-        { key: 'prepaid', label: 'Prepaid cart' },
+        { key: 'postpaid', label: 'Postpaid Read-Back' },
+        { key: 'prepaid', label: 'Prepaid Cart' },
       ]}
       render={(k) =>
         k === 'postpaid' ? (
@@ -227,9 +227,9 @@ function CrossSell() {
 // Approval, Continue Prepaid / Proceed to Payment, Abandon Order) are the ones New Connection uses.
 const ELIGIBILITY_SCENARIOS = [
   { key: 'clear', label: 'Clear', idNumber: '28456701234' },
-  { key: 'approval', label: 'Approval routing', idNumber: 'P0998812' },
-  { key: 'soft', label: 'Soft stop', idNumber: '29011122233' },
-  { key: 'hard', label: 'Hard stop', idNumber: 'DIP-QA-004521' },
+  { key: 'approval', label: 'Approval Routing', idNumber: 'P0998812' },
+  { key: 'soft', label: 'Soft Stop', idNumber: '29011122233' },
+  { key: 'hard', label: 'Hard Stop', idNumber: 'DIP-QA-004521' },
 ];
 function EligibilityScenario({ idNumber }: { idNumber: string }) {
   const [r, setR] = useState<Parameters<typeof EligibilityGateStep>[0]['result']>(undefined);
@@ -313,11 +313,11 @@ function Wizard() {
   const steps: WizardStep[] = [
     {
       key: 'identity',
-      label: 'Customer Identification',
+      label: 'Customer Verification',
       render: ({ values, setValue }) => (
         <div className="grid gap-4 sm:grid-cols-2">
           <Input label="ID Number" value={(values.idNumber as string) ?? ''} onChange={(e) => setValue('idNumber', e.target.value)} />
-          <Input label="Full name" value={(values.name as string) ?? ''} onChange={(e) => setValue('name', e.target.value)} />
+          <Input label="Full Name" value={(values.name as string) ?? ''} onChange={(e) => setValue('name', e.target.value)} />
         </div>
       ),
       isValid: (values) => Boolean(values.idNumber && values.name),
@@ -357,7 +357,7 @@ function Wizard() {
   return (
     <GuidedActivationWizard
       wizardId={SAMPLE_WIZARD_ID}
-      title="Sample journey"
+      title="Sample Journey"
       confirmLeave={false}
       steps={steps}
       onSubmit={() => {
@@ -380,7 +380,7 @@ function Qualification() {
   return (
     <GuidedActivationWizard
       wizardId={QUALIFICATION_WIZARD_ID}
-      title="Sample journey"
+      title="Sample Journey"
       confirmLeave={false}
       steps={[customerQualificationStep({ flow: 'new', existingCustomerId: undefined, guardedContactChange: (v, setValue) => setValue('contact', v), productAgnostic: true })]}
       onSubmit={() => {
@@ -396,9 +396,9 @@ function Lines() {
   return (
     <Variants
       items={[
-        { key: 'all', label: 'All mobile lines' },
-        { key: 'postpaid', label: 'Postpaid lines' },
-        { key: 'prepaid', label: 'Prepaid lines' },
+        { key: 'all', label: 'All Mobile Lines' },
+        { key: 'postpaid', label: 'Postpaid Lines' },
+        { key: 'prepaid', label: 'Prepaid Lines' },
       ]}
       render={(k) => <LineSelection customerId="CUST-1001" lineType={k === 'all' ? undefined : k} value={line} onChange={setLine} />}
     />
@@ -410,6 +410,23 @@ function Complete() {
       order={{ orderId: 'ORD-SAMPLE', activityId: 'ACT-SAMPLE', pendingApproval: false, customerName: 'Sample Customer', msisdn: '+974 5555 0100', planName: 'Postpaid Essential', simType: 'eSIM', dueTodayQar: 0, monthlyRecurringQar: 115 }}
       showActivityId
     />
+  );
+}
+
+function PaginationDemo() {
+  const rows = Array.from({ length: 47 }, (_, i) => `Row ${i + 1}`);
+  const paging = usePagination(rows, 10);
+  return (
+    <div className="space-y-3">
+      <ul className="divide-y divide-border-soft rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg">
+        {paging.slice.map((r) => (
+          <li key={r} className="px-4 py-2 text-fg text-[length:var(--fs-body)]">
+            {r}
+          </li>
+        ))}
+      </ul>
+      <Pagination page={paging.page} total={paging.total} pageSize={paging.pageSize} onPage={paging.setPage} />
+    </div>
   );
 }
 
@@ -432,6 +449,7 @@ export const CAPABILITY_PREVIEWS: Record<string, () => ReactNode> = {
   'cross-sell-offers': () => <CrossSell />,
   'eligibility-gate': () => <Eligibility />,
   'selectable-card-styling': () => <Cards />,
+  pagination: () => <PaginationDemo />,
   'side-drawer': () => <DrawerDemo />,
   toasts: () => <ToastDemo />,
   'activation-complete': () => <Complete />,

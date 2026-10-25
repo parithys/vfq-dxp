@@ -75,7 +75,7 @@ export function PostpaidPlanCard({ p, selectedProductId, billLimit, onSelectProd
         {/* What the plan includes free: one prominent block, so the agent can confirm it with the customer. */}
         {p.features?.length && p.benefits?.length ? (
           <div className="border-t border-[var(--field-card-border)] pt-4 mt-auto space-y-1.5">
-            <p className="text-fg font-bold text-[length:var(--fs-caption)] uppercase tracking-wide">Included in this offer</p>
+            <p className="text-fg font-bold text-[length:var(--fs-caption)] uppercase tracking-wide">Included in This Offer</p>
             <ul className="space-y-1">
               {p.benefits.map((b) => (
                 <li key={b} className="flex items-start gap-2 text-fg font-medium text-[length:var(--fs-caption)]">

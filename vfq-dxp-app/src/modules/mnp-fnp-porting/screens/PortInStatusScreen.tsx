@@ -135,7 +135,7 @@ function PortInDetail({ record }: { record: PortInRecord }) {
     useCustomerContext.getState().endJourney(wizardId);
     workflow.clearDraft(wizardId);
     // A new draft with a new order reference once submitted; the source order stays Cancelled. The reusable details are filled in,
-    // and the journey runs again from Customer Identification so everything is reviewed and re-validated before it is submitted.
+    // and the journey runs again from Customer Verification so everything is reviewed and re-validated before it is submitted.
     workflow.patchDraft(wizardId, { set: values, progressTo: 0 });
     navigate('/mobile/start-connection');
   };
@@ -173,21 +173,21 @@ function PortInDetail({ record }: { record: PortInRecord }) {
         )}
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
-          <Field label="Port status">{record.portStatus}</Field>
-          <Field label="Tracking record">{record.trackingStatus}</Field>
-          <Field label="NPAS reference">{record.npasReference}</Field>
+          <Field label="Port Status">{record.portStatus}</Field>
+          <Field label="Tracking Record">{record.trackingStatus}</Field>
+          <Field label="NPAS Reference">{record.npasReference}</Field>
           <Field label="Submitted">{when(record.submittedAt)}</Field>
-          <Field label="NPAS response">{when(record.npasResponseAt)}</Field>
+          <Field label="NPAS Response">{when(record.npasResponseAt)}</Field>
           <Field label="Confirmed Port-In Date">{record.confirmedPortIn ? `${record.confirmedPortIn.date}, ${record.confirmedPortIn.start}-${record.confirmedPortIn.end}` : undefined}</Field>
-          <Field label="Plan type">{record.mnpCategory}</Field>
-          <Field label="Scheduled Port-In date">{record.scheduledPortInDate}</Field>
-          <Field label="Donor operator">{record.donorOperator}</Field>
-          <Field label="Donor subscription">{record.donorSubscriptionType}</Field>
-          <Field label="Donor customer type">{record.donorCustomerType}</Field>
+          <Field label="Plan Type">{record.mnpCategory}</Field>
+          <Field label="Scheduled Port-In Date">{record.scheduledPortInDate}</Field>
+          <Field label="Donor Operator">{record.donorOperator}</Field>
+          <Field label="Donor Subscription">{record.donorSubscriptionType}</Field>
+          <Field label="Donor Customer Type">{record.donorCustomerType}</Field>
           <Field label="Donor ID">{record.donorCustomerId ? `${record.donorIdType ?? ''} ${record.donorCustomerId}`.trim() : undefined}</Field>
           <Field label="MNP Form">{record.mnpFormNumber ? `${record.mnpFormNumber}${record.mnpFormSigned ? ' (signed)' : ''}` : undefined}</Field>
           <Field label="SIM">{record.simSerial ? `${record.simSerial} (${record.simStatus ?? 'Reserved'})` : undefined}</Field>
-          <Field label="Source cancelled order">{record.sourceCancelledOrderId}</Field>
+          <Field label="Source Cancelled Order">{record.sourceCancelledOrderId}</Field>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-border-soft">
@@ -209,7 +209,7 @@ function PortInDetail({ record }: { record: PortInRecord }) {
 
       {SHOW_DEMO_CONTENT && waiting && (
         <section className="card card-surface p-5 space-y-3" aria-label="Simulate NPAS response">
-          <h3 className="font-bold text-fg text-[length:var(--fs-body)]">Simulate NPAS response</h3>
+          <h3 className="font-bold text-fg text-[length:var(--fs-body)]">Simulate NPAS Response</h3>
           <p className="text-fg-2 text-[length:var(--fs-caption)]">Demo control: NPAS is not connected, so its answer is entered here.</p>
           <div className="flex flex-wrap items-end gap-3">
             <Button variant="primary" disabled={pending} onClick={() => void apply(approvePortIn(record), 'NPAS approved the port-in request.')}>
@@ -217,7 +217,7 @@ function PortInDetail({ record }: { record: PortInRecord }) {
             </Button>
             <div className="w-full max-w-sm">
               <Select
-                label="Donor rejection reason"
+                label="Donor Rejection Reason"
                 placeholder="Select a reason"
                 value={reasonCode}
                 onChange={(e) => setReasonCode(e.target.value)}
@@ -233,7 +233,7 @@ function PortInDetail({ record }: { record: PortInRecord }) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="card p-5" aria-label="Status history">
-          <h3 className="font-bold text-fg text-[length:var(--fs-body)] mb-3">Status history</h3>
+          <h3 className="font-bold text-fg text-[length:var(--fs-body)] mb-3">Status History</h3>
           <ol className="space-y-3">
             {[...record.history].reverse().map((h, i) => (
               <li key={`${h.status}-${i}`} className="flex gap-3">
@@ -248,7 +248,7 @@ function PortInDetail({ record }: { record: PortInRecord }) {
           </ol>
         </section>
         <section className="card p-5" aria-label="Notifications">
-          <h3 className="font-bold text-fg text-[length:var(--fs-body)] mb-3">Customer notifications</h3>
+          <h3 className="font-bold text-fg text-[length:var(--fs-body)] mb-3">Customer Notifications</h3>
           {record.notifications.length === 0 ? (
             <p className="text-muted text-[length:var(--fs-body)]">None sent.</p>
           ) : (

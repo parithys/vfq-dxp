@@ -81,7 +81,7 @@ export function ConnectionsSection({ ctx }: { ctx: Ctx }) {
         <Card title="" icon={ICON.bars}>
           <div className="px-4 py-3 flex gap-2 border-b border-[var(--field-card-border)]">
             <SearchField value={query} onChange={(e) => setQuery(e.target.value)} onClear={() => setQuery('')} placeholder="Search by MSISDN, service number or plan name..." aria-label="Search connections" wrapperClassName="flex-1 min-w-48" />
-            <FilterSelect label="Service type" value={type} options={SERVICE_FILTERS.map((x) => ({ value: x, label: x }))} onChange={(v) => setType(v)} />
+            <FilterSelect label="Service Type" value={type} options={SERVICE_FILTERS.map((x) => ({ value: x, label: x }))} onChange={(v) => setType(v)} />
             <FilterSelect label="Status" value={status} options={['All Status', 'Active', 'Suspended'].map((x) => ({ value: x, label: x }))} onChange={(v) => setStatus(v)} />
           </div>
           {shown.map((s) => {
@@ -142,7 +142,7 @@ export function ConnectionsSection({ ctx }: { ctx: Ctx }) {
                   items={[
                     { key: 'overview', label: 'Overview' },
                     { key: 'usage', label: 'Usage' },
-                    { key: 'plan', label: 'Plan & Add-ons' },
+                    { key: 'plan', label: 'Plan & Add-Ons' },
                     { key: 'benefits', label: 'Benefits' },
                     { key: 'doi', label: 'Device (DOI)' },
                     { key: 'more', label: 'More' },
@@ -241,14 +241,14 @@ export function ConnectionsSection({ ctx }: { ctx: Ctx }) {
               {tab === 'plan' && (
                 <div className="border-t border-[var(--field-card-border)]">
                   <KV label="Plan Name">{pr('Plan Name') || cur.label}</KV>
-                  <KV label="Active Add-ons">{addons.map((a) => str(a.name)).join(', ') || 'None'}</KV>
+                  <KV label="Active Add-Ons">{addons.map((a) => str(a.name)).join(', ') || 'None'}</KV>
                   <KV label="Active Discounts">{discounts.map((a) => str(a.name)).join(', ') || 'None'}</KV>
                   <KV label="Bill Limit">{billLimit}</KV>
                 </div>
               )}
               {tab === 'benefits' && (
                 <div className="border-t border-[var(--field-card-border)]">
-                  <KV label="Plan and Add-ons Benefits">{pr('Plan and Add-ons Benefits') || '-'}</KV>
+                  <KV label="Plan and Add-Ons Benefits">{pr('Plan and Add-ons Benefits') || '-'}</KV>
                 </div>
               )}
               {tab === 'doi' && (
@@ -261,7 +261,7 @@ export function ConnectionsSection({ ctx }: { ctx: Ctx }) {
               )}
               {tab === 'more' && (
                 <div className="border-t border-[var(--field-card-border)]">
-                  <KV label="Service reference">{cur.ref}</KV>
+                  <KV label="Service Reference">{cur.ref}</KV>
                   <KV label="Category">{cur.category}</KV>
                 </div>
               )}
@@ -302,7 +302,7 @@ export function ConnectionsSection({ ctx }: { ctx: Ctx }) {
           <ActionList
             items={[
               { title: 'Change Plan', sub: 'Modify current plan' },
-              { title: 'Add / Remove Add-ons', sub: 'Manage add-ons' },
+              { title: 'Add / Remove Add-Ons', sub: 'Manage add-ons' },
               { title: 'Request SIM Swap', sub: 'Initiate SIM replacement' },
               { title: 'View Device / DOI', sub: 'Check device installment' },
               { title: 'Trouble Ticket', sub: 'Log an issue for this line', onClick: () => ctx.goToTab('ts-history') },

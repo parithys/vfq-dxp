@@ -36,14 +36,11 @@ export function billingAccountStep(
   return {
     key: 'billingAccount',
     summary: billingAccountSummary,
-    // Passed over on the way forward. An existing billing account is selected automatically, or one is created when there is none
-    // (never reported as a problem): BillingAccountAutoResolver, mounted by the wizard for this step wherever the journey enters it
-    // (a journey that skips Product Selection included). The step stays in the rail so the agent can go back and change either.
-    // ...EXCEPT while a NEW account is being created: its credit limit is the agent's to see and choose, so the step is shown.
-    autoPass: (values) => {
-      const b = values.billingAccount as BillingAccountValue | undefined;
-      return !(b?.creatingNew && !b.selectedProfileId);
-    },
+    // Passed over on the way forward, always: an existing billing account is selected automatically, or one is created when there is none (never
+    // reported as a problem): BillingAccountAutoResolver, mounted by the wizard for this step wherever the journey enters it (a journey that skips
+    // Product Selection included). A new account takes the default credit limit for the segment (the agent's choice, if any, still wins). The step
+    // stays in the rail, so the agent can go back to change the profile or choose a different credit limit.
+    autoPass: () => true,
     headless: ({ values, setValue }) => {
       const contact = values.contact as GuidedContactValue | undefined;
       if (!contact?.moiResult) return null;
@@ -61,10 +58,13 @@ export function billingAccountStep(
     render: ({ values, setValue }) => {
       const eligibility = values.eligibility as EligibilityResult | undefined;
       const address = values.address as ZsbAddressValue | undefined;
-      const defaultAddressLine =
-        [address?.streetNo && `Street ${address.streetNo}`, address?.zone && `Zone ${address.zone}`, address?.area, address?.addressLine]
-          .filter(Boolean)
-          .join(', ') || undefined;
+      // A prefilled address (taken from the billing profile, or placeholders) is not a typed one: its line is used whole, and a placeholder is no address.
+      const prefilled = Boolean((address as { prefilledKey?: string } | undefined)?.prefilledKey);
+      const defaultAddressLine = prefilled
+        ? address?.addressLine && address.addressLine !== '-' ? address.addressLine : undefined
+        : [address?.streetNo && `Street ${address.streetNo}`, address?.zone && `Zone ${address.zone}`, address?.area, address?.addressLine]
+            .filter(Boolean)
+            .join(', ') || undefined;
       const billing = (values.billingAccount as BillingAccountValue) ?? {};
       const nationality = eligibility?.nationality ?? (values.contact as GuidedContactValue | undefined)?.moiResult?.nationality;
       return (

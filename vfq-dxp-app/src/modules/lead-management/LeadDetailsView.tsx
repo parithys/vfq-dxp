@@ -214,7 +214,7 @@ export function LeadDetailsView() {
         </div>
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button>
-          <Button variant="primary" onClick={submitReject} disabled={!rejectCode}>Confirm rejection</Button>
+          <Button variant="primary" onClick={submitReject} disabled={!rejectCode}>Confirm Rejection</Button>
         </div>
       </Drawer>
 
@@ -242,7 +242,7 @@ export function LeadDetailsView() {
         footer={
           <>
             <Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button>
-            <Button variant="primary" onClick={submitDescription}>Save description</Button>
+            <Button variant="primary" onClick={submitDescription}>Save Description</Button>
           </>
         }
       >

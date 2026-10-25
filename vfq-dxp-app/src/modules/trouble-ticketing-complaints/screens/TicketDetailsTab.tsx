@@ -16,9 +16,9 @@ export function TicketDetailsTab({ ticket, updateRecord }: Props) {
       <div><dt className="text-[length:var(--fs-caption)] text-fg">Resolution Code</dt><dd className="text-fg">{ticket.resolutionCode ?? '-'}</dd></div>
       <div><dt className="text-[length:var(--fs-caption)] text-fg">Hashtags</dt><dd className="text-fg">{(ticket.hashtags ?? []).join(', ') || '-'}</dd></div>
       <div><dt className="text-[length:var(--fs-caption)] text-fg">SLA Target</dt><dd className="text-fg">{ticket.slaTargetHours ? `${ticket.slaTargetHours}h, due ${ticket.slaDueAt ? formatDateTime(ticket.slaDueAt) : '-'}` : '-'}</dd></div>
-      <div><dt className="text-[length:var(--fs-caption)] text-fg">Reopen count</dt><dd className="text-fg">{ticket.reopenCount ?? 0}</dd></div>
+      <div><dt className="text-[length:var(--fs-caption)] text-fg">Reopen Count</dt><dd className="text-fg">{ticket.reopenCount ?? 0}</dd></div>
       {ticket.category === 'Disconnection' && (
-        <div><dt className="text-[length:var(--fs-caption)] text-fg">Resolution Code (retention)</dt><dd className="text-fg">{ticket.retentionResolutionCode ?? '-'}</dd></div>
+        <div><dt className="text-[length:var(--fs-caption)] text-fg">Resolution Code (Retention)</dt><dd className="text-fg">{ticket.retentionResolutionCode ?? '-'}</dd></div>
       )}
       <div className="col-span-2">
         <dt className="text-[length:var(--fs-caption)] text-fg mb-1">L3 Reference (RES-07 - editable while Not Solved)</dt>

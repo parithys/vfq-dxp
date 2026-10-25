@@ -60,7 +60,7 @@ export function BillingSection({ data }: { data: Customer360Data }) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {creditLimit && (
             <MetricCard
-              label="Credit limit"
+              label="Credit Limit"
               value={`${String(creditBreakdownOf(data).overall ?? creditLimit.creditLimitQar ?? creditLimit.creditLimitQAR ?? '-')} QAR`}
               subtext={
                 creditLimit.restrictionApplied
@@ -71,7 +71,7 @@ export function BillingSection({ data }: { data: Customer360Data }) {
           )}
           {latestBill && (
             <MetricCard
-              label="Current bill"
+              label="Current Bill"
               value={`${String(latestBill.totalAmount ?? '-')} QAR`}
               subtext={`${formattedBillPeriod} · ${capitalize(latestBill.status)}`}
             />
@@ -88,17 +88,17 @@ export function BillingSection({ data }: { data: Customer360Data }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <MetricCard
-          label="Current charges"
+          label="Current Charges"
           value={latestBill ? `${String((latestBill as Record<string, unknown>).currentChargesQAR ?? '-')} QAR` : '-'}
           subtext="CUS-001-BIV-03"
         />
         <MetricCard
-          label="Previous payment"
+          label="Previous Payment"
           value={previousPayment ? `${String(previousPayment.amountQar ?? '-')} QAR` : '-'}
           subtext={previousPayment ? String(previousPayment.chargeType ?? 'CUS-001-BIV-04') : 'No payments on file'}
         />
         <MetricCard
-          label="Previous outstanding"
+          label="Previous Outstanding"
           value={profile ? `${String(profile.previousOutstandingQAR ?? 0)} QAR` : '-'}
           subtext="CUS-001-BIV-05"
         />
@@ -237,7 +237,7 @@ export function BillingSection({ data }: { data: Customer360Data }) {
 
       <section>
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg">Bills (last 12 months)</h3>
+          <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg">Bills (Last 12 Months)</h3>
         </div>
         <DataTable
           rows={billsInWindow}
@@ -274,7 +274,7 @@ export function BillingSection({ data }: { data: Customer360Data }) {
       </section>
 
       <section>
-        <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg mb-2">Adjustments &amp; refunds</h3>
+        <h3 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide font-semibold text-fg mb-2">Adjustments &amp; Refunds</h3>
         <DataTable
           rows={data.adjustments}
           rowKey={(r) => String(r.adjustmentId)}

@@ -15,7 +15,7 @@ export interface ServiceAddressProps {
   mode?: 'structured';
   value: ZsbAddressValue;
   onChange: (value: ZsbAddressValue) => void;
-  /** From Customer Identification: a Qatari national's registered address is prefilled. */
+  /** From Customer Verification: a Qatari national's registered address is prefilled. */
   idNumber?: string;
   nationality?: string;
   /** A journey that reports fibre readiness itself hides the built-in banner. */

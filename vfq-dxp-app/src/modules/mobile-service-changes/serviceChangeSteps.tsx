@@ -76,7 +76,7 @@ const prepaidLineOf = (values: Values): PrepaidLine[] => {
 const prepaidDue = (values: Values) => (values.checkoutTotals as PrepaidCheckoutTotals | undefined)?.totalDueQar ?? 0;
 
 /**
- * Change Postpaid Plan: Customer Identification (eligibility, special discounts), the line to change, Offers & Plans (without the line's
+ * Change Postpaid Plan: Customer Verification (eligibility, special discounts), the line to change, Offers & Plans (without the line's
  * current plan), Add-ons, Checkout, the full CAF & Signature and Payment (nothing is due today, so a zero-value receipt). The same
  * shared steps as New Mobile Postpaid, without Address, Number or SIM: the line already has them.
  */
@@ -95,7 +95,7 @@ export function changePostpaidPlanSteps(ctx: ServiceChangeContext): WizardStep[]
 }
 
 /**
- * Change Prepaid Pack: Customer Identification, the prepaid line, the new pack (without the current one) with its discount, its add-ons,
+ * Change Prepaid Pack: Customer Verification, the prepaid line, the new pack (without the current one) with its discount, its add-ons,
  * the prepaid Checkout (the pack, discount and add-ons; no SIM or SIM card charge, the SIM is the customer's) and Payment of what is due.
  */
 export function changePrepaidPackSteps(ctx: ServiceChangeContext): WizardStep[] {
@@ -122,7 +122,7 @@ export function changePrepaidPackSteps(ctx: ServiceChangeContext): WizardStep[] 
 }
 
 /**
- * Add Add-On, on a postpaid or a prepaid line: Customer Identification, the line, the add-ons its plan can take, Checkout and Payment. The
+ * Add Add-On, on a postpaid or a prepaid line: Customer Verification, the line, the add-ons its plan can take, Checkout and Payment. The
  * postpaid Checkout is the shared Checkout Summary (the line's plan with the add-ons priced into the monthly charge); the prepaid one is the
  * prepaid Checkout with the pack as it is (only the add-ons are charged). Each is skipped for the other line type.
  */

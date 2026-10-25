@@ -14,7 +14,7 @@ import { simTypeSummary } from './summary';
  * continue", 2026-09-28); eSIM stays a manual Continue - it is a choice to review (QR-after-payment messaging,
  * customer email), not a validation result to act on at once.
  *
- * `customerEmail` is where an eSIM's QR code is sent; by default the email captured at Customer Identification,
+ * `customerEmail` is where an eSIM's QR code is sent; by default the email captured at Customer Verification,
  * masked for a new customer. `device` makes the serial field scan-led on a tablet and type-led on the web.
  */
 export function simTypeStep(

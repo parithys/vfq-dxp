@@ -36,10 +36,10 @@ const RESOLVED = new Set(['Solved', 'Completed', 'Closed']);
 const DAY = 86_400_000;
 
 const RANGES = [
-  { value: '30d', label: 'Last 30 days', days: 30 },
-  { value: '6m', label: 'Last 6 months', days: 183 },
-  { value: '12m', label: 'Last 12 months', days: 365 },
-  { value: 'all', label: 'All time', days: 0 },
+  { value: '30d', label: 'Last 30 Days', days: 30 },
+  { value: '6m', label: 'Last 6 Months', days: 183 },
+  { value: '12m', label: 'Last 12 Months', days: 365 },
+  { value: 'all', label: 'All Time', days: 0 },
 ];
 
 const time = (v: unknown): number => {

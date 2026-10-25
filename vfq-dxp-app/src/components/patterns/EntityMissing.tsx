@@ -28,7 +28,7 @@ export function EntityMissing({
         <div className="flex items-center gap-4">
           {onRetry && (
             <button type="button" onClick={onRetry} className="text-link font-medium hover:underline">
-              Try again
+              Try Again
             </button>
           )}
           <Link to={backTo} className="text-link font-medium hover:underline">

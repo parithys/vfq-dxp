@@ -6,9 +6,9 @@ import { actualUserIdentity } from './actualUserModel';
 const identityOf = (v: Record<string, unknown>) => actualUserIdentity(v.actualUser as ActualUserValue | undefined);
 
 export const actualUserSummary: SummaryField[] = [
-  { key: 'user', label: 'Line used by', type: 'text', value: (v) => (identityOf(v) ? 'Actual user' : 'Primary customer') },
-  { key: 'name', label: 'Actual user', type: 'text', optional: true, value: (v) => identityOf(v)?.moiResult?.name },
-  { key: 'id', label: 'ID number', type: 'text', optional: true, sensitive: true, value: (v) => identityOf(v)?.idNumber },
+  { key: 'user', label: 'Line Used By', type: 'text', value: (v) => (identityOf(v) ? 'Actual user' : 'Primary customer') },
+  { key: 'name', label: 'Actual User', type: 'text', optional: true, value: (v) => identityOf(v)?.moiResult?.name },
+  { key: 'id', label: 'ID Number', type: 'text', optional: true, sensitive: true, value: (v) => identityOf(v)?.idNumber },
   { key: 'email', label: 'Email', type: 'text', optional: true, value: (v) => identityOf(v)?.email },
-  { key: 'phone', label: 'Alternate phone', type: 'text', optional: true, value: (v) => identityOf(v)?.altPhone ?? at(v, 'actualUser', 'identity', 'altPhone') },
+  { key: 'phone', label: 'Alternate Phone', type: 'text', optional: true, value: (v) => identityOf(v)?.altPhone ?? at(v, 'actualUser', 'identity', 'altPhone') },
 ];

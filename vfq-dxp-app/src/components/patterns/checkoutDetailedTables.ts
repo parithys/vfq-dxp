@@ -52,11 +52,11 @@ export function buildDetailedTables({
         ? `${q(charges.discountQar)}${discount.durationMonths ? ` for first ${discount.durationMonths} months` : ' (no expiry)'}`
         : 'None',
     },
-    { label: 'Pro rated charges', value: q(partialPlanQar) },
-    { label: 'Pro-rated Add-On charges', value: q(partialAddonQar) },
+    { label: 'Pro Rated Charges', value: q(partialPlanQar) },
+    { label: 'Pro-Rated Add-On Charges', value: q(partialAddonQar) },
     { label: 'Monthly Bill Cycle', value: '1st of every-month' },
-    { label: 'Approximate first bill amount', value: q(firstBill.totalQar) },
-    { label: 'Approximate second bill amount', value: q(monthlyRecurringQar) },
+    { label: 'Approximate First Bill Amount', value: q(firstBill.totalQar) },
+    { label: 'Approximate Second Bill Amount', value: q(monthlyRecurringQar) },
     // VAT is part of how the bill is built up, so it sits in the explainer (it was a line of the order summary).
     { label: `VAT (${Math.round(VAT_RATE * 100)}%)`, value: `${formatQar(charges.vatQar)}/mo` },
   ];
@@ -73,16 +73,16 @@ export function buildDetailedTables({
         { label: 'Number Discount Value', value: q(discountValueQar) },
         { label: 'Number Lock-in Value:', value: q(lockInValueQar) },
         ...(isStarNumber
-          ? [{ label: 'Star Number Lock-in', value: starTier ? `${starTier.lockInDurationMonths} months` : 'Not yet banded - confirm before signature' }]
+          ? [{ label: 'Star Number Lock-In', value: starTier ? `${starTier.lockInDurationMonths} months` : 'Not yet banded - confirm before signature' }]
           : []),
         { label: 'Plan', value: plan?.name ?? '-' },
-        { label: 'Lock-in Period', value: plan?.commitmentMonths ? `${plan.commitmentMonths} months` : 'No lock-in' },
-        { label: 'Add-ons', value: addons.length ? addons.map((a) => `${a.name} (QAR ${a.mrcQAR}/mo)`).join(', ') : 'None' },
+        { label: 'Lock-In Period', value: plan?.commitmentMonths ? `${plan.commitmentMonths} months` : 'No lock-in' },
+        { label: 'Add-Ons', value: addons.length ? addons.map((a) => `${a.name} (QAR ${a.mrcQAR}/mo)`).join(', ') : 'None' },
         { label: 'SIM Type', value: simType?.simType ?? '-' },
         ...(creditLimitQar !== undefined
           ? [
-              { label: 'Credit limit', value: `QAR ${creditLimitQar}`, boldLabel: true },
-              { label: 'Bill limit', value: billLimit !== undefined || plan?.mrcQAR !== undefined ? `QAR ${billLimit ?? plan?.mrcQAR}` : `Up to QAR ${creditLimitQar}`, boldLabel: true },
+              { label: 'Credit Limit', value: `QAR ${creditLimitQar}`, boldLabel: true },
+              { label: 'Bill Limit', value: billLimit !== undefined || plan?.mrcQAR !== undefined ? `QAR ${billLimit ?? plan?.mrcQAR}` : `Up to QAR ${creditLimitQar}`, boldLabel: true },
             ]
           : []),
       ],

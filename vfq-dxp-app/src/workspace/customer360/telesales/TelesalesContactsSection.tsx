@@ -72,7 +72,7 @@ export function ContactsSection({ ctx }: { ctx: Ctx }) {
           <Card title={`Contacts List (${total})`} icon={ICON.user}>
             <div className="px-4 py-3 flex gap-2 border-b border-[var(--field-card-border)]">
               <SearchField value={query} onChange={(e) => setQuery(e.target.value)} onClear={() => setQuery('')} placeholder="Search contacts by name, role or email..." aria-label="Search contacts" wrapperClassName="flex-1 min-w-48" />
-              <FilterSelect label="Filter by role" value={role} options={['All Roles', 'Customer (Self)', 'Authorised Person', 'Notification Contact', 'Family Member'].map((x) => ({ value: x, label: x }))} onChange={(v) => setRole(v)} />
+              <FilterSelect label="Filter by Role" value={role} options={['All Roles', 'Customer (Self)', 'Authorised Person', 'Notification Contact', 'Family Member'].map((x) => ({ value: x, label: x }))} onChange={(v) => setRole(v)} />
             </div>
             {shown.map((r) => (
               <button key={r.key} type="button" onClick={() => setSelected(r.key)} className={`w-full flex items-start gap-3 px-4 py-3 text-left border-b border-[var(--field-card-border)] last:border-0 hover:bg-surface ${cur?.key === r.key ? 'bg-surface' : ''}`}>

@@ -29,7 +29,7 @@ interface BillingAccountStepProps {
   value: BillingAccountValue;
   onChange: (value: BillingAccountValue) => void;
   /**
-   * The customer's email as captured on Customer Identification (masked for a new customer).
+   * The customer's email as captured on Customer Verification (masked for a new customer).
    * It is the single source of truth for the journey: when given, it is shown in place of the
    * address stored on each billing profile, never a second lookup.
    */
@@ -373,7 +373,7 @@ export function BillingAccountStep({
                 {/* Bill cycle and billing mode on one row: the day the cycle starts (default by rule, editable) and how it bills. */}
                 <div className="grid sm:grid-cols-2 gap-3">
                   <Select
-                    label="Bill cycle"
+                    label="Bill Cycle"
                     required
                     value={String(billCycleDay)}
                     onChange={(e) => setNewAccount({ billCycleDay: Number(e.target.value) })}
@@ -384,7 +384,7 @@ export function BillingAccountStep({
                     }))}
                   />
                   <Select
-                    label="Billing mode"
+                    label="Billing Mode"
                     value={newAccount.billingMode ?? DEFAULT_BILLING_MODE}
                     onChange={(e) => setNewAccount({ billingMode: e.target.value })}
                     options={BILLING_MODES}

@@ -18,14 +18,14 @@ interface VerificationGateProps {
 
 // CUS-001-KYC-02/03 / BR-01: re-confirms the identified customer's identity
 // before any demographic/contact/address/billing maintenance proceeds, with
-// the Customer Identification capability the activation journeys use (scan or
+// the Customer Verification capability the activation journeys use (scan or
 // upload, verify, Fetch from MOI - bound to THIS customer) and the eligibility
 // checks on the identified customer. Once
 // verified, useCustomerVerificationStore never un-verifies - matches
 // Annex_02's Unverified -> Verified, no transition out of Verified.
 export function VerificationGate({ customerId, customerName, open, onClose, onVerified }: VerificationGateProps) {
   const verifyCustomer = useCustomerVerificationStore((s) => s.verifyCustomer);
-  // The same Customer Identification capability the activation journeys use, bound to THIS customer: the scan reads their own document, the
+  // The same Customer Verification capability the activation journeys use, bound to THIS customer: the scan reads their own document, the
   // number and expiry are verified against it, and Fetch resolves them from MOI. The eligibility checks then run on the identified customer.
   const [value, setValue] = useState<IdLookupValue>({});
   const [eligibility, setEligibility] = useState<EligibilityResult | undefined>();

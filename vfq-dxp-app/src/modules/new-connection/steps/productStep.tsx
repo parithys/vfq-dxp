@@ -40,8 +40,8 @@ export function productStep(ctx: ProductStepContext): WizardStep {
   }
   return {
     key: 'product',
-    label: 'Offers',
-    heading: 'Recommended offers',
+    label: 'Recommended Offers',
+    heading: 'Recommended Offers',
     subheading: 'Personalised using the customer’s profile and eligibility.',
     summary: [...crossSalesSummary, ...productSummary],
     render: ({ values, setValue, goNext }) => <ProductSelection values={values} setValue={setValue} goNext={goNext} ctx={ctx} variant="buttons" />,

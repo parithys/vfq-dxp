@@ -216,7 +216,7 @@ export function CompanySearchInput({ label, value, onChange, id, allowAddNew = t
                   <Icon path={PLUS_ICON} className="w-5 h-5" />
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-[length:var(--fs-body)] font-semibold text-accent">Add new company</span>
+                  <span className="block text-[length:var(--fs-body)] font-semibold text-accent">Add New Company</span>
                   <span className="block text-[length:var(--fs-caption)] text-muted truncate">
                     {results.length === 0
                       ? `No registered company matches "${query.trim()}".`

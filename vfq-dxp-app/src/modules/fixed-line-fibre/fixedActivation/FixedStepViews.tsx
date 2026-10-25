@@ -140,7 +140,7 @@ export function NumberDevicesStep({ values, setValue }: { values: Values; setVal
   return (
     <div className="space-y-6">
       <section>
-        <h3 className="text-fg font-semibold text-[length:var(--fs-h5)] mb-2">Fixed line number</h3>
+        <h3 className="text-fg font-semibold text-[length:var(--fs-h5)] mb-2">Fixed Line Number</h3>
         <p className="text-fg-2 text-[length:var(--fs-body)] mb-2">Allocated automatically for this order.</p>
         <p className="text-fg font-bold text-[length:var(--fs-h4)]">{msisdn ?? '…'}</p>
       </section>

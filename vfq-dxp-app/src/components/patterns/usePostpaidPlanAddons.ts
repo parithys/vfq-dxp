@@ -35,7 +35,7 @@ export function usePostpaidPlanAddons({
   const [plans, setPlans] = useState<PostpaidPlan[]>([]);
   const [addonProducts, setAddonProducts] = useState<AddonProduct[]>([]);
   const [planDiscounts, setPlanDiscounts] = useState<Discount[]>([]);
-  // Of the three special types only the one chosen at Customer Identification is offered (a customer holds one).
+  // Of the three special types only the one chosen at Customer Verification is offered (a customer holds one).
   const discounts = useMemo(
     () => discountsForSpecialType(discountsForCustomer(planDiscounts, customerBenefits, customerBenefit && customerBenefit !== 'none' ? customerBenefit : undefined), specialDiscountType),
     [planDiscounts, customerBenefits, customerBenefit, specialDiscountType]
@@ -70,7 +70,7 @@ export function usePostpaidPlanAddons({
   // the FULL catalogue, not the filtered one, so a query that empties the
   // active tab's matches doesn't also make its own tab disappear out from
   // under it. Each tab's CONTENT still reads the filtered list below.
-  // The Special Discount selected on Customer Identification adds a third tab listing only the plans that discount applies to.
+  // The Special Discount selected on Customer Verification adds a third tab listing only the plans that discount applies to.
   const special = specialDiscountType ? SPECIAL_DISCOUNT_TYPE[specialDiscountType] : undefined;
   // planDiscounts holds only the SELECTED plan's discounts, so the tab reads the whole catalogue of this discount type.
   const [specialDiscountRows, setSpecialDiscountRows] = useState<Discount[]>([]);

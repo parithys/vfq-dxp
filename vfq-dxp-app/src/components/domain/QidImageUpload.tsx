@@ -323,7 +323,7 @@ export function QidImageUpload({
               <Icon path={SCAN_CORNERS} className="w-12 h-12 text-border" />
             </div>
             <div className="space-y-1.5 max-w-xl">
-              {!canScan && <h4 className="text-fg font-bold text-[length:var(--fs-h5)]">Card could not be read</h4>}
+              {!canScan && <h4 className="text-fg font-bold text-[length:var(--fs-h5)]">Card Could Not Be Read</h4>}
               {canScan && (
                 <p className="text-fg-2 text-[length:var(--fs-body)]">
                   {`Both sides of the ${documentType} are required for verification`}

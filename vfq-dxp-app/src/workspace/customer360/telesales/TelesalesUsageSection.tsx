@@ -52,7 +52,7 @@ export function UsageSection({ ctx }: { ctx: Ctx }) {
         actions={
           <label className="inline-flex items-center gap-3 card px-4 py-2 text-[length:var(--fs-body)]">
             Select Connection
-            <FilterSelect captioned label="Select connection" value={pickedRef} options={services.map((s) => ({ value: s.ref, label: `${s.identifier} (${s.label})` }))} onChange={setPickedRef} />
+            <FilterSelect captioned label="Select Connection" value={pickedRef} options={services.map((s) => ({ value: s.ref, label: `${s.identifier} (${s.label})` }))} onChange={setPickedRef} />
             <Pill tone="green">{cur?.status ?? 'Active'}</Pill>
           </label>
         }
@@ -161,9 +161,9 @@ export function UsageSection({ ctx }: { ctx: Ctx }) {
             <Ring value={qar(Number(bal?.mainBalanceQAR ?? 0))} fraction={1} label="Primary Balance" wide />
           </div>
         </Card>
-        <Card title="Plan & Add-on Usage" icon={ICON.card} link="View Plan Details">
+        <Card title="Plan & Add-On Usage" icon={ICON.card} link="View Plan Details">
           <Field label="Plan Name">{str(res('Plan Name')) || cur?.label || '-'}</Field>
-          <Field label="Active Add-ons">
+          <Field label="Active Add-Ons">
             {addons.length} <span className="text-link font-semibold">View All</span>
           </Field>
           <Field label="Active Discounts">{discounts.length ? str(discounts[0].name) : '-'}</Field>

@@ -110,7 +110,7 @@ export function C360Overview({ data, services, goToTab, onTicketCreated, queryFo
         ]
       : []),
     ...(fixedOffer ? [{ icon: IC.globe, label: '', title: fixedOffer, pill: { text: 'Fixed Line Offer', tone: 'grey' as Tone } }] : []),
-    ...(additionalLine ? [{ icon: IC.bars, label: '', title: 'Add a second line', pill: { text: 'Cross-Sell', tone: 'grey' as Tone } }] : []),
+    ...(additionalLine ? [{ icon: IC.bars, label: '', title: 'Add a Second Line', pill: { text: 'Cross-Sell', tone: 'grey' as Tone } }] : []),
     ...(happy ? [{ icon: IC.star, label: '', title: happy.name, pill: { text: 'Sales Enhancement', tone: 'grey' as Tone } }] : []),
   ];
   const activeOffers = offers.length;
@@ -206,7 +206,7 @@ export function C360Overview({ data, services, goToTab, onTicketCreated, queryFo
             <Row label="Overall">{dash(qar(limits.overall ?? defaultCreditLimitForSegment(data.customer.segment)))}</Row>
             <Row label="Default">{dash(qar(limits.default))}</Row>
             <Row label="Credit Control Team">{limits.creditControl === null ? '-' : dash(qar(limits.creditControl))}</Row>
-            <Row label="Credit Limit increased due to Deposit">{limits.depositIncrease ? dash(qar(limits.depositIncrease)) : '-'}</Row>
+            <Row label="Credit Limit Increased Due to Deposit">{limits.depositIncrease ? dash(qar(limits.depositIncrease)) : '-'}</Row>
             <Row label="Account Status">{account?.status ? <StatusPill status={account.status} /> : '-'}</Row>
             <Row label="Customer Since"><Dv k="customerSince" /></Row>
           </div>

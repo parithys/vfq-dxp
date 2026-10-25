@@ -180,7 +180,7 @@ export function AppointmentBookingStep({ value, onChange }: AppointmentBookingSt
         </label>
         <div className="grid gap-4 sm:grid-cols-3">
           <Input
-            label="Requested date"
+            label="Requested Date"
             type="date"
             disabled={!value.requestSpecific}
             min={earliest}
@@ -190,7 +190,7 @@ export function AppointmentBookingStep({ value, onChange }: AppointmentBookingSt
             error={dateError}
           />
           <Input
-            label="Requested time"
+            label="Requested Time"
             type="time"
             disabled={!value.requestSpecific}
             min={TIME_SLOTS[0].slice(0, 5)}
@@ -200,7 +200,7 @@ export function AppointmentBookingStep({ value, onChange }: AppointmentBookingSt
             error={timeError}
           />
           <Input
-            label="Future-dated order"
+            label="Future-Dated Order"
             readOnly
             disabled
             value={isFutureDated(value, today) ? `Yes - ${dateShort(value.requestedDate!)}` : 'Not set'}
@@ -209,7 +209,7 @@ export function AppointmentBookingStep({ value, onChange }: AppointmentBookingSt
       </section>
 
       <Textarea
-        label="Appointment notes"
+        label="Appointment Notes"
         placeholder="Customer available after 10:00. Gate code 4471. Call before arrival."
         value={value.comments ?? ''}
         onChange={(e) => onChange({ ...value, comments: e.target.value })}
@@ -217,8 +217,8 @@ export function AppointmentBookingStep({ value, onChange }: AppointmentBookingSt
 
       <section aria-label="Documents the technician collects" className="space-y-2">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h3 className="text-fg font-bold text-[length:var(--fs-h5)]">Documents the technician collects</h3>
-          <span className="text-muted text-[length:var(--fs-caption)]">Defaulted from persona</span>
+          <h3 className="text-fg font-bold text-[length:var(--fs-h5)]">Documents the Technician Collects</h3>
+          <span className="text-muted text-[length:var(--fs-caption)]">Defaulted from Persona</span>
         </div>
         <ul className="rounded-[var(--radius-card)] border border-[var(--field-card-border)] bg-bg divide-y divide-border-soft">
           {APPOINTMENT_DOCUMENTS.map((doc) => {

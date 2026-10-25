@@ -28,7 +28,7 @@ const nameOf = (values: Record<string, unknown>) => contactOf(values)?.moiResult
 const offerAccepted = (values: Record<string, unknown>) =>
   (values.crossSales as CrossSalesValue | undefined)?.decision === 'accepted' && committedLines(values).length === 0;
 
-// The New Prepaid steps, after Customer Identification and Product Selection (the first two steps of New Connection, which
+// The New Prepaid steps, after Customer Verification and Product Selection (the first two steps of New Connection, which
 // this product shares with the others), in the order of the Mobile Prepaid process flow and in the shape of Postpaid's:
 //
 //   Address -> Plan & Add-ons -> Number (or a Pre-Paired SIM) -> SIM -> Subscriptions ("Add another subscription?")
@@ -47,6 +47,7 @@ export function prepaidSteps({ device }: { device: DeviceType }): WizardStep[] {
       serviceAddressStep({
         mode: 'structured',
         autoPass: true,
+        billing: () => false,
         identity: (values) => ({ idNumber: contactOf(values)?.idNumber, nationality: contactOf(values)?.moiResult?.nationality }),
       }),
       {
@@ -76,7 +77,7 @@ export function prepaidSteps({ device }: { device: DeviceType }): WizardStep[] {
         formDetails: (values) => {
           const lines = allLines(values);
           return [
-            { label: 'Application date', value: formatDate(new Date()) },
+            { label: 'Application Date', value: formatDate(new Date()) },
             { label: lines.length > 1 ? 'Mobile numbers' : 'Mobile number', value: lines.map((l) => l.msisdn).join(', ') || '-' },
             { label: lines.length > 1 ? 'SIM serials' : 'SIM serial', value: lines.map((l) => l.simType.simSerial ?? 'eSIM').join(', ') || '-' },
           ];
@@ -90,7 +91,7 @@ export function prepaidSteps({ device }: { device: DeviceType }): WizardStep[] {
       plan: sums.planSummary(),
       planExtras: [
         { key: 'discount', label: 'Discount', type: 'select', optional: true, labelFrom: { kind: 'addons-discounts', idField: 'addonDiscountId', labelField: 'name' }, value: (v) => v.discountId },
-        { key: 'addons', label: 'Add-ons', type: 'multi', optional: true, labelFrom: { kind: 'addons-discounts', idField: 'addonDiscountId', labelField: 'name' }, value: (v) => v.addonIds },
+        { key: 'addons', label: 'Add-Ons', type: 'multi', optional: true, labelFrom: { kind: 'addons-discounts', idField: 'addonDiscountId', labelField: 'name' }, value: (v) => v.addonIds },
       ],
       payment: sums.paymentSummary,
     }

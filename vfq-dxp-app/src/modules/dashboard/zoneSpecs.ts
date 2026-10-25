@@ -37,15 +37,15 @@ export function customerOpsSpec(
     : m.taskTiles;
 
   const allCards: ZoneSpec['cards'] = [
-    { label: 'Open tickets', sub: 'Across all queues', value: m.openTickets, icon: I.headset, loadingKind: 'trouble-tickets' },
+    { label: 'Open Tickets', sub: 'Across all queues', value: m.openTickets, icon: I.headset, loadingKind: 'trouble-tickets' },
     // A role that can decide orders sees how many are waiting on it; everyone else keeps the shared total.
     m.ordersAwaitingMyDecision !== undefined
-      ? { label: 'Orders awaiting your decision', sub: 'routed to your role', value: m.ordersAwaitingMyDecision, icon: I.clipboard, loadingKind: 'orders' }
+      ? { label: 'Orders Awaiting Your Decision', sub: 'routed to your role', value: m.ordersAwaitingMyDecision, icon: I.clipboard, loadingKind: 'orders' }
       : { label: opts.compact ? 'Orders pending' : 'Orders pending approval', sub: opts.compact ? 'Awaiting manager approval' : 'awaiting a manager', value: m.ordersPendingApproval, icon: I.clipboard, loadingKind: 'orders' },
-    { label: 'Total leads', sub: 'created this session', value: m.totalLeads, icon: I.users, loadingKind: 'leads' },
-    { label: 'SIM swaps pending', sub: 'awaiting approval', value: m.simSwapsPending, icon: I.simCard, loadingKind: 'sim-swap-orders' },
+    { label: 'Total Leads', sub: 'created this session', value: m.totalLeads, icon: I.users, loadingKind: 'leads' },
+    { label: 'SIM Swaps Pending', sub: 'awaiting approval', value: m.simSwapsPending, icon: I.simCard, loadingKind: 'sim-swap-orders' },
     {
-      label: 'Customers on file',
+      label: 'Customers on File',
       // Regional roles see the seeded rollup for their scope; everyone else
       // sees the real directory count. The subtext says which, so a figure of
       // 182 next to a directory of 8 is never mistaken for a bug.
@@ -54,7 +54,7 @@ export function customerOpsSpec(
       icon: I.users2,
       loadingKind: opts.regional ? 'channel-performance' : 'customers',
     },
-    { label: 'Bulk jobs processed', sub: 'incl. Pre-to-Post migrations', value: m.bulkJobsProcessed, icon: I.refresh, loadingKind: 'bulk-activation-orders' },
+    { label: 'Bulk Jobs Processed', sub: 'incl. Pre-to-Post migrations', value: m.bulkJobsProcessed, icon: I.refresh, loadingKind: 'bulk-activation-orders' },
   ];
 
   return {
@@ -111,8 +111,8 @@ export function productWorkSpec(
         { key: 'assigned', label: 'Assigned Tasks', count: m.taskTiles[0]?.count ?? 0, to: '/tasks?filter=open', loadingKind: 'tasks' },
       ],
       cards: [
-        { label: 'Activities not completed', sub: 'across WFM/OFS', value: m.wfmActivitiesOpen, icon: I.chart, loadingKind: 'wfm-activities' },
-        { label: 'Priority tasks', sub: 'flagged for today', value: m.taskTiles[3]?.count ?? 0, icon: I.alert, loadingKind: 'tasks' },
+        { label: 'Activities Not Completed', sub: 'across WFM/OFS', value: m.wfmActivitiesOpen, icon: I.chart, loadingKind: 'wfm-activities' },
+        { label: 'Priority Tasks', sub: 'flagged for today', value: m.taskTiles[3]?.count ?? 0, icon: I.alert, loadingKind: 'tasks' },
       ],
       actions: [
         { label: 'Serial Number Check', screenId: 'SCR-093' },
@@ -133,9 +133,9 @@ export function productWorkSpec(
         { key: 'bulk', label: 'Bulk Jobs Processed', count: m.bulkJobsProcessed, to: '/orders', loadingKind: 'bulk-activation-orders' },
       ],
       cards: [
-        { label: 'Orders in flight', sub: 'not yet completed', value: m.fulfilmentQueue, icon: I.checkCircle, loadingKind: 'orders' },
-        { label: 'Verification backlog', sub: 'documents to check', value: m.verificationBacklog, icon: I.alert, loadingKind: 'order-approvals' },
-        { label: 'Open tickets', sub: 'across all queues', value: m.openTickets, icon: I.ticket, loadingKind: 'trouble-tickets' },
+        { label: 'Orders in Flight', sub: 'not yet completed', value: m.fulfilmentQueue, icon: I.checkCircle, loadingKind: 'orders' },
+        { label: 'Verification Backlog', sub: 'documents to check', value: m.verificationBacklog, icon: I.alert, loadingKind: 'order-approvals' },
+        { label: 'Open Tickets', sub: 'across all queues', value: m.openTickets, icon: I.ticket, loadingKind: 'trouble-tickets' },
       ],
       actions: [
         { label: 'Order Approval Queue', screenId: 'SCR-060' },
@@ -155,18 +155,18 @@ export function productWorkSpec(
   ];
 
   const allCards: ZoneSpec['cards'] = [
-    { label: 'Mobile attach rate', sub: opts.regional ? period : 'Current quarter', value: perf ? `${perf.mobileAttachRatePct}%` : '-', icon: I.mobile, loadingKind: 'channel-performance' },
-    { label: 'Fibre & Home take-up', sub: period, value: perf ? `${perf.fibreHomeTakeUpPct}%` : '-', icon: I.wifi, loadingKind: 'channel-performance' },
-    { label: 'Lead → activation', sub: 'last 30 days', value: perf ? `${perf.leadToActivationPct}%` : '-', icon: I.users, loadingKind: 'channel-performance' },
-    { label: 'Top-performing plan', sub: perf?.topPerformingPlan ?? '-', value: perf ? `+${perf.topPerformingPlanDeltaPct}%` : '-', icon: I.tag, loadingKind: 'channel-performance' },
+    { label: 'Mobile Attach Rate', sub: opts.regional ? period : 'Current quarter', value: perf ? `${perf.mobileAttachRatePct}%` : '-', icon: I.mobile, loadingKind: 'channel-performance' },
+    { label: 'Fibre & Home Take-Up', sub: period, value: perf ? `${perf.fibreHomeTakeUpPct}%` : '-', icon: I.wifi, loadingKind: 'channel-performance' },
+    { label: 'Lead → Activation', sub: 'last 30 days', value: perf ? `${perf.leadToActivationPct}%` : '-', icon: I.users, loadingKind: 'channel-performance' },
+    { label: 'Top-Performing Plan', sub: perf?.topPerformingPlan ?? '-', value: perf ? `+${perf.topPerformingPlanDeltaPct}%` : '-', icon: I.tag, loadingKind: 'channel-performance' },
     {
-      label: 'Channel mix',
+      label: 'Channel Mix',
       sub: 'Retail · Direct · Tele',
       value: perf ? `${perf.channelMixRetailPct}/${perf.channelMixDirectPct}/${perf.channelMixTelePct}` : '-',
       icon: I.trending,
       loadingKind: 'channel-performance',
     },
-    { label: 'Price exceptions', sub: 'awaiting finance sign-off', value: m.priceExceptions, icon: I.alert, loadingKind: 'price-exceptions' },
+    { label: 'Price Exceptions', sub: 'awaiting finance sign-off', value: m.priceExceptions, icon: I.alert, loadingKind: 'price-exceptions' },
   ];
 
   return {

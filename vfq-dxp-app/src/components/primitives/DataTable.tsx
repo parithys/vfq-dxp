@@ -1,4 +1,4 @@
-import { Pager } from './Pager';
+import { Pagination, pageWindow } from './Pagination';
 import { useState, type KeyboardEvent, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Icon } from './Icon';
@@ -110,10 +110,10 @@ export function DataTable<T>({
     return [...rows].sort((a, b) => sign * compareValues(getValue(a), getValue(b)));
   })();
 
-  const pageCount = Math.max(1, Math.ceil(sortedRows.length / pageSize));
-  const currentPage = Math.min(page, pageCount - 1);
-  // pageSize may be Infinity (show everything): 0 * Infinity is NaN, so take the whole list explicitly.
-  const pagedRows = Number.isFinite(pageSize) ? sortedRows.slice(currentPage * pageSize, currentPage * pageSize + pageSize) : sortedRows;
+  // The page maths is the Pagination capability's; a pageSize of Infinity shows everything on one page.
+  const pw = pageWindow(sortedRows.length, pageSize, page + 1);
+  const currentPage = pw.page - 1;
+  const pagedRows = sortedRows.slice(pw.from === 0 ? 0 : pw.from - 1, pw.to);
   const showPager = sortedRows.length > pageSize;
 
   const handleRowKeyDown = (event: KeyboardEvent<HTMLTableRowElement>, row: T) => {
@@ -240,10 +240,7 @@ export function DataTable<T>({
       </div>
       {!loading && showPager && (
         <div className="flex items-center justify-between gap-3 border-t border-[var(--table-border)] px-4 py-2">
-          <span className="text-[length:var(--fs-caption)] text-fg-2">
-            Page {currentPage + 1} of {pageCount}
-          </span>
-          <Pager page={currentPage + 1} pages={pageCount} onPage={(p) => setPage(p - 1)} />
+          <Pagination className="flex-1" page={currentPage + 1} total={sortedRows.length} pageSize={pageSize} onPage={(p) => setPage(p - 1)} />
         </div>
       )}
     </div>

@@ -1,5 +1,6 @@
 import { formatDateTime, formatQar } from '../../lib/format';
-import { SegmentedTabs } from '../primitives/SegmentedTabs';
+import { TabStrip } from '../primitives/TabStrip';
+import { Pagination, pageWindow } from '../primitives/Pagination';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '../primitives/Button';
 import { Badge } from '../primitives/Badge';
@@ -13,8 +14,8 @@ import { usePersonaStore } from '../../stores/personaStore';
 import { Checkbox } from '../primitives/Checkbox';
 import { SearchField } from '../primitives/SearchField';
 import { FREE_NUMBER_PRICE_CEILING_QAR, STAR_NUMBER_ENTITLEMENT_MULTIPLIER, starNumberOverageQar } from '../../engines/postpaidPricing';
-import { TAB_LABELS, TAB_ORDER, PORTAL_TAB_ORDER, RETAIL_SALES_PERSONA_ID, toLocalMsisdn, MAX_RESERVATIONS_PER_AGENT, PAGE_SIZE, FREE_PAGE_SIZE, STAR_SORT_OPTIONS, FREE_SORT_OPTIONS, PRICE_RANGES, inPriceRange, SORTERS, STAT_ICONS } from './msisdnPickerModel';
-import type { MsisdnRecord, NumberTab, SortKey } from './msisdnPickerModel';
+import { TAB_LABELS, TAB_ORDER, PORTAL_TAB_ORDER, RETAIL_SALES_PERSONA_ID, toLocalMsisdn, MAX_RESERVATIONS_PER_AGENT, PAGE_SIZE, FREE_PAGE_SIZE, STAR_SORT_OPTIONS, FREE_SORT_OPTIONS, PRICE_RANGES, inPriceRange, SEARCH_MODE_OPTIONS, DEFAULT_SEARCH_MODE, matchesNumberSearch, hasRepeatingPairPattern, searchError, SORTERS, STAT_ICONS } from './msisdnPickerModel';
+import type { MsisdnRecord, NumberTab, SearchMode, SortKey } from './msisdnPickerModel';
 import { StarStat } from './StarStat';
 
 
@@ -99,6 +100,11 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
   // list is actually filtered by, applied ~300 ms after typing stops and only once it has at least 2 characters.
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
+  // How the box matches (the dropdown before it): Any is what the box always did.
+  const [searchMode, setSearchMode] = useState<SearchMode>(DEFAULT_SEARCH_MODE);
+  // XXYY only: list every number that has a repeating-pair pattern, with no pattern typed (the search box is disabled meanwhile).
+  const [allPatterns, setAllPatterns] = useState(false);
+  const showingAllPatterns = searchMode === 'xxyy' && allPatterns;
   const [sort, setSort] = useState<SortKey>('price-desc');
   const [sortChosen, setSortChosen] = useState<{ Star: boolean; Free: boolean }>({ Star: false, Free: false });
   // Free's own sort state, separate from Star's `sort` above - see
@@ -225,7 +231,9 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
   const effectiveSort: SortKey = tab === 'Star' ? sort : tab === 'Free' ? freeSort : 'number-asc';
 
   const trimmedInput = searchInput.trim();
-  const wantedSearch = trimmedInput.length >= SEARCH_MIN ? trimmedInput : '';
+  // Text the mode does not accept (letters for XXYY / Starts With / Ends With, a non-pair for XXYY) is an error and is not searched.
+  const searchProblem = showingAllPatterns ? undefined : searchError(trimmedInput, searchMode);
+  const wantedSearch = !showingAllPatterns && trimmedInput.length >= SEARCH_MIN && !searchProblem ? trimmedInput : '';
   const searchPending = wantedSearch !== search;
   useEffect(() => {
     if (!searchPending) return;
@@ -243,13 +251,8 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
       if (tab === 'Reserved') return true;
       // Matches the stored E.164 OR the displayed local form, so typing the 8 digits on screen finds the row.
       if (tab === 'Star' && withinEntitlementOnly && entitlementQar !== undefined && n.priceQAR > entitlementQar) return false;
-      if (!search) return true;
-      const q = search.toLowerCase();
-      return (
-        n.msisdn.includes(search) ||
-        toLocalMsisdn(n.msisdn).replace(/\s/g, '').includes(search.replace(/\s/g, '')) ||
-        (n.valueTier ?? '').toLowerCase().includes(q)
-      );
+      if (showingAllPatterns) return hasRepeatingPairPattern(n.msisdn);
+      return matchesNumberSearch(n, search, searchMode);
   };
   const activeRanges = PRICE_RANGES.filter((r) => priceRanges.includes(r.key));
   const rangeCounts = Object.fromEntries(PRICE_RANGES.map((r) => [r.key, inTab.filter((n) => passesOtherFilters(n) && inPriceRange(n.priceQAR, r)).length]));
@@ -260,20 +263,36 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
     .sort(tab === 'Reserved' ? (a, b) => String(b.reservedAt ?? '').localeCompare(String(a.reservedAt ?? '')) : SORTERS[effectiveSort]);
 
   const pageSize = tab === 'Free' ? FREE_PAGE_SIZE : PAGE_SIZE;
-  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
-  // Clamped rather than reset: deleting a search term can shrink the list
-  // under the current page, and snapping to page 0 would lose the agent's
-  // place every time they edited the box.
-  const safePage = Math.min(page, pageCount - 1);
-  const paged = filtered.slice(safePage * pageSize, safePage * pageSize + pageSize);
+  // Clamped rather than reset: deleting a search term can shrink the list under the current page, and snapping to page 1 would lose the agent's
+  // place every time they edited the box. (The page maths is the Pagination capability's.)
+  const pw = pageWindow(filtered.length, pageSize, page + 1);
+  const safePage = pw.page - 1;
+  const paged = filtered.slice(pw.from === 0 ? 0 : pw.from - 1, pw.to);
 
+  // One row: the "search by" dropdown, the search box, and (XXYY only) the all-patterns checkbox; it wraps below the box on a narrow toolbar.
   const searchNode = (
-    <div className="space-y-1">
+    <div className="flex flex-wrap items-start gap-x-4 gap-y-2">
+    <div className="flex min-w-0 flex-1 basis-80 items-start gap-2">
+      <div className="shrink-0 w-36">
+        <Select
+          aria-label="Search by"
+          options={SEARCH_MODE_OPTIONS}
+          className="h-[var(--field-height)] py-0!"
+          value={searchMode}
+          onChange={(e) => {
+            setSearchMode(e.target.value as SearchMode);
+            setAllPatterns(false);
+            setPage(0);
+          }}
+        />
+      </div>
+      <div className="flex-1 min-w-0 space-y-1">
       <SearchField
         aria-label="Search numbers"
-        placeholder="Search by number or tier (2-8 characters)"
+        placeholder={searchMode === 'any' ? 'Search by number or tier (2-8 characters)' : searchMode === 'xxyy' ? 'Enter repeating pairs, e.g. 3344 (2-8 digits)' : 'Enter up to 8 digits'}
         value={searchInput}
         maxLength={SEARCH_MAX}
+        disabled={showingAllPatterns}
         className="pr-24 h-[var(--field-height)] py-0!"
         aria-describedby="msisdn-search-hint"
         onChange={(e) => setSearchInput(e.target.value)}
@@ -284,17 +303,37 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
         }}
       >
         {/* Typed length (raw, as the field counts it) against the 8-character limit. */}
-        <span aria-hidden="true" className="absolute right-10 top-1/2 -translate-y-1/2 text-muted text-[length:var(--fs-caption)]">
+        <span aria-hidden="true" className={`absolute right-10 top-1/2 -translate-y-1/2 text-[length:var(--fs-caption)] ${showingAllPatterns ? 'text-[var(--field-label-disabled)]' : 'text-muted'}`}>
           {searchInput.length}/{SEARCH_MAX}
         </span>
       </SearchField>
-      <p id="msisdn-search-hint" role="status" className="empty:hidden text-muted text-[length:var(--fs-caption)]">
-        {trimmedInput.length > 0 && trimmedInput.length < SEARCH_MIN
-          ? `Enter at least ${SEARCH_MIN} characters`
-          : searchPending
-            ? 'Searching\u2026'
-            : ''}
+      <p
+        id="msisdn-search-hint"
+        role={searchProblem ? 'alert' : 'status'}
+        className={`empty:hidden text-[length:var(--fs-caption)] ${searchProblem ? 'text-danger' : 'text-muted'}`}
+      >
+        {searchProblem
+          ? searchProblem
+          : trimmedInput.length > 0 && trimmedInput.length < SEARCH_MIN
+            ? `Enter at least ${SEARCH_MIN} characters`
+            : searchPending
+              ? 'Searching\u2026'
+              : ''}
       </p>
+      </div>
+    </div>
+    {searchMode === 'xxyy' && (
+      <label className="flex h-[var(--field-height)] shrink-0 items-center gap-2 whitespace-nowrap cursor-pointer text-fg text-[length:var(--fs-body)]">
+        <Checkbox
+          checked={allPatterns}
+          onChange={(e) => {
+            setAllPatterns(e.target.checked);
+            setPage(0);
+          }}
+        />
+        Show Me All Available Patterns
+      </label>
+    )}
     </div>
   );
   // inlineToolbar: the dropdown reads "Sort by" until the agent picks an order (the
@@ -341,7 +380,8 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
             Anything above that is billed the difference.
         </p>
       )}
-      <SegmentedTabs
+      {/* The tabs switch which list is shown, so they are the underline tab strip (navigation / content tabs), not the pill filter switch. */}
+      <TabStrip
         items={visibleTabs.map((t) => ({ key: t, label: TAB_LABELS[t] }))}
         active={tab}
         onChange={(t) => {
@@ -367,10 +407,8 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
           shown on both Free and Star still, since search narrows by number
           regardless of whether that tab also offers a price sort. */}
       {inlineToolbar ? (
-        <div className="flex items-start gap-3">
-          {tab !== 'Reserved' && <div className="flex-1 min-w-0">{searchNode}</div>}
-          {showSort && <div className="shrink-0 w-56">{sortNode}</div>}
-        </div>
+        // The search takes the whole row; the sort sits at the right end of the Price Range row below, in both layouts.
+        tab !== 'Reserved' && <div className="min-w-0">{searchNode}</div>
       ) : (
         <>
           {tab !== 'Reserved' && searchNode}
@@ -409,8 +447,9 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
           matches is disabled. */}
       {tab === 'Star' && (
         <div className="space-y-2" role="group" aria-label="Price range">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-fg-2 text-[length:var(--fs-caption)]">Price range</span>
+          <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+            <span className="text-fg-2 text-[length:var(--fs-caption)]">Price Range</span>
             {[{ key: 'all', label: 'All' }, ...PRICE_RANGES].map((r) => {
               const isAll = r.key === 'all';
               const on = isAll ? priceRanges.length === 0 : priceRanges.includes(r.key);
@@ -439,12 +478,26 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
                 </button>
               );
             })}
-            {/* Sort sits at the right end of the same row as the price range (the journeys' inline toolbar puts it beside the search instead). */}
-            {!inlineToolbar && showSort && <div className="ml-auto">{sortNode}</div>}
           </div>
-          {(activeRanges.length > 0 || withinEntitlementOnly || search) && (
+          {/* Sort stays at the right end of the Price Range row (the chips wrap among themselves, not under it), in the portal and in the inline toolbar. */}
+          {showSort && <div className={inlineToolbar ? 'w-56 shrink-0' : 'shrink-0'}>{sortNode}</div>}
+          </div>
+          {(activeRanges.length > 0 || withinEntitlementOnly || search || showingAllPatterns) && (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-fg-2 text-[length:var(--fs-caption)]">Active filters</span>
+              <span className="text-fg-2 text-[length:var(--fs-caption)]">Active Filters</span>
+              {showingAllPatterns && (
+                <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] bg-surface px-2.5 py-0.5 text-[length:var(--fs-caption)] text-fg">
+                  All XXYY Patterns
+                  <button
+                    type="button"
+                    aria-label="Remove filter All XXYY Patterns"
+                    onClick={() => { setAllPatterns(false); setPage(0); }}
+                    className="text-fg-2 hover:text-fg focus:outline-none focus-visible:shadow-[var(--focus-ring)] rounded-[var(--radius-pill)]"
+                  >
+                    <Icon path="M18 6L6 18 M6 6l12 12" className="w-3.5 h-3.5" />
+                  </button>
+                </span>
+              )}
               {activeRanges.map((r) => (
                 <span key={r.key} className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] bg-surface px-2.5 py-0.5 text-[length:var(--fs-caption)] text-fg">
                   {r.label}
@@ -458,7 +511,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
                   </button>
                 </span>
               ))}
-              <Button variant="tertiary" compact onClick={() => { setPriceRanges([]); setWithinEntitlementOnly(false); setSearch(''); setSearchInput(''); setPage(0); }}>
+              <Button variant="tertiary" compact onClick={() => { setPriceRanges([]); setWithinEntitlementOnly(false); setSearch(''); setSearchInput(''); setSearchMode(DEFAULT_SEARCH_MODE); setAllPatterns(false); setPage(0); }}>
                 Clear filters
               </Button>
             </div>
@@ -546,9 +599,9 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
             const money = (v: number) => formatQar(v, { nbsp: true });
             const facts = [
               { icon: STAT_ICONS.wallet, label: 'Price', value: money(n.priceQAR), alert: false },
-              ...(lockIn !== undefined ? [{ icon: STAT_ICONS.lock, label: 'Lock-in period', value: `${lockIn}\u00a0months`, alert: false }] : []),
+              ...(lockIn !== undefined ? [{ icon: STAT_ICONS.lock, label: 'Lock-In Period', value: `${lockIn}\u00a0months`, alert: false }] : []),
               ...(planMrcQar !== undefined && upfront > 0
-                ? [{ icon: STAT_ICONS.tag, label: 'Upfront charge', value: money(upfront), alert: true }]
+                ? [{ icon: STAT_ICONS.tag, label: 'Upfront Charge', value: money(upfront), alert: true }]
                 : []),
             ];
             return (
@@ -650,35 +703,17 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
                 : 'You have no reserved numbers.'
               : activeRanges.length > 0 && tab === 'Star'
                 ? 'No Star Numbers match the selected price range and filters. Clear the filters to see all.'
-                : search
+                : showingAllPatterns
+                  ? 'No available numbers have an XXYY pattern.'
+                  : search
                   ? `No available numbers match \u201c${search}\u201d.`
                   : 'No available numbers in this category.'}
           </p>
         )}
       </div>
-      {/* Ten at a time with Next/Previous (2026-09-27). The list was capped
-          and scrollable, which hid how much inventory there was and gave the
-          agent no way to say where they had got to. Hidden entirely on a
-          single page so a one-page list carries no dead controls. */}
-      {pageCount > 1 && (
-        <div className="flex items-center justify-between gap-4">
-          <Button variant="secondary" compact disabled={safePage === 0} onClick={() => setPage((n) => n - 1)}>
-            Previous
-          </Button>
-          <span className="text-muted text-[length:var(--fs-caption)]">
-            Showing {filtered.length === 0 ? 0 : safePage * pageSize + 1}-
-            {Math.min((safePage + 1) * pageSize, filtered.length)} of {filtered.length}
-          </span>
-          <Button
-            variant="secondary"
-            compact
-            disabled={safePage >= pageCount - 1}
-            onClick={() => setPage((n) => n + 1)}
-          >
-            Next
-          </Button>
-        </div>
-      )}
+      {/* Paged by the Pagination capability (previous, numbered pages, next, under a "Showing a-b of N" count): every journey, the portal and the
+          Capability Library page the numbers the same way. Hidden entirely on a single page so a one-page list carries no dead controls. */}
+      <Pagination page={safePage + 1} total={filtered.length} pageSize={pageSize} onPage={(p) => setPage(p - 1)} />
     </div>
   );
 }

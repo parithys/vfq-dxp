@@ -34,7 +34,7 @@ export function TicketHeaderCard({ ticket, ragVariant, ragLabel, notesCount, sla
         {surveyNotifications.length > 0 ? (
           <span>Triggered on {formatDateTime(surveyNotifications[surveyNotifications.length - 1].dbTimestamp)}</span>
         ) : (
-          <span className="italic text-muted">Not yet triggered</span>
+          <span className="italic text-muted">Not Yet Triggered</span>
         )}
       </p>
     </div>

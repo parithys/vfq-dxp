@@ -257,7 +257,7 @@ export function C360AccountInformation({
               <Field label="Overall" value={qar(limits.overall)} />
               <Field label="Default" value={qar(limits.default)} />
               <Field label="Credit Control Team" value={limits.creditControl === null ? '-' : qar(limits.creditControl)} />
-              <Field label="Credit Limit increased due to Deposit" value={limits.depositIncrease ? qar(limits.depositIncrease) : '-'} />
+              <Field label="Credit Limit Increased Due to Deposit" value={limits.depositIncrease ? qar(limits.depositIncrease) : '-'} />
               <Field label="Primary MSISDN" value={data.customer.phone} />
               <Field label="Account Manager Name" requirement="AM name" value={account?.accountManagerName} />
               <Field label="Account Manager Mobile" requirement="AM mobile" value={account?.accountManagerMobile} />
@@ -356,7 +356,7 @@ export function C360AccountInformation({
             title="Financial Summary"
             action={
               <SegmentedTabs
-                label="Revenue basis"
+                label="Revenue Basis"
                 items={[{ key: 'postpaid', label: 'Postpaid' }, { key: 'prepaid', label: 'Prepaid' }]}
                 active={mode}
                 onChange={setMode}

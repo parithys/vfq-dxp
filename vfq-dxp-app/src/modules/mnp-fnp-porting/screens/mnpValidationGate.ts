@@ -33,34 +33,34 @@ export function mnpValidationGate(values: Record<string, unknown>, stage: 'check
   const checks: GateCheck[] = [
     {
       id: 'customer',
-      label: 'Customer identified and verified',
+      label: 'Customer Identified and Verified',
       ok: Boolean(contactOf(values)?.moiResult),
-      detail: 'Complete Customer Identification.',
+      detail: 'Complete Customer Verification.',
     },
     {
       id: 'eligibility',
-      label: 'Eligible for a port-in',
+      label: 'Eligible for a Port-In',
       // Approval routing is not a failure (the order is routed once submitted); a hard or soft stop is.
       ok: Boolean(eligibility) && !eligibility!.hardStop && !eligibility!.softStop,
       detail: eligibility ? 'The customer is not eligible for this port-in; see the eligibility checks.' : 'Eligibility has not been checked.',
     },
     ...(hasBillingAccount(values)
-      ? [{ id: 'billing', label: 'Billing profile', ok: Boolean(billing?.selectedProfileId || (billing?.creatingNew && billing.newAccount)), detail: 'Choose or create a billing profile.' }]
+      ? [{ id: 'billing', label: 'Billing Profile', ok: Boolean(billing?.selectedProfileId || (billing?.creatingNew && billing.newAccount)), detail: 'Choose or create a billing profile.' }]
       : []),
-    { id: 'plan', label: 'Plan selected', ok: Boolean(values.productId), detail: 'Choose a plan.' },
-    { id: 'sim', label: 'Vodafone SIM validated', ok: Boolean(values.simSerial && values.simValid), detail: 'Scan or enter a valid, available SIM serial.' },
+    { id: 'plan', label: 'Plan Selected', ok: Boolean(values.productId), detail: 'Choose a plan.' },
+    { id: 'sim', label: 'Vodafone SIM Validated', ok: Boolean(values.simSerial && values.simValid), detail: 'Scan or enter a valid, available SIM serial.' },
     {
       id: 'mnp',
-      label: 'Port-in number and donor details',
+      label: 'Port-In Number and Donor Details',
       ok: donorDetailsValid(values.donorDetails as DonorDetailsValue | undefined),
       detail: 'Complete the donor details with a valid port-in number.',
     },
   ];
   if (stage === 'submit') {
     checks.push(
-      { id: 'form', label: 'MNP Form signed', ok: mnpFormSigned(values.donorAttachment as DonorAttachmentValue | undefined, mnpFormInputOf(values)), detail: 'The MNP Form must be signed on the current details.' },
-      { id: 'caf', label: 'CAF signed', ok: isCafValid(values.caf as CafValue | undefined, (t) => t === 'Digital' || t === 'Touch Screen'), detail: 'The CAF must be signed.' },
-      { id: 'payment', label: 'Payment or zero-value receipt', ok: Boolean((values.payment as WinCashPaymentValue | undefined)?.paid), detail: 'Take the payment, or issue the zero-value receipt.' }
+      { id: 'form', label: 'MNP Form Signed', ok: mnpFormSigned(values.donorAttachment as DonorAttachmentValue | undefined, mnpFormInputOf(values)), detail: 'The MNP Form must be signed on the current details.' },
+      { id: 'caf', label: 'CAF Signed', ok: isCafValid(values.caf as CafValue | undefined, (t) => t === 'Digital' || t === 'Touch Screen'), detail: 'The CAF must be signed.' },
+      { id: 'payment', label: 'Payment or Zero-Value Receipt', ok: Boolean((values.payment as WinCashPaymentValue | undefined)?.paid), detail: 'Take the payment, or issue the zero-value receipt.' }
     );
   }
   return checks;

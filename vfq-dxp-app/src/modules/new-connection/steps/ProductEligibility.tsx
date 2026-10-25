@@ -9,7 +9,7 @@ import type { ConnectionType } from '../../../domain/eligibility';
 const connectionOf = (values: Record<string, unknown>): ConnectionType =>
   values.product === 'fixed-line' ? 'FIXED_FWA' : eligibilityJourney(values) === 'prepaid' ? 'MOBILE_PREPAID' : 'MOBILE_POSTPAID';
 
-/** Passport BAU/Credit Control approvals (PB-*) come from the ID type, so they are announced at Customer Identification, not repeated here. */
+/** Passport BAU/Credit Control approvals (PB-*) come from the ID type, so they are announced at Customer Verification, not repeated here. */
 const isPassportOnly = (ruleIds: string[] | undefined) => !!ruleIds?.length && ruleIds.every((id) => id.startsWith('PB-'));
 
 /**
@@ -30,7 +30,7 @@ export function ProductEligibility({
   existingCustomerId: string | undefined;
   /** Offered when the product is not already prepaid; switches the order to prepaid. */
   onSwitchToPrepaid?: () => void;
-  /** MNP learns the connection type only here, so Customer Identification could not announce the approvals that depend on it (the ID type's and the passport's): show them. */
+  /** MNP learns the connection type only here, so Customer Verification could not announce the approvals that depend on it (the ID type's and the passport's): show them. */
   deferredApprovals?: boolean;
 }) {
   const product = values.product as string | undefined;
@@ -49,7 +49,7 @@ export function ProductEligibility({
       connectionType={connectionOf(values)}
       scope="product"
       portIn={product === 'mnp'}
-      // The customer's checks were shown at Customer Identification. Here only what this product changes: everything for Prepaid (it judges
+      // The customer's checks were shown at Customer Verification. Here only what this product changes: everything for Prepaid (it judges
       // ID type and line limit by its own rules), otherwise just what blocks the product, the port-in dues and the approval the line count asks for.
       showRow={eligibilityJourney(values) === 'prepaid' ? undefined : (row) => row.tone === 'hard-stop' || row.tone === 'soft-stop' || row.id === 'port-in-dues' || (row.id === 'active-lines' && row.tone === 'approval-routing' && (deferredApprovals || !isPassportOnly(row.approvalRuleIds))) || (deferredApprovals && row.id === 'id-type-routing' && row.tone === 'approval-routing')}
       result={eligibility}

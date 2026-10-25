@@ -125,18 +125,18 @@ export function buildTelesalesTabs(ctx: TelesalesContext): TabItem[] {
 
   // 3. Billing
   const billing: FieldGroup[] = [
-    { title: 'Billing summary', display: 'kpi', fields: ['Latest Bill', 'Outstanding Balance', 'Unbilled Usage', 'Due Date', 'Last Payment & Channel'] },
+    { title: 'Billing Summary', display: 'kpi', fields: ['Latest Bill', 'Outstanding Balance', 'Unbilled Usage', 'Due Date', 'Last Payment & Channel'] },
   ];
   // 5. Recent activities
-  const recent: FieldGroup[] = [{ title: 'Recent activity', display: 'list', fields: [RECENT_MILESTONES, 'Activity (last 5)', 'Last 5 Orders'] }];
+  const recent: FieldGroup[] = [{ title: 'Recent Activity', display: 'list', fields: [RECENT_MILESTONES, 'Activity (last 5)', 'Last 5 Orders'] }];
   // 7. Contact & address
   const reach: FieldGroup[] = [
-    { title: 'Contact information', display: 'list', fields: ['First Name & Last Name (Full Name)', 'Email', 'Notification MSISDN', 'Preferred Language'] },
-    { title: 'Authorised persons', display: 'list', fields: ['Authorized person(s)', 'Authorized Role', 'Authorized Mobile', 'Authorized email'] },
+    { title: 'Contact Information', display: 'list', fields: ['First Name & Last Name (Full Name)', 'Email', 'Notification MSISDN', 'Preferred Language'] },
+    { title: 'Authorised Persons', display: 'list', fields: ['Authorized person(s)', 'Authorized Role', 'Authorized Mobile', 'Authorized email'] },
   ];
   const address: FieldGroup[] = [
-    { title: 'National address', display: 'list', width: 'half', component: 'National Address', fields: [] },
-    { title: 'Open UI address', display: 'list', width: 'half', component: 'Open UI Address', fields: [] },
+    { title: 'National Address', display: 'list', width: 'half', component: 'National Address', fields: [] },
+    { title: 'Open UI Address', display: 'list', width: 'half', component: 'Open UI Address', fields: [] },
   ];
 
   // Deep-dive rows: shown only when the persona may see the field behind them.

@@ -106,7 +106,7 @@ export function PrepaidCheckoutStep({ customerName, idType, lines, onTotalsCompu
               <Row label="Pack" value={plan ? (fees ? plan.name : existingLine?.excludePack ? `${plan.name} (current pack)` : `${plan.name} - ${qar(charges.starterPackQar)}`) : 'SIM only, no pack selected'} />
               {discount && <Row label="Discount" value={`${discount.name} (${Math.round(Math.abs(discount.price) * 100)}% off the starter pack)`} />}
               {addons.map((a) => (
-                <Row key={a.addonDiscountId} label="Add-on" value={`${a.name} - ${qar(a.price)}`} />
+                <Row key={a.addonDiscountId} label="Add-On" value={`${a.name} - ${qar(a.price)}`} />
               ))}
               <Row label={existingLine ? 'Line' : 'Number'} value={`${line.msisdn}${charges.numberQar > 0 ? ` (premium, ${qar(charges.numberQar)} one-time)` : ''}`} />
               {!existingLine && (
@@ -119,7 +119,7 @@ export function PrepaidCheckoutStep({ customerName, idType, lines, onTotalsCompu
                 </>
               )}
               {!fees && !existingLine && <Row label="SIM Card Charge" value={charges.simCardChargeQar > 0 ? qar(charges.simCardChargeQar) : 'Waived'} />}
-              {!fees && <Row label="Due for this subscription" value={qar(charges.totalQar)} />}
+              {!fees && <Row label="Due for This Subscription" value={qar(charges.totalQar)} />}
             </dl>
             {!fees && !existingLine && <p className="text-[length:var(--fs-caption)] text-muted">{charges.simCardMessage}</p>}
           </section>
@@ -134,7 +134,7 @@ export function PrepaidCheckoutStep({ customerName, idType, lines, onTotalsCompu
           </div>
         ))}
         <div className="flex justify-between text-fg font-semibold">
-          <span>Total payable today</span>
+          <span>Total Payable Today</span>
           <span>{qar(totals.totalDueQar)}</span>
         </div>
         <p className="mt-1 text-[length:var(--fs-caption)] text-fg-2">

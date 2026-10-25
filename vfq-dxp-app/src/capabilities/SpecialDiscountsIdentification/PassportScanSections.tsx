@@ -120,7 +120,7 @@ export function PassportScanSections({ value, onChange, onScan, error, canScan =
               <Icon path={SCAN_CORNERS} className="w-10 h-10 text-border" />
             </div>
             <div className="space-y-1">
-              {!canScan && <h4 className="text-fg font-bold text-[length:var(--fs-body)]">Card could not be read</h4>}
+              {!canScan && <h4 className="text-fg font-bold text-[length:var(--fs-body)]">Card Could Not Be Read</h4>}
               {canScan && <p className="text-fg-2 text-[length:var(--fs-caption)]">Scan the {side} side of the passport for verification.</p>}
             </div>
             {capture.scan && (

@@ -146,5 +146,5 @@ test('the check runs before the customer is kept or drawn: in Customer 360, in t
   assert.match(fs.readFileSync('src/components/patterns/IdLookupStep.tsx', 'utf8'), /accessRestricted && <RestrictedCustomerNotice/);
   const global = fs.readFileSync('src/navigation/GlobalSearch.tsx', 'utf8');
   assert.match(global, /canViewCustomerSegment\(usePersonaStore\.getState\(\)\.activePersonaId, c\.segment\)/);
-  assert.match(global, /label: 'Restricted customer'/);
+  assert.match(global, /label: 'Restricted Customer'/);
 });

@@ -10,7 +10,7 @@ import type { ActualUserValue } from './actualUserModel';
 /**
  * ACTUAL USER - the line's real user, when it is not the customer who owns it. The agent chooses "Same as primary customer" (the default)
  * or "Add actual user"; adding one identifies them the way the primary customer was identified (ID type, scan or upload, MOI, identity
- * details, email, phone) through Customer Identification, so the two never drift apart. For someone who is already a customer, MOI
+ * details, email, phone) through Customer Verification, so the two never drift apart. For someone who is already a customer, MOI
  * brings their email and phone from the record; what the agent changes is written back when the order is submitted (the email to their
  * customer record, the phone to their existing contact-level record).
  *
@@ -21,8 +21,8 @@ const PEOPLE = 'M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8 4 
 const CHECK = 'M5 12.5l4.5 4.5L19 7.5';
 
 const OPTIONS: { key: 'primary' | 'other'; label: string; hint: string; icon: string }[] = [
-  { key: 'primary', label: 'Same as primary customer', hint: 'The customer will use the line themself', icon: PERSON },
-  { key: 'other', label: 'Add actual user', hint: 'Someone else will use this line (a family member, for example)', icon: PEOPLE },
+  { key: 'primary', label: 'Same as Primary Customer', hint: 'The customer will use the line themself', icon: PERSON },
+  { key: 'other', label: 'Add Actual User', hint: 'Someone else will use this line (a family member, for example)', icon: PEOPLE },
 ];
 
 export function ActualUser({

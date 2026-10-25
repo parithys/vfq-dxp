@@ -117,7 +117,7 @@ export async function submitNewConnectionOrder(
         ...(customerType?.officeId?.frontScanned && customerType.officeId.backScanned
           ? [
               {
-                label: 'Office ID card',
+                label: 'Office ID Card',
                 detail: `${customerType.officeId.source === 'upload' ? 'Uploaded' : 'Scanned'} for ${customerType.type === 'b2b2c' ? 'B2B2C' : customerType.type === 'retired' ? 'Retired' : 'MADA'}`,
               },
             ]
@@ -159,7 +159,7 @@ export async function submitNewConnectionOrder(
       await createRecord('orders', {
         orderId,
         ...actualUserOrderFields(values.actualUser as ActualUserValue | undefined),
-        // The email captured on Customer Identification, carried unchanged.
+        // The email captured on Customer Verification, carried unchanged.
         customerEmail: contact.email,
         customerSalutation: contact.salutation,
         ...contactIdentityOrderFields(contact),
@@ -281,7 +281,7 @@ export async function submitNewConnectionOrder(
         simType: simType?.simType,
         esimActivationCode: simType?.esimActivationCode,
         customerEmail: contact.email,
-        // Shown exactly as on Customer Identification: masked for a new customer (NAS email),
+        // Shown exactly as on Customer Verification: masked for a new customer (NAS email),
         // the Billing Profile / customer address for an existing one. The message itself is
         // addressed to the real address.
         customerEmailDisplay: contact.moiResult?.isNewCustomer && !contact.moiResult?.createdByAgent && contact.email ? maskEmail(contact.email) : contact.email,

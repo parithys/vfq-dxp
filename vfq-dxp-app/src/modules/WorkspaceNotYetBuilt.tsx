@@ -51,7 +51,7 @@ export function WorkspaceNotYetBuilt({ navKey }: { navKey: NavKey }) {
       {planned?.capabilities && planned.capabilities.length > 0 && (
         <>
           <h2 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted mt-6 mb-2">
-            Planned capabilities
+            Planned Capabilities
           </h2>
           <ul className="text-fg-2 text-[length:var(--fs-body)] space-y-1 list-disc pl-5">
             {planned.capabilities.map((c) => (
@@ -64,7 +64,7 @@ export function WorkspaceNotYetBuilt({ navKey }: { navKey: NavKey }) {
       {launchers.length > 0 && (
         <>
           <h2 className="text-[length:var(--fs-caption-upper)] uppercase tracking-wide text-muted mt-6 mb-2">
-            Available today
+            Available Today
           </h2>
           <div className="flex flex-wrap gap-2">
             {launchers.map((l) => (

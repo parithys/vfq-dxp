@@ -91,7 +91,7 @@ export function DonorDetailsStep({ value, onChange }: DonorDetailsStepProps) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* The standard mobile number field: Qatar (+974) fixed, 8 national digits. It stores +974XXXXXXXX, which normalizePortInNumber reads. */}
         <PhoneNumberInput
-          label="Port-in Number"
+          label="Port-In Number"
           required
           fixedIso="QA"
           maxNationalDigits={8}
@@ -127,7 +127,7 @@ export function DonorDetailsStep({ value, onChange }: DonorDetailsStepProps) {
           options={optionsOf(DONOR_SUBSCRIPTION_TYPES)}
         />
         <Input
-          label="Scheduled Port-In Date (optional)"
+          label="Scheduled Port-In Date (Optional)"
           type="date"
           value={value.scheduledPortInDate ?? ''}
           error={dateError}

@@ -12,7 +12,7 @@ export const blacklistResolvers: Record<string, Resolver> = {
     data.customer.blacklisted ? (
       <Badge variant="danger">{data.customer.blacklistCategory ? `Blacklisted - ${data.customer.blacklistCategory}` : 'Blacklisted'}</Badge>
     ) : (
-      <Badge variant="success">Not blacklisted</Badge>
+      <Badge variant="success">Not Blacklisted</Badge>
     ),
   'Account Number': (data) => (data.accounts.length > 0 ? data.accounts.map((a) => a.accountId).join(', ') : undefined),
   'Total amount': (data) => `${computeBillingSummary(data).outstanding} QAR`,

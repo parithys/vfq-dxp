@@ -25,23 +25,23 @@ const MSISDN_STATUS = 'MSISDN Status (Active, Suspended, Barred)';
 
 export const customer360Layouts: Record<string, FieldGroup[]> = {
   'Account Information': [
-    { title: 'Account health', display: 'kpi', fields: ['Segment', 'Primary MSISDN', SERVICE_CONNECTIONS, 'Credit Limit', 'Current Dunning Stage', 'Overdue TT', 'OG/IC Barring Dates', 'About to OG/IC Bar (Y/N)', 'Special Management'] },
-    { title: 'Account management', display: 'list', fields: ['AM name', 'AM mobile', 'AM Email', 'Manager Email', 'Availability/escalation contact', BILLING_EMAIL] },
-    { title: 'Pending requests', display: 'kpi', fields: ['Pending TON requests', 'Pending Adjustments', 'Pending Sim swap'] },
+    { title: 'Account Health', display: 'kpi', fields: ['Segment', 'Primary MSISDN', SERVICE_CONNECTIONS, 'Credit Limit', 'Current Dunning Stage', 'Overdue TT', 'OG/IC Barring Dates', 'About to OG/IC Bar (Y/N)', 'Special Management'] },
+    { title: 'Account Management', display: 'list', fields: ['AM name', 'AM mobile', 'AM Email', 'Manager Email', 'Availability/escalation contact', BILLING_EMAIL] },
+    { title: 'Pending Requests', display: 'kpi', fields: ['Pending TON requests', 'Pending Adjustments', 'Pending Sim swap'] },
     { title: 'Activity', display: 'list', fields: [RECENT_MILESTONES, 'Activity (last 5)', 'Last 5 Orders', 'All Orders', 'All Trouble Tickets'] },
-    { title: 'Structure & products', display: 'list', fields: ['Account Hierarchy', 'Contact Hierarchy', 'All Billing Profiles', 'Installed Assets', 'NAS/Address'] },
+    { title: 'Structure & Products', display: 'list', fields: ['Account Hierarchy', 'Contact Hierarchy', 'All Billing Profiles', 'Installed Assets', 'NAS/Address'] },
   ],
   Assets: [
-    { title: 'Line status', display: 'kpi', fields: [MSISDN_STATUS, 'Any Barring Flags', 'MSISDN Activation Date', 'Postpaid Activation Date', 'Plan Activation Date', 'Sim serial', 'Repeat Call Flag (Y/N)'] },
-    { title: 'Plan & offers', display: 'kpi', fields: ['Plan Name', 'Plan and Add-ons Benefits', 'Bill Limit', 'Active Add-on', 'Active Discount', 'Pending Discounts', 'Existing Discounts Expiry Date', 'Star number value', 'Autobase elegibility flag', 'Lifestyle Benifits'] },
-    { title: 'Balance & usage', display: 'kpi', fields: [BALANCE, USAGE, '10 Recent Usages (Data, Calls, Text, OOB)', 'Last Recharge Amount', 'Last Recharge Type'] },
-    { title: 'Device instalment', display: 'kpi', fields: ['DOI Handset Type', 'DOI Price', 'DOI Remaining Amount', 'DOI Tennure'] },
+    { title: 'Line Status', display: 'kpi', fields: [MSISDN_STATUS, 'Any Barring Flags', 'MSISDN Activation Date', 'Postpaid Activation Date', 'Plan Activation Date', 'Sim serial', 'Repeat Call Flag (Y/N)'] },
+    { title: 'Plan & Offers', display: 'kpi', fields: ['Plan Name', 'Plan and Add-ons Benefits', 'Bill Limit', 'Active Add-on', 'Active Discount', 'Pending Discounts', 'Existing Discounts Expiry Date', 'Star number value', 'Autobase elegibility flag', 'Lifestyle Benifits'] },
+    { title: 'Balance & Usage', display: 'kpi', fields: [BALANCE, USAGE, '10 Recent Usages (Data, Calls, Text, OOB)', 'Last Recharge Amount', 'Last Recharge Type'] },
+    { title: 'Device Instalment', display: 'kpi', fields: ['DOI Handset Type', 'DOI Price', 'DOI Remaining Amount', 'DOI Tennure'] },
     { title: 'Digital', display: 'kpi', fields: ['App Recent/Last Login (Date & Time)', 'App Active User (Y/N)', 'App Digital Adoption %', 'App Version', 'Phone Version', 'Registered Email ID', 'Notifications & SMS'] },
   ],
   'Contact Information': [
     { title: 'Identity', display: 'kpi', fields: ['First Name & Last Name (Full Name)', 'ID Type', 'ID Number', 'ID Status (Blacklisted/Whitelisted)', 'DOB', 'Tennure', 'Total Number of Connections', 'Credit Score', 'QCB Check'] },
     { title: 'Reach', display: 'list', fields: ['Email', 'Notification MSISDN', 'Preferred Language', 'Employer'] },
-    { title: 'Authorised persons', display: 'list', fields: ['Authorized person(s)', 'Authorized Role', 'Authorized Mobile', 'Authorized email'] },
+    { title: 'Authorised Persons', display: 'list', fields: ['Authorized person(s)', 'Authorized Role', 'Authorized Mobile', 'Authorized email'] },
     { title: 'Offers', display: 'list', fields: ['Cross sale offers flag', 'Sales enhansment offers'] },
   ],
   'Billing & Payments': [
@@ -50,12 +50,12 @@ export const customer360Layouts: Record<string, FieldGroup[]> = {
     { title: 'Prepaid', display: 'kpi', fields: ['Prepaid - Monthly Recharge Amount', 'Prepaid - Top Recharge Type'] },
   ],
   'Account Address': [
-    { title: 'National address', display: 'list', width: 'half', component: 'National Address', fields: [] },
-    { title: 'Open UI address', display: 'list', width: 'half', component: 'Open UI Address', fields: [] },
+    { title: 'National Address', display: 'list', width: 'half', component: 'National Address', fields: [] },
+    { title: 'Open UI Address', display: 'list', width: 'half', component: 'Open UI Address', fields: [] },
   ],
   'Blacklist View': [
-    { title: 'Blacklist status', display: 'kpi', fields: ['Blacklisted ID Status', 'Total amount', 'Account Number'] },
-    { title: 'Billing detail', display: 'list', fields: ['Bill Period', 'Bill Number', 'MSISDNs'] },
+    { title: 'Blacklist Status', display: 'kpi', fields: ['Blacklisted ID Status', 'Total amount', 'Account Number'] },
+    { title: 'Billing Detail', display: 'list', fields: ['Bill Period', 'Bill Number', 'MSISDNs'] },
   ],
   'Account/Contact Lead': [
     { title: 'Lead', display: 'kpi', fields: ['Lead Type', 'Lead Status', 'MSISDN', 'Created By'] },

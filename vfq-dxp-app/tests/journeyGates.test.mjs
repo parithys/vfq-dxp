@@ -42,7 +42,7 @@ test('a forward jump needs every step from the current one up to the target to b
   assert.equal(nav.forwardJumpAllowed(list, 0, 1, {}), true, 'a step with no isValid counts as valid');
 });
 
-test('a hard stop on Customer Identification blocks a jump straight back to the furthest step, in the line-change journey', () => {
+test('a hard stop on Customer Verification blocks a jump straight back to the furthest step, in the line-change journey', () => {
   const ctx = { flow: 'new', existingCustomerId: undefined, guardedContactChange: () => true, products: [], customerBenefits: undefined };
   const list = steps.changePostpaidPlanSteps(ctx);
   const contact = { moiResult: { name: 'X', nationality: 'Qatari' }, idNumber: '28456701234', idType: 'QID', firstName: 'A', lastName: 'B', dob: '12/03/1985', nationality: 'Qatari', gender: 'Male', idExpiryDate: '2030-01-01', email: 'a@example.qa', altPhone: '' };
@@ -72,7 +72,7 @@ test('a line that belongs to another customer than the one identified now is not
   const deps = { createRecord: async () => {}, updateRecord: async () => {} };
   await assert.rejects(
     () => submitMod.submitServiceChangeOrder('change-postpaid-plan', { contact: { moiResult: {} }, eligibility: { customerId: 'CUST-2002', checks: [] }, line: { ...line, productId: 'P' }, productId: 'PROD-104' }, deps),
-    /Return to Customer Identification/
+    /Return to Customer Verification/
   );
 });
 
@@ -93,7 +93,7 @@ test('RequireFeature shows its page for a granted feature and "No access" for an
   const mine = personas.find((p) => p.id === initial);
   const held = mine.features[0].key;
   assert.match(render(held), /THE PAGE/);
-  assert.doesNotMatch(render(held), /No access/);
-  assert.match(render('no.such.feature'), /No access/);
+  assert.doesNotMatch(render(held), /No Access/);
+  assert.match(render('no.such.feature'), /No Access/);
   assert.doesNotMatch(render('no.such.feature'), /THE PAGE/);
 });

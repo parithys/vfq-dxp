@@ -71,7 +71,7 @@ export async function validateRetiredWithGovernment(idNumber: string | undefined
 }
 
 export const TYPE_OPTIONS: { key: SpecialDiscountType; label: string; description: string }[] = [
-  { key: 'none', label: 'Standard customer', description: 'None of B2B2C, Retiree or MADA applies' },
+  { key: 'none', label: 'Standard Customer', description: 'None of B2B2C, Retiree or MADA applies' },
   { key: 'b2b2c', label: 'Consumer B2B2C', description: 'Employee of a supported partner company' },
   { key: 'retired', label: 'Retiree', description: 'Agent validates the applicable information' },
   { key: 'mada', label: 'MADA', description: 'Agent validates the applicable information' },

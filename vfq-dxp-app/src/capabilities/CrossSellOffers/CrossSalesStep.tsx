@@ -100,7 +100,7 @@ export function CrossSalesStep({
           <Icon path="M3 17l6-6 4 4 8-8 M15 7h6v6" className="w-6 h-6" />
         </span>
         <div className="min-w-0">
-          <p className="text-fg font-semibold text-[length:var(--fs-body)]">No cross-sales offer available</p>
+          <p className="text-fg font-semibold text-[length:var(--fs-body)]">No Cross-Sales Offer Available</p>
           <p className="text-fg-2 text-[length:var(--fs-caption)]">Continue to choose a service from the standard catalogue.</p>
         </div>
       </div>

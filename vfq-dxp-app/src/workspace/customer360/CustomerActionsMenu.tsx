@@ -72,7 +72,7 @@ function useGroups(applies: (child: NavItem) => boolean) {
     .filter((i) => PRODUCT_LINES.has(i.key) && i.children?.length)
     .map((line) => ({ line, children: line.children!.filter(applies) }))
     .filter((g) => g.children.length > 0);
-  return hub ? [{ line: hub, children: [{ ...hub, label: 'Start a new connection' }] }, ...lines] : lines;
+  return hub ? [{ line: hub, children: [{ ...hub, label: 'Start a New Connection' }] }, ...lines] : lines;
 }
 
 /** One row of a menu. A disabled one is shown dimmed with its hint (an action that applies but is not open yet). */
@@ -241,7 +241,7 @@ export function CustomerActionsMenu({
           anchor={triggerOf(ref)}
           id={menuId}
           onClose={closeAndRefocus}
-          label="Customer actions"
+          label="Customer Actions"
           groups={groups.map((g) => ({ key: g.line.key, label: g.line.label, children: g.children }))}
           onPick={(child) => {
             setOpen(false);
@@ -323,7 +323,7 @@ export function ServiceActionsMenu({
               >
                 <IconTile icon={NEW_CONNECTION_ICON} />
                 <span className="min-w-0 flex-1">
-                  <span className="block font-medium text-[length:var(--fs-body)] text-fg">Start a new connection</span>
+                  <span className="block font-medium text-[length:var(--fs-body)] text-fg">Start a New Connection</span>
                   <span className="block text-fg-2 text-[length:var(--fs-caption)]">New mobile or home connection, or add a line, for this customer</span>
                 </span>
               </button>
@@ -350,7 +350,7 @@ export function ServiceActionsMenu({
                           <span className={`block font-medium text-[length:var(--fs-body)] ${reachable ? 'text-fg' : 'text-fg-2'}`}>{journey.title}</span>
                           <span className="block text-fg-2 text-[length:var(--fs-caption)]">{journey.description}</span>
                         </span>
-                        {!reachable && <span className="shrink-0 text-muted text-[length:var(--fs-caption)]">Not yet open</span>}
+                        {!reachable && <span className="shrink-0 text-muted text-[length:var(--fs-caption)]">Not Yet Open</span>}
                       </button>
                     </li>
                   );

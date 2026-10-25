@@ -153,7 +153,7 @@ test('every journey that identifies the customer records the ID document it capt
   }
 });
 
-test('Customer Identification: what the agent may change follows how the capture came in', async () => {
+test('Customer Verification: what the agent may change follows how the capture came in', async () => {
   const m = await load('/src/components/patterns/idLookupModel.ts');
   assert.equal(m.captureModeOf(true, 0), 'upload');
   assert.equal(m.captureModeOf(true, 3), 'upload', 'an upload is an upload whatever the reader did before');

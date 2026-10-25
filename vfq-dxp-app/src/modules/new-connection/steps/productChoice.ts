@@ -7,7 +7,7 @@ import type { EligibilityResult } from '../../../components/domain/eligibilityTy
 import type { ConnectionProduct, HomeProduct, MnpType } from '../products';
 import type { ProductStepContext } from './ProductSelection';
 
-/** The step's position in the wizard: right after Customer Identification. Switching product returns progress to it. */
+/** The step's position in the wizard: right after Customer Verification. Switching product returns progress to it. */
 export const PRODUCT_STEP_INDEX = 1;
 
 /**

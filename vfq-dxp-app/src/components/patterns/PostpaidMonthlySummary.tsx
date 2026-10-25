@@ -77,7 +77,7 @@ export function PostpaidMonthlySummary({ charges, selectedDiscount, bundledItems
       {/* One row, like the rows above it: the label at the left and the figure at the right, with "/mo" set small
           against the amount so the number carries the weight rather than the unit. */}
       <div className="flex items-baseline justify-between gap-4 pt-3">
-        <p className="opacity-80 text-[length:var(--fs-caption)]">Total monthly</p>
+        <p className="opacity-80 text-[length:var(--fs-caption)]">Total Monthly</p>
         <p className="font-bold text-[length:var(--fs-h3)] leading-tight whitespace-nowrap">
           {formatQar(charges.totalQar)}
           <span className="text-[length:var(--fs-caption)] font-bold">/mo</span>

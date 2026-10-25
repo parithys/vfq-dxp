@@ -4,7 +4,7 @@ import { qidDocumentRecord, type LinkedIdUpdate } from '../../components/pattern
 type CreateRecord = (kind: 'identity-documents', record: Record<string, unknown>) => Promise<unknown>;
 
 /**
- * Customer Identification linked a QID to a customer who is already on file (through their Passport): the order adds that QID to THEIR
+ * Customer Verification linked a QID to a customer who is already on file (through their Passport): the order adds that QID to THEIR
  * identity documents, so the next lookup by the QID finds the same customer rather than a new one. Never a second customer; never a
  * duplicate document (the same number on the same customer is left as it is). Returns whether a document was added.
  */

@@ -103,7 +103,7 @@ export function useJourneyCustomerLock({
     const held = useCustomerContext.getState().journey;
     if (held?.wizardId === WIZARD_ID && !isMirrorWindow) {
       const changesIdentity = v.idNumber !== held.idNumber || Boolean(v.moiResult && v.moiResult.name !== held.customerName);
-      // On the Customer Identification page itself the agent may change the document type (and so the
+      // On the Customer Verification page itself the agent may change the document type (and so the
       // identity) at any time: the hold is released and re-taken when the new document resolves. From the
       // next step on, the customer is fixed.
       if (changesIdentity && (draftStep ?? 0) === 0) {

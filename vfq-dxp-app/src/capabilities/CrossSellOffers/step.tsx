@@ -28,8 +28,8 @@ export function offersStep({ applyCrossSales, navigate, createRecord, journey = 
   return {
     key: 'crossSales',
     summary: crossSalesSummary,
-    label: 'Offers',
-    heading: 'Recommended offers',
+    label: 'Recommended Offers',
+    heading: 'Recommended Offers',
     subheading: 'Personalised using the customer\u2019s profile and eligibility.',
     render: ({ values, setValue, goNext }) => (
       <CrossSalesStep

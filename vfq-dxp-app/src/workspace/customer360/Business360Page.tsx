@@ -26,8 +26,8 @@ function Stat({ label, value }: { label: string; value: number }) {
 }
 
 const SEGMENT_FILTER = [
-  { value: 'all', label: 'All segments' },
-  { value: 'EBU', label: 'EBU · Company-paid' },
+  { value: 'all', label: 'All Segments' },
+  { value: 'EBU', label: 'EBU · Company-Paid' },
   { value: 'CBU', label: 'CBU · B2B2C' },
 ];
 
@@ -122,16 +122,16 @@ export function Business360Page() {
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4" aria-label="Summary">
-        <Stat label="Linked users" value={all.length} />
-        <Stat label="EBU · Company-paid" value={ebu} />
+        <Stat label="Linked Users" value={all.length} />
+        <Stat label="EBU · Company-Paid" value={ebu} />
         <Stat label="CBU · B2B2C" value={cbu} />
       </div>
 
       <section className="card p-6">
-        <h2 className="text-fg font-semibold text-[length:var(--fs-h5)] mb-1">Linked users</h2>
+        <h2 className="text-fg font-semibold text-[length:var(--fs-h5)] mb-1">Linked Users</h2>
         {all.length === 0 ? (
           <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface p-6 text-center">
-            <p className="text-fg font-medium mb-1">No linked users yet</p>
+            <p className="text-fg font-medium mb-1">No Linked Users Yet</p>
             <p className="text-fg-2 text-[length:var(--fs-caption)]">
               No individual customer is linked to {account.enterpriseAccountId}. Users appear here once their account is linked to this business.
             </p>

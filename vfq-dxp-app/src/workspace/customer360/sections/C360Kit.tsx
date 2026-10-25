@@ -517,15 +517,8 @@ export function UsageBar({ pct, value, unit, label }: { pct: number; value: Reac
   );
 }
 
-/** Small pager (‹ 1 2 3 ›) used by the Activities and Alerts lists. */
-export function usePaging<T>(rows: T[], pageSize: number) {
-  const [page, setPage] = useState(1);
-  const pages = Math.max(1, Math.ceil(rows.length / pageSize));
-  const safe = Math.min(page, pages);
-  return { page: safe, pages, setPage, slice: rows.slice((safe - 1) * pageSize, safe * pageSize), total: rows.length };
-}
-
-export { Pager } from '../../../components/primitives/Pager';
+// Paging is the Pagination capability's (capabilities/Pagination): one hook, one bar, one pager for every paged list.
+export { usePagination as usePaging, Pagination, Pager } from '../../../capabilities';
 
 export const fmtDate = (v: unknown): string | undefined => (v === undefined || v === null || v === '' ? undefined : formatDate(v));
 

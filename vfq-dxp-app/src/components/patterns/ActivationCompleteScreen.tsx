@@ -64,7 +64,7 @@ export interface ActivationCompleteOrder {
   /** eSIM orders only - drives the QR handover panel. */
   esimActivationCode?: string;
   customerEmail?: string;
-  /** The address as Customer Identification shows it (masked for a new customer). Defaults to customerEmail. */
+  /** The address as Customer Verification shows it (masked for a new customer). Defaults to customerEmail. */
   customerEmailDisplay?: string;
   customerEmailVerified?: boolean;
 }
@@ -236,14 +236,14 @@ export function ActivationCompleteScreen({
           { label: numberLabel, value: order.msisdn },
           { label: 'Plan', value: order.planName },
           ...(hideSimType ? [] : [{ label: 'SIM Type', value: order.simType ?? '-' }]),
-          ...(order.dueTodayQar !== undefined ? [{ label: 'Due today', value: `QAR ${order.dueTodayQar}` }] : []),
+          ...(order.dueTodayQar !== undefined ? [{ label: 'Due Today', value: `QAR ${order.dueTodayQar}` }] : []),
           ...(order.monthlyRecurringQar !== undefined
-            ? [{ label: 'Monthly recurring', value: `QAR ${order.monthlyRecurringQar}/mo` }]
+            ? [{ label: 'Monthly Recurring', value: `QAR ${order.monthlyRecurringQar}/mo` }]
             : []),
           { label: 'Status', value: order.statusLabel ?? (order.pendingApproval ? 'Submitted for Approval' : 'Complete') },
           ...(order.extraLines ?? []),
           // The cue for the fibre actions below: whether the customer's location can be served by fibre.
-          { label: 'Customer location', value: fibre === 'rfs' ? 'RFS - Eligible for Fibre' : fibre === 'not-rfs' ? 'Not RFS (not ready for service)' : fibre === 'unknown' ? 'Not on file' : 'Checking...' },
+          { label: 'Customer Location', value: fibre === 'rfs' ? 'RFS - Eligible for Fibre' : fibre === 'not-rfs' ? 'Not RFS (not ready for service)' : fibre === 'unknown' ? 'Not on file' : 'Checking...' },
         ]}
         actions={[
           { label: 'View Order', variant: 'primary', onClick: () => navigate(`${ORDER_DETAIL_ROUTE}?id=${order.orderId}`) },
