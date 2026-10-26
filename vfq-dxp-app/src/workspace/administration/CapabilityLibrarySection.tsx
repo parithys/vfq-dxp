@@ -45,7 +45,7 @@ function Detail({ cap }: { cap: CapabilityDef }) {
       </div>
 
       <section aria-label="Live preview" className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 space-y-3">
-        <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Live Preview</h4>
+        <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Live Preview</h3>
         {preview ? (
           <div className="rounded-[var(--radius-card)] bg-[var(--surface)] p-4">{preview()}</div>
         ) : (
@@ -56,7 +56,7 @@ function Detail({ cap }: { cap: CapabilityDef }) {
       </section>
 
       <section aria-label="Where it lives" className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 space-y-3">
-        <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Where It Lives</h4>
+        <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Where It Lives</h3>
         <dl className="grid grid-cols-[10rem_1fr] gap-y-2 text-[length:var(--fs-body)]">
           <dt className="text-fg">Entry Point</dt>
           <dd className="text-fg font-medium">{cap.entry}</dd>
@@ -82,7 +82,7 @@ function Detail({ cap }: { cap: CapabilityDef }) {
       </section>
 
       <section aria-label="Implementation files" className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5">
-        <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-2">Implementation Files</h4>
+        <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-2">Implementation Files</h3>
         <ul className="divide-y divide-border-soft">
           <PathRow path={cap.home} />
           {[...cap.parts, ...cap.publicApi].map((p) => <PathRow key={p} path={p} />)}
@@ -90,7 +90,7 @@ function Detail({ cap }: { cap: CapabilityDef }) {
       </section>
 
       <section aria-label="Used by" className="rounded-[var(--radius-card)] border border-border-soft bg-bg p-5 space-y-3">
-        <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Used by {journeys.length} journeys and areas</h4>
+        <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Used by {journeys.length} journeys and areas</h3>
         <div className="flex flex-wrap gap-2">
           {journeys.map((j) => (
             <span key={j} className="rounded-[var(--radius-pill)] bg-surface text-fg-2 px-3 py-1 text-[length:var(--fs-caption)] font-medium">{j}</span>

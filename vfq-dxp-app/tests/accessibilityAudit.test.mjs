@@ -52,3 +52,10 @@ test('the page title band (PageHeader, wizard title, Customer 360 header) reads 
   assert.match(read('src/lib/serviceTypeTag.ts'), /label: 'Voice Plan'/);
   assert.match(read('src/lib/serviceTypeTag.ts'), /label: 'Broadband Plan'/);
 });
+
+test('Administration headings do not skip a level: the capability name is an h2 and its sections h3', () => {
+  const s = read('src/workspace/administration/CapabilityLibrarySection.tsx');
+  assert.ok(s.includes('<h2 className="text-fg font-bold'));
+  assert.ok(!/<h4\b/.test(s), 'no h4 directly under the h2');
+  assert.equal((s.match(/<h3\b/g) ?? []).length, (s.match(/<\/h3>/g) ?? []).length);
+});
