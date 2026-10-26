@@ -427,6 +427,8 @@ export function FilterSelect({ label, value, options, onChange, hideLabel = fals
         type="button"
         ref={triggerRef}
         role="combobox"
+        // A combobox is not named from its content, so the visible "Order Type: All" gives no name: name it, with the chosen value.
+        aria-label={`${label}: ${selected?.label ?? ''}`}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={open ? `${id}-list` : undefined}

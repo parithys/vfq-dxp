@@ -146,7 +146,7 @@ export function CustomerProfileHeader(p: CustomerProfileHeaderProps) {
     )}
     <section
       ref={sectionRef}
-      className={p.flush ? 'border-b bg-charcoal-panel text-on-dark p-5' : 'card border-[var(--field-card-border)] bg-charcoal-panel text-on-dark p-5 mb-4'}
+      className={p.flush ? 'border-b bg-[var(--title-band-bg)] text-on-dark p-5' : 'card border-[var(--field-card-border)] bg-charcoal-panel text-on-dark p-5 mb-4'}
     >
       <div className="flex flex-wrap lg:flex-nowrap items-stretch gap-6">
         <div className="flex items-start gap-4 min-w-0 flex-1">

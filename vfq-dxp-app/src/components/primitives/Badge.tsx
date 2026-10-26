@@ -43,7 +43,7 @@ interface BadgeProps extends ComponentPropsWithRef<'span'> {
 // control app-wide, badges included, which is a deliberate supersession of
 // that reference's corner - not a rediscovery of the shape it replaced.
 const variantClasses: Record<BadgeVariant, string> = {
-  'outlined-red': 'border border-accent text-accent bg-transparent',
+  'outlined-red': 'border border-accent text-[var(--accent-text)] bg-transparent',
   'filled-neutral': 'bg-light-neutral text-fg-2',
   success: 'bg-bg border border-[var(--success-border)] text-success',
   // Solid green, white label, per the 2026-09-26 asset. A SEPARATE variant

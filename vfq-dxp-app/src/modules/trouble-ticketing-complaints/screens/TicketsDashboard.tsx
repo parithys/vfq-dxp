@@ -210,6 +210,7 @@ export function TicketsDashboard({ padded = true }: TicketsDashboardProps) {
     <div className={padded ? 'p-8' : ''}>
       <PageHeader
         bleed={padded}
+        level={padded ? 1 : 2}
         title="Tickets Dashboard"
         description="Trouble tickets and complaints across all queues."
         actions={

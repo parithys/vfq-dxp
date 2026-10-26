@@ -2,7 +2,8 @@ import { Icon } from '../primitives/Icon';
 import { Button } from '../primitives/Button';
 import { ConnectionTypeTag } from '../primitives/ConnectionTypeTag';
 import { CARD_HIGHLIGHT, CARD_IDLE, CARD_SELECTED, ICON_CALL, ICON_CARD, ICON_DATA, ICON_GIFT, STAR_ICON, planFeatureRows } from '../primitives/offerCardParts';
-import type { PostpaidPlan } from './postpaidPlanModel';
+import { PLAN_CLASS_TAG, isPlanClass, type PostpaidPlan } from './postpaidPlanModel';
+import { ServiceTypeTag } from '../primitives/ServiceTypeTag';
 import { formatQar, formatAmount } from '../../lib/format';
 
 interface PostpaidPlanCardProps {
@@ -55,7 +56,7 @@ export function PostpaidPlanCard({ p, selectedProductId, billLimit, onSelectProd
           <Icon path={STAR_ICON} className="w-3 h-3" />
           Popular
         </span>
-        <ConnectionTypeTag category="Postpaid" />
+        {isPlanClass(p.planClass) ? <ServiceTypeTag type={PLAN_CLASS_TAG[p.planClass]} /> : <ConnectionTypeTag category="Postpaid" />}
       </div>
       <div className="flex-1 flex flex-col gap-2">
         <p className="text-fg font-bold text-[length:var(--fs-h5)] leading-snug">{p.name}</p>
@@ -105,7 +106,7 @@ export function PostpaidPlanCard({ p, selectedProductId, billLimit, onSelectProd
             setDetailPlan(p);
           }}
           aria-label={`View details for ${p.name}`}
-          className="inline-flex items-center gap-1 rounded-[var(--radius-button)] text-link hover:underline focus:outline-none focus-visible:shadow-[var(--focus-ring)] text-[length:var(--fs-caption)] font-medium"
+          className="inline-flex min-h-6 items-center gap-1 rounded-[var(--radius-button)] text-link hover:underline focus:outline-none focus-visible:shadow-[var(--focus-ring)] text-[length:var(--fs-caption)] font-medium"
         >
           View details
           <Icon path="M9 18l6-6-6-6" className="w-4 h-4" />

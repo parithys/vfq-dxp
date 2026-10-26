@@ -60,8 +60,8 @@ export function PlanSearchBox({
         {...nav.inputProps}
         aria-label={`Search ${scopeLabel ?? 'plans'} by name or price`}
         role="combobox"
-        aria-expanded={searchOpen}
-        aria-controls="plan-search-listbox"
+        aria-expanded={Boolean(searchOpen && planSearch.trim())}
+        aria-controls={searchOpen && planSearch.trim() ? 'plan-search-listbox' : undefined}
         autoComplete="off"
         placeholder={`Search ${scopeLabel ?? 'plans'} by name or price`}
         value={planSearch}

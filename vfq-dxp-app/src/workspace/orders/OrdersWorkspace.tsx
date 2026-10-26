@@ -40,6 +40,7 @@ export function OrdersWorkspace() {
     <div className="p-8">
       <PageHeader title={<>Orders</>} />
       <Tabs
+        label="Order Views"
         // The search sits on the tab row, to the right of the tabs, and fills the rest of the row.
         toolbar={
           <>

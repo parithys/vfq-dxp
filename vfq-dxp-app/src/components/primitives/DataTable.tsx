@@ -154,7 +154,7 @@ export function DataTable<T>({
                       <button
                         type="button"
                         onClick={() => toggleSort(col)}
-                        className={`inline-flex items-center gap-1.5 hover:text-fg ${col.numeric ? 'flex-row-reverse' : ''}`}
+                        className={`inline-flex min-h-6 items-center gap-1.5 hover:text-fg ${col.numeric ? 'flex-row-reverse' : ''}`}
                       >
                         {col.header}
                         <Icon
@@ -162,6 +162,8 @@ export function DataTable<T>({
                           className={`w-3.5 h-3.5 shrink-0 ${active ? 'text-fg' : 'text-muted'}`}
                         />
                       </button>
+                    ) : col.header === '' ? (
+                      <span className="sr-only">Actions</span>
                     ) : (
                       <span className={col.hideHeader ? 'sr-only' : undefined}>{col.header}</span>
                     )}

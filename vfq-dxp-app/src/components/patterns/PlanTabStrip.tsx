@@ -9,5 +9,5 @@ interface PlanTabStripProps {
 
 /** The Offers / Plans switch: the shared horizontal tab strip bound to the plan groups (it switches the content shown). */
 export function PlanTabStrip({ planGroupTabs, activeTab, setActiveTab }: PlanTabStripProps) {
-  return <TabStrip items={planGroupTabs} active={activeTab as PlanGroupKey} onChange={setActiveTab} />;
+  return <TabStrip items={planGroupTabs} active={activeTab as PlanGroupKey} onChange={setActiveTab} label="Plan Groups" />;
 }

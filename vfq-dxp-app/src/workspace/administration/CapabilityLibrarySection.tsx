@@ -36,7 +36,7 @@ function Detail({ cap }: { cap: CapabilityDef }) {
     <div className="space-y-6">
       <div className="space-y-2">
         <div className="flex items-center gap-3 flex-wrap">
-          <h3 className="text-fg font-bold text-[length:var(--fs-h4)]">{cap.name}</h3>
+          <h2 className="text-fg font-bold text-[length:var(--fs-h4)]">{cap.name}</h2>
           <Badge variant={cap.status === 'consolidated' ? 'success' : 'warning'}>
             {cap.status === 'consolidated' ? 'In the library' : 'Registered in place'}
           </Badge>

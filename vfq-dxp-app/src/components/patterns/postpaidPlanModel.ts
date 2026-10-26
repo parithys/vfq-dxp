@@ -72,6 +72,8 @@ export interface PostpaidPlan {
    * that skip actually happens; this component only renders a note saying so.
    */
   preBundledOffer?: boolean;
+  /** Postpaid Voice Plans or Postpaid Broadband Plans, by the plan's primary focus (see PLAN_CLASS_TAG). Absent: the plan has no class on record. */
+  planClass?: string;
 }
 
 export interface Discount {
@@ -130,6 +132,14 @@ export const PLAN_GROUPS: { key: PlanGroupKey; label: string }[] = [
 ];
 
 /** The one name of the special-discount tab, whichever of the three types the customer holds (the type itself is not shown). */
+/** The two classes of postpaid plan (the plan's `planClass`): decided by what the plan is primarily for, never by whether it has minutes or data. */
+export const PLAN_CLASS_TAG = {
+  'Postpaid Voice Plans': 'postpaid-voice',
+  'Postpaid Broadband Plans': 'postpaid-broadband',
+} as const;
+export type PlanClass = keyof typeof PLAN_CLASS_TAG;
+export const isPlanClass = (v: unknown): v is PlanClass => typeof v === 'string' && v in PLAN_CLASS_TAG;
+
 export const SPECIAL_OFFERS_TAB_LABEL = 'Special Offers';
 
 export const SPECIAL_DISCOUNT_TYPE: Record<'mada' | 'b2b2c' | 'retired', { addonType: string }> = {

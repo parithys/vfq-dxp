@@ -340,7 +340,7 @@ export function ToastContainer() {
                 <button type="button"
                   onClick={() => dismissToast(t.id)}
                   aria-label="Dismiss notification"
-                  className="shrink-0 text-muted hover:text-fg"
+                  className="inline-flex h-6 w-6 shrink-0 items-center justify-center text-muted hover:text-fg"
                 >
                   <Icon path={CLOSE_ICON} className="w-4 h-4" />
                 </button>

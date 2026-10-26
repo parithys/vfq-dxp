@@ -67,7 +67,7 @@ export function TicketApprovalQueue({ padded = true }: TicketApprovalQueueProps)
 
   return (
     <div className={padded ? 'p-8' : ''}>
-      <PageHeader title={<>Ticket Approval Queue</>} description={<>Trouble tickets awaiting an approval decision.</>} bleed={padded} />
+      <PageHeader title={<>Ticket Approval Queue</>} description={<>Trouble tickets awaiting an approval decision.</>} bleed={padded} level={padded ? 1 : 2} />
       <ErrorBanner message={loadError} />
       <RestrictedRowsNotice count={hiddenCount} />
       <DataTable<Ticket>

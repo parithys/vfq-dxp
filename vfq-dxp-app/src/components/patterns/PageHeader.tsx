@@ -15,19 +15,23 @@ export function PageHeader({
   badges,
   actions,
   bleed = true,
+  level = 1,
 }: {
   title: ReactNode;
   description?: ReactNode;
   badges?: ReactNode;
   actions?: ReactNode;
   bleed?: boolean;
+  /** 1 for the page's own title; 2 where the header sits inside a page that already has its h1 (a workspace tab hosting a screen). */
+  level?: 1 | 2;
 }) {
+  const Heading = level === 1 ? 'h1' : 'h2';
   return (
-    <header className={`${bleed ? '-mx-8 -mt-8 mb-6' : 'mb-5'} px-5 py-3 bg-charcoal-panel text-on-dark border-b border-[var(--field-card-border)] flex flex-wrap items-center justify-between gap-x-4 gap-y-2`}>
+    <header className={`${bleed ? '-mx-8 -mt-8 mb-6' : 'mb-5'} px-5 py-3 bg-[var(--title-band-bg)] text-on-dark border-b border-[var(--field-card-border)] flex flex-wrap items-center justify-between gap-x-4 gap-y-2`}>
       {/* Title, badges and description on the left; the actions on the right, centred vertically against the whole header. */}
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <h1 className="text-[length:var(--fs-h4)] font-bold text-on-dark break-words min-w-0">{title}</h1>
+          <Heading className="text-[length:var(--fs-h4)] font-bold text-on-dark break-words min-w-0">{title}</Heading>
           {badges}
         </div>
         {description && <div className="text-on-dark-2 text-[length:var(--fs-body)]">{description}</div>}

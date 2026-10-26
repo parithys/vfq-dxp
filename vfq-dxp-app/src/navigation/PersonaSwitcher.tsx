@@ -157,7 +157,7 @@ export function PersonaSwitcher() {
     // stepped where they met. Sharing the token rather than copying the value
     // keeps them joined in dark mode too, where the two resolve differently
     // (#3a3d42 vs rgba(255,255,255,.1)).
-    <div className="relative z-[var(--z-header)] grid grid-cols-[auto_minmax(0,1fr)_auto] md:grid-cols-[auto_minmax(8rem,28rem)_minmax(max-content,1fr)_auto] items-center gap-3 h-16 px-4 border-b border-[var(--nav-border)] bg-header-glass backdrop-blur">
+    <header className="relative z-[var(--z-header)] grid grid-cols-[auto_minmax(0,1fr)_auto] md:grid-cols-[auto_minmax(8rem,28rem)_minmax(max-content,1fr)_auto] items-center gap-3 h-16 px-4 border-b border-[var(--nav-border)] bg-header-glass backdrop-blur">
       <button type="button"
         onClick={toggleMobileOpen}
         aria-label="Open navigation"
@@ -267,7 +267,7 @@ export function PersonaSwitcher() {
                         setOpen(null);
                         navigate(i.to);
                       }}
-                      className="block w-full px-4 py-2.5 text-left hover:bg-surface focus:outline-none focus-visible:bg-surface"
+                      className="block w-full px-4 py-2.5 text-left border-b border-border-soft last:border-b-0 hover:bg-surface focus:outline-none focus-visible:bg-surface"
                     >
                       <span className="block text-fg font-medium text-[length:var(--fs-body)]">{i.title}</span>
                       <span className="block text-fg-2 text-[length:var(--fs-caption)] break-words">{i.detail}</span>
@@ -385,6 +385,6 @@ export function PersonaSwitcher() {
             : 'A journey is in progress. The new role may not be able to continue it - use Save as Draft in the journey first to keep it as a draft.'}
         </p>
       </Modal>
-    </div>
+    </header>
   );
 }

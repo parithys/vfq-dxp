@@ -28,6 +28,7 @@ export function Tabs({
   activeKey,
   onChange,
   toolbar,
+  label = 'Sections',
 }: {
   items: TabItem[];
   defaultKey?: string;
@@ -41,6 +42,8 @@ export function Tabs({
   onChange?: (key: string) => void;
   /** Horizontal only: controls that sit on the tab row, pushed to its right edge (a search box, filters). */
   toolbar?: ReactNode;
+  /** Accessible name of the tab strip (what the tabs are tabs of). */
+  label?: string;
 }) {
   const [uncontrolledActive, setUncontrolledActive] = useState(defaultKey ?? items[0]?.key);
   const active = activeKey ?? uncontrolledActive;
@@ -65,7 +68,7 @@ export function Tabs({
               key={item.key}
               onClick={() => setActive(item.key)}
               className={`block w-full text-left px-4 py-2.5 text-[length:var(--fs-body)] border-l-2 transition-colors
-                ${active === item.key ? 'border-accent text-accent font-medium bg-surface' : 'border-transparent text-fg-2 hover:text-fg hover:bg-surface'}`}
+                ${active === item.key ? 'border-accent text-[var(--accent-text)] font-medium bg-surface' : 'border-transparent text-fg-2 hover:text-fg hover:bg-surface'}`}
             >
               {item.label}
             </button>
@@ -80,11 +83,11 @@ export function Tabs({
     <div>
       {toolbar ? (
         <div className="flex flex-wrap items-center gap-3">
-          <TabStrip items={items} active={active} onChange={setActive} className="flex-1 min-w-0" />
+          <TabStrip items={items} active={active} onChange={setActive} label={label} className="flex-1 min-w-0" />
           <div className="flex min-w-0 flex-1 basis-[30%] items-center justify-end gap-3">{toolbar}</div>
         </div>
       ) : (
-        <TabStrip items={items} active={active} onChange={setActive} />
+        <TabStrip items={items} active={active} onChange={setActive} label={label} />
       )}
       <div className="pt-4"><NestedTabs>{activeItem?.content}</NestedTabs></div>
     </div>

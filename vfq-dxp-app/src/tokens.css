@@ -72,6 +72,8 @@
   --border: #e0e0e0;
   --border-soft: #eeeeee;
   --charcoal-panel: #21232b;
+  /* The page title band (PageHeader, the wizard title): charcoal in the light theme, the section-header surface in dark. */
+  --title-band-bg: var(--charcoal-panel);
   --danger: #d0342b;
   /* Solid status fills that carry a white label. --success and --danger are tuned as TEXT and border colours, and the dark
      theme lightens them for a dark page, which leaves white on them at 2.1:1 (green) and 3.4:1 (red); these stay as they
@@ -368,7 +370,7 @@
   --summary-bg: #1b2a41;
   --summary-fg: #ffffff;
   --customer-view-bg: #edf3f6;
-  --customer-view-fg: #3a8fa3;
+  --customer-view-fg: #256f81; /* 5.1:1 on --customer-view-bg (was #3a8fa3, 3.3:1) */
   --icon-tile-bg: #f1f4fa;
   --icon-tile-fg: #3a4161;
   /* --surface-warm-border lived here from 2026-09-27 until later the same day.
@@ -409,7 +411,7 @@
   --tint-pink-bg: #fde4f1;   --tint-pink-fg: #9b1c63;
   --tint-indigo-bg: #e6e9f5; --tint-indigo-fg: #3a4486;
   /* Badge 'tag-blue' (number-card category tag). */
-  --tag-blue-bg: #e6f0fd;    --tag-blue-fg: #2f6fcc;
+  --tag-blue-bg: #e6f0fd;    --tag-blue-fg: #2a66c2;
   --tag-primary-bg: #5e2750; --tag-primary-fg: #ffffff; /* Badge 'tag-primary': the Primary marker, solid plum + white in both themes */
   --tag-amber-bg: #fff3d9;   /* 'tag-amber' fill; its label is --warn-text */
   /* Info banner (e.g. MSISDN picker notice). */
@@ -566,6 +568,8 @@
      tokens (set further down) so the three regions stay one palette. Cards and the header sit one step above the
      page, mixed from --nav-bg toward --nav-fg rather than a separate hex. */
   --bg: color-mix(in oklab, var(--nav-bg), var(--nav-fg) 5%);
+  /* Dark mode only: the page title band takes the section-header surface (--bg), not the fixed charcoal of the light theme. */
+  --title-band-bg: var(--bg);
   --surface: var(--nav-bg);
   --surface-warm: color-mix(in oklab, var(--nav-bg), var(--accent) 12%);
   /* --page-bg/--table-header-bg have no separate dark-mode design of their

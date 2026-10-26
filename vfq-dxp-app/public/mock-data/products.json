@@ -15,7 +15,9 @@
     ],
     "preBundledOffer": true,
     "_benefitsNote": "App-level demo addition (2026-09-28) for the 'display each plan's free bundles and benefits' request - no evidenced per-plan benefits/bundles field exists in the corpus (products.json previously carried only data/voice/speed/commitment). preBundledOffer is the SAME kind of addition for 'pre-bundled eligible offers skip Plan/Add-on Selection' - marked on this one plan only, as a representative demo rather than assuming every 'Offers for this QID' plan qualifies.",
-    "_commitmentNote": "Corrected 2026-09-28 from an invented 12 to the evidenced BR-120 figure ('Postpaid plans carry a minimum subscription period (lock-in) of 3 months')."
+    "_commitmentNote": "Corrected 2026-09-28 from an invented 12 to the evidenced BR-120 figure ('Postpaid plans carry a minimum subscription period (lock-in) of 3 months').",
+    "planClass": "Postpaid Voice Plans",
+    "_planClassNote": "planClass (2026-10-26) by the plan's primary focus, from its stated benefits: Postpaid Broadband Plans where data leads (a data allowance of 60 GB or more, or unlimited data) with international calling under 300 minutes; Postpaid Voice Plans where calling leads (300 or more international minutes, 'up to 300' counted as 300) or data is the lower tiers (15 / 30 / 40 GB). Both classes still include voice and data."
   },
   {
     "productId": "PROD-101",
@@ -39,7 +41,8 @@
       "Free GigaHome TV Basic Pack for 3 months",
       "Free International 50 Add-on for 1 month"
     ],
-    "_commitmentNote": "Corrected 2026-09-28 from an invented 12 to the evidenced BR-269 figure - this exact plan ('Red 350') is BR-269's own named example of a postpaid plan disclosing a 3-month Minimum Subscription Period."
+    "_commitmentNote": "Corrected 2026-09-28 from an invented 12 to the evidenced BR-269 figure - this exact plan ('Red 350') is BR-269's own named example of a postpaid plan disclosing a 3-month Minimum Subscription Period.",
+    "planClass": "Postpaid Broadband Plans"
   },
   {
     "productId": "PROD-105",
@@ -55,7 +58,8 @@
       "Free GigaHome TV Basic Pack for 6 months",
       "Free 20GB roaming data"
     ],
-    "_commitmentNote": "Corrected 2026-09-28 from an invented 12 to the evidenced BR-120 figure ('Postpaid plans carry a minimum subscription period (lock-in) of 3 months')."
+    "_commitmentNote": "Corrected 2026-09-28 from an invented 12 to the evidenced BR-120 figure ('Postpaid plans carry a minimum subscription period (lock-in) of 3 months').",
+    "planClass": "Postpaid Broadband Plans"
   },
   {
     "productId": "PROD-106",
@@ -72,7 +76,8 @@
       "Free international roaming pack",
       "Priority customer support"
     ],
-    "_commitmentNote": "Corrected 2026-09-28 from an invented 24 to the evidenced BR-120 figure ('Postpaid plans carry a minimum subscription period (lock-in) of 3 months') - BR-120 states this as a blanket rule for postpaid plans generally, with no evidenced exception for a premium/VIP tier's own plan commitment (BR-289's 2-year figure is the STAR NUMBER's lock-in on a VIP plan, not the plan's own)."
+    "_commitmentNote": "Corrected 2026-09-28 from an invented 24 to the evidenced BR-120 figure ('Postpaid plans carry a minimum subscription period (lock-in) of 3 months') - BR-120 states this as a blanket rule for postpaid plans generally, with no evidenced exception for a premium/VIP tier's own plan commitment (BR-289's 2-year figure is the STAR NUMBER's lock-in on a VIP plan, not the plan's own).",
+    "planClass": "Postpaid Broadband Plans"
   },
   {
     "productId": "PROD-200",
@@ -162,7 +167,8 @@
       "Free Star Number worth QAR 1,500",
       "Free Vodafone My Book"
     ],
-    "_note": "Offers-tab plan (2026-10-06 design). mrcQAR is the promotional price for promoMonths months; originalMrcQAR is the price after."
+    "_note": "Offers-tab plan (2026-10-06 design). mrcQAR is the promotional price for promoMonths months; originalMrcQAR is the price after.",
+    "planClass": "Postpaid Voice Plans"
   },
   {
     "productId": "PROD-108",
@@ -192,7 +198,8 @@
       "Free Star Number worth QAR 2,500",
       "Free Vodafone My Book"
     ],
-    "_note": "Offers-tab plan (2026-10-06 design). mrcQAR is the promotional price for promoMonths months; originalMrcQAR is the price after."
+    "_note": "Offers-tab plan (2026-10-06 design). mrcQAR is the promotional price for promoMonths months; originalMrcQAR is the price after.",
+    "planClass": "Postpaid Voice Plans"
   },
   {
     "productId": "PROD-109",
@@ -222,7 +229,8 @@
       "Free Star Number worth QAR 3,500",
       "Free Vodafone My Book"
     ],
-    "_note": "Offers-tab plan (2026-10-06 design). mrcQAR is the promotional price for promoMonths months; originalMrcQAR is the price after."
+    "_note": "Offers-tab plan (2026-10-06 design). mrcQAR is the promotional price for promoMonths months; originalMrcQAR is the price after.",
+    "planClass": "Postpaid Voice Plans"
   },
   {
     "productId": "PROD-110",
@@ -245,7 +253,8 @@
       "Free Vodafone My Book",
       "Vodafone World worth up to QAR 150"
     ],
-    "_note": "Plans-tab plan (2026-10-06 design: Unlimited range). The offer flag was removed (2026-10-25): it put these Plans-tab plans on the Offers tab, where a plan is pre-bundled and its add-ons and discounts are locked."
+    "_note": "Plans-tab plan (2026-10-06 design: Unlimited range). The offer flag was removed (2026-10-25): it put these Plans-tab plans on the Offers tab, where a plan is pre-bundled and its add-ons and discounts are locked.",
+    "planClass": "Postpaid Voice Plans"
   },
   {
     "productId": "PROD-111",
@@ -271,7 +280,8 @@
       "Vodafone Call+",
       "Vodafone World worth up to QAR 30"
     ],
-    "_note": "Plans-tab plan (2026-10-06 design: Unlimited range). The offer flag was removed (2026-10-25): it put these Plans-tab plans on the Offers tab, where a plan is pre-bundled and its add-ons and discounts are locked."
+    "_note": "Plans-tab plan (2026-10-06 design: Unlimited range). The offer flag was removed (2026-10-25): it put these Plans-tab plans on the Offers tab, where a plan is pre-bundled and its add-ons and discounts are locked.",
+    "planClass": "Postpaid Broadband Plans"
   },
   {
     "productId": "PROD-112",
@@ -297,7 +307,8 @@
       "Free Vodafone My Book",
       "Vodafone World worth up to QAR 50"
     ],
-    "_note": "Plans-tab plan (2026-10-06 design: Unlimited range). The offer flag was removed (2026-10-25): it put these Plans-tab plans on the Offers tab, where a plan is pre-bundled and its add-ons and discounts are locked."
+    "_note": "Plans-tab plan (2026-10-06 design: Unlimited range). The offer flag was removed (2026-10-25): it put these Plans-tab plans on the Offers tab, where a plan is pre-bundled and its add-ons and discounts are locked.",
+    "planClass": "Postpaid Voice Plans"
   },
   {
     "productId": "PROD-113",
@@ -322,7 +333,8 @@
       "Free Vodafone My Book",
       "Vodafone World worth up to QAR 100"
     ],
-    "_note": "Plans-tab plan (2026-10-06 design: Unlimited range). The offer flag was removed (2026-10-25): it put these Plans-tab plans on the Offers tab, where a plan is pre-bundled and its add-ons and discounts are locked."
+    "_note": "Plans-tab plan (2026-10-06 design: Unlimited range). The offer flag was removed (2026-10-25): it put these Plans-tab plans on the Offers tab, where a plan is pre-bundled and its add-ons and discounts are locked.",
+    "planClass": "Postpaid Voice Plans"
   },
   {
     "productId": "PROD-130",
@@ -343,7 +355,8 @@
     "eligibleNationalities": [
       "Indian"
     ],
-    "_eligibilityNote": "Offered only to customers of this nationality (2026-10-25). The plan was supplied by name only ('... India Promotion'); the nationality is read from that name and needs the business's confirmation. The BIA plans (PROD-134, PROD-140) name no nationality here and stay open to all."
+    "_eligibilityNote": "Offered only to customers of this nationality (2026-10-25). The plan was supplied by name only ('... India Promotion'); the nationality is read from that name and needs the business's confirmation. The BIA plans (PROD-134, PROD-140) name no nationality here and stay open to all.",
+    "planClass": "Postpaid Voice Plans"
   },
   {
     "productId": "PROD-131",
@@ -364,7 +377,8 @@
     "eligibleNationalities": [
       "Pakistani"
     ],
-    "_eligibilityNote": "Offered only to customers of this nationality (2026-10-25). The plan was supplied by name only ('... India Promotion'); the nationality is read from that name and needs the business's confirmation. The BIA plans (PROD-134, PROD-140) name no nationality here and stay open to all."
+    "_eligibilityNote": "Offered only to customers of this nationality (2026-10-25). The plan was supplied by name only ('... India Promotion'); the nationality is read from that name and needs the business's confirmation. The BIA plans (PROD-134, PROD-140) name no nationality here and stay open to all.",
+    "planClass": "Postpaid Voice Plans"
   },
   {
     "productId": "PROD-132",
@@ -385,7 +399,8 @@
     "eligibleNationalities": [
       "Filipino"
     ],
-    "_eligibilityNote": "Offered only to customers of this nationality (2026-10-25). The plan was supplied by name only ('... India Promotion'); the nationality is read from that name and needs the business's confirmation. The BIA plans (PROD-134, PROD-140) name no nationality here and stay open to all."
+    "_eligibilityNote": "Offered only to customers of this nationality (2026-10-25). The plan was supplied by name only ('... India Promotion'); the nationality is read from that name and needs the business's confirmation. The BIA plans (PROD-134, PROD-140) name no nationality here and stay open to all.",
+    "planClass": "Postpaid Voice Plans"
   },
   {
     "productId": "PROD-133",
@@ -402,7 +417,8 @@
       "300 SMS",
       "50 international minutes"
     ],
-    "_note": "Plans-tab plan (2026-10-06). Only the name was supplied: price, data and minutes follow the Essential tier and international minutes follow the nationality table - demo values, need VFQ Business confirmation."
+    "_note": "Plans-tab plan (2026-10-06). Only the name was supplied: price, data and minutes follow the Essential tier and international minutes follow the nationality table - demo values, need VFQ Business confirmation.",
+    "planClass": "Postpaid Voice Plans"
   },
   {
     "productId": "PROD-134",
@@ -419,7 +435,8 @@
       "300 SMS",
       "50 international minutes"
     ],
-    "_note": "Plans-tab plan (2026-10-06). Only the name was supplied: price, data and minutes follow the Extra tier and international minutes follow the nationality table - demo values, need VFQ Business confirmation."
+    "_note": "Plans-tab plan (2026-10-06). Only the name was supplied: price, data and minutes follow the Extra tier and international minutes follow the nationality table - demo values, need VFQ Business confirmation.",
+    "planClass": "Postpaid Voice Plans"
   },
   {
     "productId": "PROD-135",
@@ -440,7 +457,8 @@
     "eligibleNationalities": [
       "Bangladeshi"
     ],
-    "_eligibilityNote": "Offered only to customers of this nationality (2026-10-25). The plan was supplied by name only ('... India Promotion'); the nationality is read from that name and needs the business's confirmation. The BIA plans (PROD-134, PROD-140) name no nationality here and stay open to all."
+    "_eligibilityNote": "Offered only to customers of this nationality (2026-10-25). The plan was supplied by name only ('... India Promotion'); the nationality is read from that name and needs the business's confirmation. The BIA plans (PROD-134, PROD-140) name no nationality here and stay open to all.",
+    "planClass": "Postpaid Voice Plans"
   },
   {
     "productId": "PROD-136",
@@ -461,7 +479,8 @@
     "eligibleNationalities": [
       "Indian"
     ],
-    "_eligibilityNote": "Offered only to customers of this nationality (2026-10-25). The plan was supplied by name only ('... India Promotion'); the nationality is read from that name and needs the business's confirmation. The BIA plans (PROD-134, PROD-140) name no nationality here and stay open to all."
+    "_eligibilityNote": "Offered only to customers of this nationality (2026-10-25). The plan was supplied by name only ('... India Promotion'); the nationality is read from that name and needs the business's confirmation. The BIA plans (PROD-134, PROD-140) name no nationality here and stay open to all.",
+    "planClass": "Postpaid Voice Plans"
   },
   {
     "productId": "PROD-137",
@@ -482,7 +501,8 @@
     "eligibleNationalities": [
       "Pakistani"
     ],
-    "_eligibilityNote": "Offered only to customers of this nationality (2026-10-25). The plan was supplied by name only ('... India Promotion'); the nationality is read from that name and needs the business's confirmation. The BIA plans (PROD-134, PROD-140) name no nationality here and stay open to all."
+    "_eligibilityNote": "Offered only to customers of this nationality (2026-10-25). The plan was supplied by name only ('... India Promotion'); the nationality is read from that name and needs the business's confirmation. The BIA plans (PROD-134, PROD-140) name no nationality here and stay open to all.",
+    "planClass": "Postpaid Voice Plans"
   },
   {
     "productId": "PROD-138",
@@ -503,7 +523,8 @@
     "eligibleNationalities": [
       "Filipino"
     ],
-    "_eligibilityNote": "Offered only to customers of this nationality (2026-10-25). The plan was supplied by name only ('... India Promotion'); the nationality is read from that name and needs the business's confirmation. The BIA plans (PROD-134, PROD-140) name no nationality here and stay open to all."
+    "_eligibilityNote": "Offered only to customers of this nationality (2026-10-25). The plan was supplied by name only ('... India Promotion'); the nationality is read from that name and needs the business's confirmation. The BIA plans (PROD-134, PROD-140) name no nationality here and stay open to all.",
+    "planClass": "Postpaid Voice Plans"
   },
   {
     "productId": "PROD-139",
@@ -520,7 +541,8 @@
       "300 SMS",
       "50 international minutes"
     ],
-    "_note": "Plans-tab plan (2026-10-06). Only the name was supplied: price, data and minutes follow the Extra tier and international minutes follow the nationality table - demo values, need VFQ Business confirmation."
+    "_note": "Plans-tab plan (2026-10-06). Only the name was supplied: price, data and minutes follow the Extra tier and international minutes follow the nationality table - demo values, need VFQ Business confirmation.",
+    "planClass": "Postpaid Voice Plans"
   },
   {
     "productId": "PROD-140",
@@ -537,7 +559,8 @@
       "300 SMS",
       "50 international minutes"
     ],
-    "_note": "Plans-tab plan (2026-10-06). Only the name was supplied: price, data and minutes follow the Max tier and international minutes follow the nationality table - demo values, need VFQ Business confirmation."
+    "_note": "Plans-tab plan (2026-10-06). Only the name was supplied: price, data and minutes follow the Max tier and international minutes follow the nationality table - demo values, need VFQ Business confirmation.",
+    "planClass": "Postpaid Broadband Plans"
   },
   {
     "productId": "PROD-141",
@@ -558,7 +581,8 @@
     "eligibleNationalities": [
       "Bangladeshi"
     ],
-    "_eligibilityNote": "Offered only to customers of this nationality (2026-10-25). The plan was supplied by name only ('... India Promotion'); the nationality is read from that name and needs the business's confirmation. The BIA plans (PROD-134, PROD-140) name no nationality here and stay open to all."
+    "_eligibilityNote": "Offered only to customers of this nationality (2026-10-25). The plan was supplied by name only ('... India Promotion'); the nationality is read from that name and needs the business's confirmation. The BIA plans (PROD-134, PROD-140) name no nationality here and stay open to all.",
+    "planClass": "Postpaid Voice Plans"
   },
   {
     "productId": "PROD-304",

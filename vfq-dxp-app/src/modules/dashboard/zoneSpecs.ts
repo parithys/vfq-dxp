@@ -96,10 +96,31 @@ export function productWorkSpec(
     framing: ZoneFraming;
     regionLabel: string;
     regional: boolean;
+    /** Customers waiting in the role's live walk-in queue; null for a role with no queue. */
+    queueWaiting?: number | null;
   }
 ): ZoneSpec {
   const perf = m.perf;
   const period = opts.regional ? `${opts.regionLabel}, this quarter` : 'this quarter';
+
+  if (opts.variant === 'counter-sales') {
+    return {
+      heading: 'My Sales',
+      subheading: 'Your orders, drafts, leads and queue',
+      headingIcon: I.clipboard,
+      tiles: [
+        { key: 'my-orders', label: 'My Orders', count: m.myOrders, to: '/orders', loadingKind: 'orders' },
+        { key: 'drafts', label: 'Drafts', count: m.taskTiles.find((t) => t.key === 'draft-orders')?.count ?? 0, to: '/tasks?filter=draft-orders', loadingKind: 'tasks' },
+        { key: 'my-leads', label: 'Leads', count: m.myLeads, to: '/leads', loadingKind: 'leads' },
+        ...(opts.queueWaiting != null ? [{ key: 'queue', label: 'Queue', count: opts.queueWaiting }] : []),
+      ],
+      cards: [],
+      actions: [
+        { label: 'New Connection', path: '/mobile/start-connection' },
+        { label: 'Resume a Draft', path: '/tasks?filter=draft-orders' },
+      ],
+    };
+  }
 
   if (opts.variant === 'field') {
     return {
