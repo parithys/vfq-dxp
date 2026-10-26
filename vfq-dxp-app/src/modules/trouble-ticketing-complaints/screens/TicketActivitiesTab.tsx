@@ -1,4 +1,5 @@
 import { formatDateTime } from '../../../lib/format';
+import { EmptyState } from '../../../components/primitives/EmptyState';
 import { Badge } from '../../../components/primitives/Badge';
 import { Button } from '../../../components/primitives/Button';
 import { Input } from '../../../components/primitives/Input';
@@ -15,7 +16,7 @@ interface Props {
 export function TicketActivitiesTab({ activities, closeActivity, activityText, setActivityText, addManualActivity }: Props) {
   return (
       <div className="space-y-3">
-        {activities.length === 0 && <p className="text-fg-2 text-[length:var(--fs-body)]">No activities logged yet.</p>}
+        {activities.length === 0 && <EmptyState compact message="No activities logged yet." />}
         {activities.map((a, i) => (
           <div key={i} className="flex items-center justify-between border-b border-border-soft pb-2 last:border-0">
             <div>

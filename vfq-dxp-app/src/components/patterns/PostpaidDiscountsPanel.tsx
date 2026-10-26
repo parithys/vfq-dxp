@@ -1,4 +1,5 @@
 import { Button } from '../primitives/Button';
+import { EmptyState } from '../primitives/EmptyState';
 import { SPECIAL_DISCOUNT_ADDON_TYPES, SPECIAL_DISCOUNT_CARD_TITLE, type Discount } from './postpaidPlanModel';
 import { DiscountCard } from './DiscountCard';
 
@@ -57,9 +58,7 @@ export function PostpaidDiscountsPanel({
               chosen), the Special Discount once a validated Consumer B2B2C / Retiree / MADA applies (the plan step selects it). Choosing
               another card replaces the choice; choosing the selected card changes nothing. */}
           {discounts.length === 0 ? (
-            <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface px-4 py-6 text-center">
-              <p className="text-fg-2 text-[length:var(--fs-body)]">No discounts available for this plan</p>
-            </div>
+            <EmptyState compact message="No discounts available for this plan." />
           ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(max(15rem,calc((100%-2rem)/3)),1fr))] gap-4">
             <DiscountCard

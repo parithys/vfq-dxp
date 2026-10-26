@@ -1,4 +1,5 @@
 import { formatDateTime } from '../../../lib/format';
+import { EmptyState } from '../../../components/primitives/EmptyState';
 import { Button } from '../../../components/primitives/Button';
 import { Textarea } from '../../../components/primitives/Textarea';
 import type { Ticket } from './ticketDetailModel';
@@ -15,7 +16,7 @@ export function TicketNotesCard({ notes, noteText, setNoteText, addNote }: Props
     <div className="card p-5">
       <h2 className="text-[length:var(--fs-h5)] text-fg font-bold mb-3">Public Notes</h2>
       <div className="space-y-2 mb-3">
-        {notes.length === 0 && <p className="text-fg-2 text-[length:var(--fs-body)]">No public notes yet.</p>}
+        {notes.length === 0 && <EmptyState compact message="No public notes yet." />}
         {notes.map((n, i) => (
           <div key={i} className="text-[length:var(--fs-body)] border-l-2 border-accent pl-3">
             <p className="text-fg">{n.text}</p>

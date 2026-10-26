@@ -55,13 +55,24 @@ const WORKBOOK = {
 };
 // The one add-on that pre-dates the workbook and is referenced by seeded orders.
 const LEGACY = { 'PROD-101': ['International 50 Add-on', 'International Calls', 'paid', 50] };
-const EXPECTED = { ...WORKBOOK, ...LEGACY };
+// One SAMPLE add-on of each pricing model under Local Data and Local Calls (2026-10-26): not in the workbook, replaced when the real ones are given.
+const SAMPLES = {
+  'PROD-210': ['Welcome Data', 'Local Data', 'free', 0],
+  'PROD-211': ['Plan Data Bonus', 'Local Data', 'free', 0],
+  'PROD-212': ['Data Trial', 'Local Data', 'free', 25],
+  'PROD-213': ['Data Booster Intro', 'Local Data', 'paid', 20],
+  'PROD-214': ['Welcome Minutes', 'Local Calls', 'free', 0],
+  'PROD-215': ['Plan Minutes Bonus', 'Local Calls', 'free', 0],
+  'PROD-216': ['Local Calls Trial', 'Local Calls', 'free', 15],
+  'PROD-217': ['Local Booster Intro', 'Local Calls', 'paid', 20],
+};
+const EXPECTED = { ...WORKBOOK, ...SAMPLES, ...LEGACY };
 // Not in the postpaid catalogue: the prepaid-only add-on in the workbook.
 const EXCLUDED_NAMES = ['Local Minutes Booster'];
 
 test('the categories and the filter are exactly those asked for, in order, and the page opens on Paid', () => {
   assert.deepEqual([...m.ADDON_CATEGORIES], ['Local Data', 'Local Calls', 'International Calls', 'Roaming', 'Combo', 'Others']);
-  assert.deepEqual(m.ADDON_PRICING_FILTERS.map((f) => f.label), ['Free', 'Paid']);
+  assert.deepEqual(m.ADDON_PRICING_FILTERS.map((f) => f.label), ['Paid', 'Free']);
   assert.equal(m.DEFAULT_ADDON_PRICING, 'paid');
 });
 
@@ -94,9 +105,12 @@ test('every add-on is listed under its own category only, and per category Free 
 
 test('category sizes match the workbook, and Free holds only the add-ons included with a plan', () => {
   const size = (c, p) => m.addonsFor(addons, c, p).length;
-  assert.deepEqual(Object.fromEntries(m.ADDON_CATEGORIES.map((c) => [c, size(c, 'free') + size(c, 'paid')])), { 'Local Data': 7, 'Local Calls': 4, 'International Calls': 8, Roaming: 6, Combo: 5, Others: 9 });
+  assert.deepEqual(Object.fromEntries(m.ADDON_CATEGORIES.map((c) => [c, size(c, 'free') + size(c, 'paid')])), { 'Local Data': 11, 'Local Calls': 8, 'International Calls': 8, Roaming: 6, Combo: 5, Others: 9 });
   assert.equal(size('Others', 'free'), 2);
-  for (const c of m.ADDON_CATEGORIES.filter((c) => c !== 'Others')) assert.equal(size(c, 'free'), 0, c);
+  // Local Data and Local Calls hold one free add-on of each free model; the other categories hold none.
+  assert.equal(size('Local Data', 'free'), 3);
+  assert.equal(size('Local Calls', 'free'), 3);
+  for (const c of m.ADDON_CATEGORIES.filter((c) => !['Others', 'Local Data', 'Local Calls'].includes(c))) assert.equal(size(c, 'free'), 0, c);
 });
 
 test('prices the workbook leaves open stay open: wording kept, never turned into a number, never Free', () => {
@@ -155,4 +169,32 @@ test('postpaid add-ons carry no validity: not in the data, not displayed (a post
   for (const a of addons) assert.equal('validity' in a, false, a.productId);
   const picker = fs.readFileSync('src/capabilities/AddonsSelection/AddonsPicker.tsx', 'utf8');
   assert.doesNotMatch(picker, /[Vv]alidity/);
+});
+
+test('the five pricing models: free for all, free with the plan, free for 3 months; standard paid, introductory discount - each worded as asked', () => {
+  const d = (a) => m.addonPriceDisplay(a);
+  assert.deepEqual(d({ mrcQAR: 0, pricingModel: 'free-all' }), { primary: 'Free' });
+  assert.deepEqual(d({ mrcQAR: 0, pricingModel: 'free-with-plan' }), { primary: 'Free', secondary: 'Included with the selected plan' });
+  assert.deepEqual(d({ mrcQAR: 25, pricingModel: 'free-first-3' }), { primary: 'Free', secondary: 'for Months 1\u20133, then QAR 25/month from Month 4' });
+  assert.deepEqual(d({ mrcQAR: 20, pricingModel: 'standard' }), { primary: 'QAR 20/mo' });
+  assert.deepEqual(d({ mrcQAR: 20, introPriceQAR: 10, pricingModel: 'intro-discount' }), { primary: 'QAR 10/mo', secondary: 'for Months 1\u20133, then QAR 20/month from Month 4' });
+  assert.equal(d({ mrcQAR: 20 }), undefined, 'a record with no model keeps its own wording');
+  for (const model of ['free-all', 'free-with-plan', 'free-first-3']) assert.equal(m.isFreeAddon({ mrcQAR: 9, pricingModel: model }), true, model);
+  for (const model of ['standard', 'intro-discount']) assert.equal(m.isFreeAddon({ mrcQAR: 0, pricingModel: model }), false, model);
+  // over the data: every Local Data / Local Calls add-on states a model, except the one with an open price
+  for (const a of addons.filter((x) => ['Local Data', 'Local Calls'].includes(x.addonCategory) && x.productId !== 'PROD-170')) assert.ok(a.pricingModel, a.productId);
+  for (const a of addons.filter((x) => x.pricingModel === 'intro-discount')) assert.ok(a.introPriceQAR > 0 && a.introPriceQAR < a.mrcQAR, a.productId);
+  for (const a of addons.filter((x) => x.pricingModel === 'free-with-plan')) assert.ok(a.eligibility?.plans?.length, a.productId);
+});
+
+test('the Paid | Free filter: Paid first and the default, owned by the page header and kept across category tabs', () => {
+  const read = (f) => fs.readFileSync(f, 'utf8');
+  assert.deepEqual(m.ADDON_PRICING_FILTERS.map((f) => f.key), ['paid', 'free']);
+  const step = read('src/capabilities/PlanSelection/postpaidStep.tsx');
+  assert.match(step, /headerAction: \(\{ values, setValue \}\)/);
+  assert.match(step, /\(values\.addonPricing as AddonPricing \| undefined\) \?\? DEFAULT_ADDON_PRICING/);
+  const picker = read('src/capabilities/AddonsSelection/AddonsPicker.tsx');
+  assert.match(picker, /pricingProp === undefined && <SegmentedTabs/, 'the picker draws no filter of its own when the page owns it');
+  assert.match(picker, /onPricingChange\?\.\(DEFAULT_ADDON_PRICING\)/, 'opens on Paid whenever the page is loaded');
+  assert.doesNotMatch(picker, /setCategory\([^)]*\)[^;]*setPricing/, 'switching category does not touch the filter');
 });

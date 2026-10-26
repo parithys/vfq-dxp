@@ -130,6 +130,9 @@ export function C360ContactIdentity({ data, services, goToTab, onEdit }: { data:
               { label: 'Blacklist Status', value: <Pill tone={customer.blacklisted ? 'red' : 'green'}>{customer.blacklisted ? 'Blacklisted' : 'Whitelisted'}</Pill> },
               { label: 'Credit Score', value: str(meta.creditScore) ?? <Dv k="creditScore" /> },
               { label: 'Employer', value: dash(str(meta.employer)) },
+              // Captured at identification; shown here and nowhere in a journey.
+              { label: 'Sponsor', value: dash(str((customer as { companyName?: string }).companyName)) },
+              { label: 'Occupation', value: dash(str((customer as { occupation?: string }).occupation)) },
             ]}
           />
         </Panel>

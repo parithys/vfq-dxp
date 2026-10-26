@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { EmptyState } from '../../../components/primitives/EmptyState';
 import { DataTable } from '../../../components/primitives/DataTable';
 import { Badge } from '../../../components/primitives/Badge';
 import { Button } from '../../../components/primitives/Button';
@@ -201,7 +202,7 @@ export function RecentActivitiesSection({ data }: { data: Customer360Data }) {
     .sort((a, b) => (a.at < b.at ? 1 : -1));
 
   if (entries.length === 0) {
-    return <p className="text-muted text-[length:var(--fs-body)]">No dated activity on file for this customer yet.</p>;
+    return <EmptyState compact message="No dated activity on file for this customer yet." />;
   }
   return (
     <div>

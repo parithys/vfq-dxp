@@ -207,8 +207,16 @@ export function ActivationCompleteScreen({
         heading={heading}
         orderId={order.orderId}
         activityId={order.activityId}
+        // Two columns only while the QR code is shown (the handover panel); otherwise one column. An eSIM held for approval shows its notice in the
+        // header, not in a second column.
         headerNote={
-          order.esimActivationCode ? undefined : emailStatus === 'sent' ? (
+          order.esimActivationCode ? (
+            order.pendingApproval ? (
+              <p className="rounded-[var(--radius-card)] border border-border-soft bg-surface px-4 py-3 text-fg-2 text-[length:var(--fs-body)]">
+                The eSIM QR code and activation code are released once the order is approved.
+              </p>
+            ) : undefined
+          ) : emailStatus === 'sent' ? (
             <p className="text-success text-[length:var(--fs-body)]">Your order details have been sent to your email.</p>
           ) : (
             <p className="text-[var(--warn-text)] text-[length:var(--fs-caption)]">
@@ -219,15 +227,8 @@ export function ActivationCompleteScreen({
           )
         }
         handoverPanel={
-          order.esimActivationCode ? (
-            order.pendingApproval ? (
-              // The eSIM is not handed over while the order waits for approval: the QR code and activation code are released once it is approved.
-              <p className="rounded-[var(--radius-card)] border border-border-soft bg-surface px-4 py-3 text-fg-2 text-[length:var(--fs-body)]">
-                The eSIM QR code and activation code are released once the order is approved.
-              </p>
-            ) : (
-              <EsimActivationPanel activationCode={order.esimActivationCode} emailSent={emailStatus === 'sent'} />
-            )
+          order.esimActivationCode && !order.pendingApproval ? (
+            <EsimActivationPanel activationCode={order.esimActivationCode} emailSent={emailStatus === 'sent'} />
           ) : undefined
         }
         summaryLines={[

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { getVisibleTopicFields } from '../../../engines/customer360VisibilityEngine';
 import { Badge } from '../../../components/primitives/Badge';
 import { Icon } from '../../../components/primitives/Icon';
+import { SegmentedTabs } from '../../../components/primitives/SegmentedTabs';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { accountInformationResolvers, accountInformationRichFields } from '../sections/accountInformationResolvers';
 import { TopicFieldsSection } from '../sections/TopicFieldsSection';
@@ -203,14 +204,6 @@ export function AdditionalInformation({ ctx }: { ctx: Ctx }) {
   if (items.length === 0) return null;
   // A tabbed card: one tab is always selected (the first until the agent picks another).
   const current = items.find((i) => i.key === open) ?? items[0];
-  const onTabKeyDown = (e: React.KeyboardEvent, index: number) => {
-    const move = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : e.key === 'Home' ? -index : e.key === 'End' ? items.length - 1 - index : 0;
-    if (!move) return;
-    e.preventDefault();
-    const next = items[(index + move + items.length) % items.length];
-    setOpen(next.key);
-    document.getElementById(`ai-tab-${next.key}`)?.focus();
-  };
   return (
     // data-mcard: MasonryGrid sizes only marked cards. Without it this card got a single 4px grid row and its
     // links were clipped away (overflow-hidden), leaving an empty strip above the next card. It spans every
@@ -222,33 +215,12 @@ export function AdditionalInformation({ ctx }: { ctx: Ctx }) {
           Additional Information
         </h3>
       </div>
-      {/* The horizontal tab strip (same look as TabStrip): accent underline on the selected tab. It keeps its own markup
-          because each tab names its panel (aria-controls) and handles its own arrow keys. */}
-      <div role="tablist" aria-label="Additional information" className="mx-5 mt-4 flex max-w-full overflow-x-auto shadow-[inset_0_calc(var(--tab-line-w)*-1)_0_0_var(--tab-line-color)]">
-        {items.map((i, index) => {
-          const selected = current?.key === i.key;
-          return (
-            <button
-              key={i.key}
-              id={`ai-tab-${i.key}`}
-              type="button"
-              role="tab"
-              aria-selected={selected}
-              aria-controls="ai-panel"
-              tabIndex={selected ? 0 : -1}
-              onClick={() => setOpen(i.key)}
-              onKeyDown={(e) => onTabKeyDown(e, index)}
-              className={`flex shrink-0 items-center border-b-[length:var(--tab-active-w)] px-4 py-3 text-[length:var(--fs-body)] whitespace-nowrap transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
-                selected ? 'border-accent text-accent font-bold' : 'border-transparent text-fg hover:text-accent'
-              }`}
-            >
-              {i.label}
-            </button>
-          );
-        })}
+      {/* Tabs inside a card on a page are content-level (Level 2): the pill tabs. */}
+      <div className="mx-5 mt-4">
+        <SegmentedTabs label="Additional Information" items={items.map((i) => ({ key: i.key, label: i.label }))} active={current?.key} onChange={setOpen} />
       </div>
       {current && (
-        <div id="ai-panel" role="tabpanel" aria-labelledby={`ai-tab-${current.key}`} className="p-5">
+        <div role="tabpanel" className="p-5">
           {current.node}
         </div>
       )}

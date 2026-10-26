@@ -1,4 +1,5 @@
 import { formatQar, VAT_RATE } from '../../engines/postpaidPricing';
+import { numberWaiverLabel } from '../../engines/numberWaiver';
 import type { SimTypeValue } from '../domain/SimTypeStep';
 import type { SummaryTable } from './CheckoutSummaryTables';
 import type { CheckoutSummaryDerived } from './useCheckoutSummary';
@@ -22,6 +23,9 @@ export function buildDetailedTables({
   starTier,
   starEntitlementQar,
   numberChargeQar,
+  numberWaiver,
+  numberWaivedQar,
+  numberPayableQar,
   dueTodayQar,
   creditLimitQar,
   charges,
@@ -91,7 +95,14 @@ export function buildDetailedTables({
       // What the customer pays at the counter today; the Total Payable Today line that used to end the explainer lives here.
       title: 'Upfront Charges',
       rows: [
-        { label: 'Number Charge After Discount', value: q(numberChargeQar) },
+        // Waive Off (Number Selection): the charge, what was waived and what is left, so the Total Payable Today can be followed line by line.
+        ...(numberWaiver && numberWaivedQar > 0
+          ? [
+              { label: 'Number Upfront Charge', value: q(numberChargeQar) },
+              { label: numberWaiverLabel(numberWaiver), value: `- ${q(numberWaivedQar)}` },
+              { label: 'Number Charge After Waiver', value: q(numberPayableQar) },
+            ]
+          : [{ label: 'Number Charge After Discount', value: q(numberChargeQar) }]),
         { label: 'Advance Payment', value: q(hrnAdvance) },
         { label: 'Total Payable Today', value: q(dueTodayQar), boldLabel: true, boldValue: true },
       ],

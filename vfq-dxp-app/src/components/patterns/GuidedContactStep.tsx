@@ -158,8 +158,8 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
           {/* Identity Details: registry-owned, so read-only CONTENT (label + value), not disabled inputs. Every fact
               that was a field before is still here; the first name, last name, date of birth, expiry, nationality
               and gender still gate Continue through the form's own required rules, which read the same values.
-              Document Type is omitted under verifyThenFetch (the agent already chose it); the Sponsor and
-              Occupation rows are shown for every customer. */}
+              Document Type is omitted under verifyThenFetch (the agent already chose it). Sponsor and Occupation
+              are captured but not shown here: they are visible in Customer 360 only. */}
           <IdentityDetailsCard
             status={
               verifyThenFetch && value.moiResult.moiUpdateTime
@@ -254,7 +254,7 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
                 onChange={(e) => onChange({ ...value, workEmail: e.target.value || undefined })}
               />
               <PhoneNumberInput
-                label="Alternate Phone #"
+                label="Work Number"
                 // Optional in verifyThenFetch (New Connection); still validated when entered.
                 required={!verifyThenFetch}
                 // Optional in verifyThenFetch, so it must not pull the cursor on arrival.

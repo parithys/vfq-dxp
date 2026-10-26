@@ -293,6 +293,7 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality, hideFib
           <Input
             label="Zone Number"
             required
+            inputMode="numeric"
             placeholder="e.g. 66"
             value={value.zone ?? ''}
             onChange={(e) => onChange({ ...value, zone: e.target.value })}
@@ -300,6 +301,7 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality, hideFib
           <Input
             label="Street Number"
             required
+            inputMode="numeric"
             placeholder="e.g. 840"
             value={value.streetNo ?? ''}
             onChange={(e) => onChange({ ...value, streetNo: e.target.value })}
@@ -307,6 +309,7 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality, hideFib
           <Input
             label="Building Number"
             required
+            inputMode="numeric"
             placeholder="e.g. 24"
             value={value.buildingNo ?? ''}
             onChange={(e) => onChange({ ...value, buildingNo: e.target.value })}

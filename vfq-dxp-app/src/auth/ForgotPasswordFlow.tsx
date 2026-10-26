@@ -107,7 +107,7 @@ export function ForgotPasswordFlow({ open, onClose, initialStaffId = '' }: Forgo
             Enter the verification code sent to your registered contact. (Demo code: {DEMO_VERIFICATION_CODE} - pending VFQ
             Security's real Authcode/OTP method.)
           </p>
-          <Input label="Verification Code" value={code} onChange={(e) => setCode(e.target.value)} error={codeError ?? undefined} />
+          <Input label="Verification Code" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value)} error={codeError ?? undefined} />
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="secondary" onClick={() => setStep('identify')}>Back</Button>
             <Button variant="primary" onClick={submitVerify} disabled={!code}>Verify</Button>

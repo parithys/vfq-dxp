@@ -42,7 +42,6 @@ export function BillLimitEditor({ product, value, onChange, layout = 'default', 
   }, [value, editing]);
   const agentMinimum = AGENT_MINIMUMS[product];
   const overCredit = (amount: number | undefined) => amount !== undefined && maxLimit !== undefined && amount > maxLimit;
-  const overMessage = `The bill limit cannot exceed the credit limit (QAR ${maxLimit}).`;
   const result = value !== undefined ? evaluateRule('BR-AGENT-MIN-THRESHOLD', { limitAmount: value, agentMinimum }) : null;
 
   const apply = () => {
@@ -63,11 +62,11 @@ export function BillLimitEditor({ product, value, onChange, layout = 'default', 
       <div className="flex items-center justify-between gap-3">
         {row && !editing ? (
           <div>
-            <p className="text-fg font-semibold">Bill Limit ({product})</p>
+            <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Bill Limit ({product})</h4>
             {value !== undefined && <p className="text-fg-2 text-[length:var(--fs-caption)]">Current limit · QAR {value}</p>}
           </div>
         ) : (
-          <span className="text-fg">Bill Limit ({product})</span>
+          <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Bill Limit ({product})</h4>
         )}
         {!editing && (
           <Button variant="secondary" compact onClick={() => setEditing(true)}>
@@ -91,7 +90,6 @@ export function BillLimitEditor({ product, value, onChange, layout = 'default', 
       ) : (
         !row && value !== undefined && <div className="text-fg mt-1">QAR {value}</div>
       )}
-      {overCredit(value) && <p className="text-danger text-[length:var(--fs-caption)] mt-2">{overMessage}</p>}
       {result && !result.pass && <p className="text-danger text-[length:var(--fs-caption)] mt-2">{result.message}</p>}
     </div>
   );

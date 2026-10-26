@@ -1,4 +1,5 @@
 import { currentAgentId } from '../../stores/authStore';
+import { EmptyState } from '../../components/primitives/EmptyState';
 import { formatDate } from '../../lib/format';
 import { useEffect, useRef, useState } from 'react';
 import { useEntityStore } from '../../stores/entityStore';
@@ -163,7 +164,7 @@ export function BellNotificationsSection() {
 
       <h3 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-2">All Notifications</h3>
       <div className="card divide-y divide-border-soft">
-        {notifications.length === 0 && <p className="px-4 py-6 text-center text-muted">No notifications configured yet.</p>}
+        {notifications.length === 0 && <EmptyState compact message="No notifications configured yet." />}
         {notifications.map((n) => (
           <div key={n.notificationId} className="px-4 py-3 flex items-start justify-between gap-4">
             <div className="min-w-0">

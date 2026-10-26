@@ -66,7 +66,7 @@ export function supplementaryRows(v: ActualUserValue | undefined): { label: stri
     { label: 'Nationality', value: i.moiResult?.nationality ?? '-' },
     { label: 'Date of Birth', value: i.moiResult?.dob ?? '-' },
     { label: 'Email', value: i.email ?? '-' },
-    ...(i.altPhone ? [{ label: 'Alternate Phone', value: i.altPhone }] : []),
+    ...(i.altPhone ? [{ label: 'Work Number', value: i.altPhone }] : []),
   ];
 }
 

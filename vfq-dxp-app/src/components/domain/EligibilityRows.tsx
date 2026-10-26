@@ -17,11 +17,11 @@ export function EligibilityChecksList({ rows }: { rows: EligibilityRow[] }) {
         <li key={row.id} className={`flex items-center gap-3 px-4 py-3 ${ROW_TONE[row.tone]}`}>
           <Icon path={ROW_ICON[row.tone]} className={`w-5 h-5 shrink-0 ${ICON_TONE[row.tone]}`} />
           <div className="min-w-0 flex-1">
-            <p className="text-fg font-semibold text-[length:var(--fs-body)]">{row.title}</p>
+            <p className={`font-semibold text-[length:var(--fs-body)] ${row.tone === 'advisory' ? 'text-[var(--tint-blue-fg)]' : 'text-fg'}`}>{row.title}</p>
             {/* The RESULT, not a static description of what the check does -
                 see the inline panel's own note on this below. */}
             {row.detail && (
-              <p className="text-fg-2 text-[length:var(--fs-caption)] leading-snug whitespace-pre-line">{row.detail}</p>
+              <p className={`text-[length:var(--fs-caption)] leading-snug whitespace-pre-line ${row.tone === 'advisory' ? 'text-[var(--tint-blue-fg)]' : 'text-fg-2'}`}>{row.detail}</p>
             )}
           </div>
         </li>

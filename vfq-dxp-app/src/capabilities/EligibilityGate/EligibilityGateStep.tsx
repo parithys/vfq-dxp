@@ -13,7 +13,7 @@ import type { ConnectionType, RequestKind } from '../../domain/eligibility';
 import { callService, ServiceError, type FailureKind, type ServiceName } from '../../engines/serviceCall';
 import { TechnicalFailure } from '../../components/patterns/ValidationStatus';
 import type { EligibilityResult, CustomerRecord, IdentityDocRecord } from '../../components/domain/eligibilityTypes';
-import { buildEligibilityRows, isUpfrontPaymentRow, UPFRONT_PAYMENT_TITLE } from '../../components/domain/eligibilityRowsModel';
+import { buildEligibilityRows } from '../../components/domain/eligibilityRowsModel';
 import { EligibilityChecksList } from '../../components/domain/EligibilityRows';
 import { useActedForCustomer } from '../../components/patterns/useActedForCustomer';
 
@@ -355,12 +355,7 @@ export function EligibilityGateStep({
         });
       }
 
-      // The upfront (HRN advance) payment is an advisory the agent only needs to be told once: it is announced as an info toast, which follows them
-      // on to the next step, instead of a row they have to read past. Every other check keeps the treatment its outcome calls for (the rows below).
-      const upfront = buildEligibilityRows(resolvedChecks, hrnFlag, match.nationality, journeyType, isExistingCustomer, scope === 'product').find(isUpfrontPaymentRow);
-      if (upfront && (showRow?.(upfront) ?? true)) {
-        pushToast('info', UPFRONT_PAYMENT_TITLE, { key: `eligibility-upfront-${idNumber}`, detail: upfront.detail });
-      }
+      // The upfront (HRN advance) payment is not announced by a toast: it is listed with the other checks (the info row below).
       onResult({
         // Soft stop blocks too - see the note on EligibilityResult.pass.
         pass: !hardStop && !softStop,
@@ -463,8 +458,8 @@ export function EligibilityGateStep({
   // stops. Routing is not a failure, but it IS a diversion the agent must know
   // about - an under-18 applicant silently proceeding behind an approval task
   // nobody mentioned would be worse than one extra screen.
-  // (The upfront payment advisory is not listed here: it was announced as an info toast when the result was computed.)
-  const unresolved = rows.filter((row) => row.tone !== 'pass' && !isUpfrontPaymentRow(row) && (showRow?.(row) ?? true));
+  // The upfront payment (HRN) result is listed with the other checks, as well as announced by the info toast when the result was computed.
+  const unresolved = rows.filter((row) => row.tone !== 'pass' && (showRow?.(row) ?? true));
 
   // NOTHING rendered on a clean pass (2026-09-28: "advance automatically
   // without showing pass indicators"). This panel now lives inside the

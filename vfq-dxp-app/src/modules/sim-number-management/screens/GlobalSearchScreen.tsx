@@ -31,7 +31,7 @@ export function GlobalSearchScreen() {
     <div className="p-8 w-full">
       <PageHeader title={<>Global Search</>} description={<>Search for a customer by MSISDN.</>} />
       <div className="flex gap-2" onKeyDown={handleKeyDown}>
-        <Input aria-label="Enter MSISDN" placeholder="Enter MSISDN" value={msisdn} onChange={(e) => { setMsisdn(e.target.value); setSearched(false); }} />
+        <Input aria-label="Enter MSISDN" inputMode="tel" placeholder="Enter MSISDN" value={msisdn} onChange={(e) => { setMsisdn(e.target.value); setSearched(false); }} />
         <Button variant="primary" onClick={() => setSearched(true)} disabled={!msisdn}>
           Go
         </Button>

@@ -7,6 +7,7 @@ import { formatDateTime } from '../../lib/format';
 import { badgeVariantFor } from '../../lib/statusTone';
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { NestedTabs } from '../../components/primitives/TabLevel';
 import { TabStrip } from '../../components/primitives/TabStrip';
 import { Button } from '../../components/primitives/Button';
 import { Badge } from '../../components/primitives/Badge';
@@ -116,6 +117,9 @@ interface Order {
   newBillingProfileName?: string;
   billCardLast4?: string;
   dueTodayQAR?: number;
+  numberWaiver?: string;
+  numberWaivedQAR?: number;
+  numberUpfrontChargeQAR?: number;
   monthlyRecurringQAR?: number;
   mrcTotalQAR?: number;
   nrcTotalQAR?: number;
@@ -540,6 +544,7 @@ function OrderDetailsPanel({ order, lastUpdatedMs }: { order: Order; lastUpdated
             )}
             <dl className="grid grid-cols-1 gap-y-3 text-[length:var(--fs-body)]">
               <DetailRow label="Number Price" value={qar(order.numberPriceQAR)} />
+              {order.numberWaiver && <DetailRow label="Waive Off" value={`${order.numberWaiver === 'full' ? 'Full' : 'Partial'} - ${qar(order.numberWaivedQAR) ?? '-'} waived of ${qar(order.numberUpfrontChargeQAR) ?? '-'}`} />}
               <DetailRow label="One-Time Charges" value={qar(order.nrcTotalQAR)} />
               <DetailRow label="Order Total" value={qar(order.totalQAR)} />
             </dl>
@@ -815,7 +820,7 @@ export function OrderApprovalDetail() {
       {/* Tab strip straight on the page background (no bar of its own); each tab's content is a set of cards (or one card) on it. */}
       <TabStrip items={tabItems.map(({ key, label }) => ({ key, label }))} active={activeTab.key} onChange={setTab} label="Order sections" />
       <div className="mt-4">
-        {activeTab.content}
+        <NestedTabs>{activeTab.content}</NestedTabs>
       </div>
 
       {mayResubmit && (

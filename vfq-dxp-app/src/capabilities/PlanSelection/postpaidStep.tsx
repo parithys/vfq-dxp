@@ -1,3 +1,5 @@
+import { SegmentedTabs } from '../../components/primitives/SegmentedTabs';
+import { ADDON_PRICING_FILTERS, DEFAULT_ADDON_PRICING, type AddonPricing } from '../../engines/addonCategories';
 import { PLAN_SELECTION_LABEL, ADDONS_DISCOUNTS_LABEL } from '../../data/stepLabels';
 import type { GuidedContactValue } from '../../components/patterns/guidedContactModel';
 import { planChoiceSummary, planExtrasSummary } from './summary';
@@ -41,6 +43,16 @@ export function postpaidExtrasStep(ctx: PostpaidPlanContext): WizardStep {
     skip: ctx.skipWhen,
     label: ADDONS_DISCOUNTS_LABEL,
     subheading: 'Choose optional services and set the spending limit.',
+    // The Paid / Free add-on filter sits in the page's top row, right-aligned, and holds across the category tabs.
+    headerAction: ({ values, setValue }) =>
+      !values.productId || ctx.products.find((p) => p.productId === values.productId)?.preBundledOffer ? null : (
+      <SegmentedTabs
+        label="Paid or Free Add-Ons"
+        items={ADDON_PRICING_FILTERS}
+        active={(values.addonPricing as AddonPricing | undefined) ?? DEFAULT_ADDON_PRICING}
+        onChange={(p) => setValue('addonPricing', p)}
+      />
+    ),
     render: ({ values, setValue }) => renderPlanStep('extras', ctx, values, setValue),
     // Bill limit is the only gate; add-ons and discounts never block.
     isValid: (values) => {
@@ -76,6 +88,7 @@ function renderPlanStep(
           customerBenefit={((values.customerType as CustomerTypeValue | undefined)?.officeAccepted || isCustomerTypeValid(values.customerType as CustomerTypeValue | undefined) && (values.customerType as CustomerTypeValue | undefined)?.type === 'b2b2c') ? (values.customerType as CustomerTypeValue).type : undefined}
           selectedProductId={values.productId as string | undefined}
           onSelectProduct={(id) => setValue('productId', id)}
+          onPlanTabChange={(tab) => setValue('planTab', tab)}
           onDeselectProduct={() => setValue('productId', undefined)}
           discountId={values.discountId as string | undefined}
           onSelectDiscount={(id) => setValue('discountId', id)}
@@ -88,6 +101,8 @@ function renderPlanStep(
           }}
           billLimit={values.billLimit as number | undefined}
           billLimitMax={eligibility?.defaultCreditLimitQar}
+          addonPricing={(values.addonPricing as AddonPricing | undefined) ?? DEFAULT_ADDON_PRICING}
+          onAddonPricingChange={(p) => setValue('addonPricing', p)}
           onBillLimitChange={(amount, pass) => {
             setValue('billLimit', amount);
             setValue('billLimitPass', pass);

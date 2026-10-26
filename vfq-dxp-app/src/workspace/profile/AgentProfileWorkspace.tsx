@@ -208,7 +208,7 @@ export function AgentProfileWorkspace() {
               <Input label="Current Password" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
               <Input label="New Password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
               <Input label="Confirm New Password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
-              <Input id="password-verification-code" label="Verification Code" value={verificationCode} onChange={(e) => setVerificationCode(e.target.value)} />
+              <Input id="password-verification-code" label="Verification Code" inputMode="numeric" autoComplete="one-time-code" value={verificationCode} onChange={(e) => setVerificationCode(e.target.value)} />
               {error && <p className="text-danger text-[length:var(--fs-caption)]">{error}</p>}
               {saved && <Badge variant="success">Password Updated</Badge>}
               <div className="pt-1">
@@ -247,7 +247,7 @@ export function AgentProfileWorkspace() {
                     { value: 'SMS OTP', label: 'SMS OTP' },
                   ]}
                 />
-                <Input id="mfa-verification-code" label="Verification Code" value={mfaCode} onChange={(e) => setMfaCode(e.target.value)} />
+                <Input id="mfa-verification-code" label="Verification Code" inputMode="numeric" autoComplete="one-time-code" value={mfaCode} onChange={(e) => setMfaCode(e.target.value)} />
                 {mfaError && <p className="text-danger text-[length:var(--fs-caption)]">{mfaError}</p>}
                 <div className="flex gap-2 pt-1">
                   <Button variant="secondary" onClick={() => { setMfaEditing(false); setMfaCode(''); setMfaError(null); }}>

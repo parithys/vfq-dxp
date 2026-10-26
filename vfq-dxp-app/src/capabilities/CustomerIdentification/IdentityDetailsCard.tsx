@@ -91,8 +91,8 @@ export interface IdentityFields {
 
 /**
  * One list of facts for every journey, so the card reads the same everywhere. The content follows the context:
- * the document type is left out where the agent already chose it (`showDocumentType` false), and Sponsor and
- * Occupation are always shown (blank when the record holds none).
+ * the document type is left out where the agent already chose it (`showDocumentType` false). Sponsor and Occupation are not listed:
+ * they are captured, and shown in Customer 360 only.
  */
 export function identityFacts(f: IdentityFields, opts: { showDocumentType?: boolean } = {}): Fact[] {
   const { showDocumentType = true } = opts;
@@ -105,8 +105,6 @@ export function identityFacts(f: IdentityFields, opts: { showDocumentType?: bool
     { icon: 'globe', label: 'Nationality', value: f.nationality ?? '' },
     { icon: 'gender', label: 'Gender', value: f.gender ?? '' },
     ...(showDocumentType ? [{ icon: 'idCard' as const, label: 'Document Type', value: f.idTypeLabel ?? '' }] : []),
-    // Sponsor and Occupation are shown for every customer - new or existing, whatever the segment - and read blank when the record holds none.
-    { icon: 'building' as const, label: 'Sponsor', value: f.companyName ?? '' },
-    { icon: 'idCard' as const, label: 'Occupation', value: f.occupation ?? '' },
+    // Sponsor and Occupation are captured (on the contact and the order) but not shown in a journey: they are visible in Customer 360 only.
   ];
 }

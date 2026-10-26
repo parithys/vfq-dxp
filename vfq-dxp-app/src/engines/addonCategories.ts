@@ -8,13 +8,25 @@ export type AddonCategory = (typeof ADDON_CATEGORIES)[number];
 
 export type AddonPricing = 'free' | 'paid';
 export const ADDON_PRICING_FILTERS: { key: AddonPricing; label: string }[] = [
-  { key: 'free', label: 'Free' },
   { key: 'paid', label: 'Paid' },
+  { key: 'free', label: 'Free' },
 ];
 /** The filter the page opens on: Paid, where nearly every add-on is (Free holds only the add-ons included with a plan). */
 export const DEFAULT_ADDON_PRICING: AddonPricing = 'paid';
 
+/**
+ * How an add-on is charged. Free: for every customer ('free-all'), only with the plans it names ('free-with-plan'), or for the first
+ * INTRO_MONTHS months and then at its standard monthly price ('free-first-3'). Paid: the standard price from activation ('standard'), or a
+ * discounted introductory price for the first INTRO_MONTHS months and then the standard price ('intro-discount'). The standard price is the
+ * record's `mrcQAR`; the introductory price is its `introPriceQAR`.
+ */
+export type AddonPricingModel = 'free-all' | 'free-with-plan' | 'free-first-3' | 'standard' | 'intro-discount';
+export const INTRO_MONTHS = 3;
+
 export interface CategorisedAddon {
+  pricingModel?: AddonPricingModel;
+  /** The discounted monthly price of the first INTRO_MONTHS months ('intro-discount'). */
+  introPriceQAR?: number;
   mrcQAR: number;
   addonCategory?: string;
   /** 'free': included with a plan. 'paid': anything else. Omitted: Free only when priced QAR 0. */
@@ -30,7 +42,34 @@ export function addonCategoryOf(a: CategorisedAddon): AddonCategory {
 }
 
 /** Free: stated as included with a plan (or, with no statement, priced QAR 0). */
-export const isFreeAddon = (a: CategorisedAddon): boolean => (a.pricing ? a.pricing === 'free' : a.mrcQAR === 0);
+export const isFreeAddon = (a: CategorisedAddon): boolean =>
+  a.pricingModel ? a.pricingModel.startsWith('free') : a.pricing ? a.pricing === 'free' : a.mrcQAR === 0;
+
+/** What the card says about the price: the figure, and the line that qualifies it (when it is not simply the monthly price). */
+export interface AddonPriceDisplay {
+  primary: string;
+  secondary?: string;
+}
+
+/** The price wording of an add-on with a pricing model; undefined for a record that states none (the card then keeps its own wording). */
+export function addonPriceDisplay(a: CategorisedAddon): AddonPriceDisplay | undefined {
+  const then = `then QAR ${a.mrcQAR}/month from Month ${INTRO_MONTHS + 1}`;
+  switch (a.pricingModel) {
+    case 'free-all':
+      return { primary: 'Free' };
+    case 'free-with-plan':
+      return { primary: 'Free', secondary: 'Included with the selected plan' };
+    case 'free-first-3':
+      return { primary: 'Free', secondary: `for Months 1\u2013${INTRO_MONTHS}, ${then}` };
+    case 'intro-discount':
+      return { primary: `QAR ${a.introPriceQAR ?? a.mrcQAR}/mo`, secondary: `for Months 1\u2013${INTRO_MONTHS}, ${then}` };
+    case 'standard':
+      // A plain price has nothing to qualify: supplementary text is for conditional, promotional or time-based pricing only.
+      return { primary: `QAR ${a.mrcQAR}/mo` };
+    default:
+      return undefined;
+  }
+}
 
 /** The add-ons of one category, narrowed by the Free / Paid filter. */
 export function addonsFor<T extends CategorisedAddon>(addons: readonly T[], category: AddonCategory, pricing: AddonPricing): T[] {

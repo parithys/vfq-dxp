@@ -78,3 +78,13 @@ test('The Reserved tab lists only holds placed for the customer being served', (
   assert.match(m, /n\.reservedForQid === customerIdNumber/);
   assert.match(read('src/capabilities/NumberSelection/step.tsx'), /customerIdNumber=\{\(values\.contact/);
 });
+
+test('Reserved Numbers: always a tab, first when the customer has holds, by customer not agent, at most two, newest first', () => {
+  const m = read('src/components/domain/MsisdnPicker.tsx');
+  assert.match(m, /n\.status === 'Reserved' && Boolean\(customerIdNumber\) && n\.reservedForQid === customerIdNumber/);
+  assert.doesNotMatch(m, /reservedBy === agentName/, 'a hold is the customer\'s, not the agent\'s');
+  assert.match(m, /\.slice\(0, MAX_RESERVATIONS_PER_AGENT\)/);
+  assert.match(m, /heldReservations > 0\s*\? TAB_ORDER\s*: PORTAL_TAB_ORDER/, 'first with holds, last (with its empty state) without');
+  assert.match(m, /No numbers have been reserved for this customer\./);
+  assert.match(m, /Reserved \{formatDateTime\(n\.reservedAt\)\}/);
+});

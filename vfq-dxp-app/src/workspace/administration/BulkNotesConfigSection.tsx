@@ -1,4 +1,5 @@
 import { currentAgentId } from '../../stores/authStore';
+import { EmptyState } from '../../components/primitives/EmptyState';
 import { formatDate } from '../../lib/format';
 import { useEffect, useRef, useState } from 'react';
 import { useEntityStore } from '../../stores/entityStore';
@@ -126,7 +127,7 @@ export function BulkNotesConfigSection() {
 
       <h3 className="text-[length:var(--fs-body-lg)] font-bold text-fg mb-2">All Bulk Notes</h3>
       <div className="card divide-y divide-border-soft">
-        {notes.length === 0 && <p className="px-4 py-6 text-center text-muted">No bulk notes posted yet.</p>}
+        {notes.length === 0 && <EmptyState compact message="No bulk notes posted yet." />}
         {notes.map((note) => (
           <div key={note.noteId} className="px-4 py-3">
             <p className="text-fg text-[length:var(--fs-body)]">{note.content}</p>

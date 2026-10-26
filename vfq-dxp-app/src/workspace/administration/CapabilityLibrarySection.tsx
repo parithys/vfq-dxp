@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { EmptyState } from '../../components/primitives/EmptyState';
 import { Badge } from '../../components/primitives/Badge';
 import { Button } from '../../components/primitives/Button';
 import { Input } from '../../components/primitives/Input';
@@ -134,7 +135,7 @@ export function CapabilityLibrarySection() {
           ))}
         </ul>
       </aside>
-      {selected ? <Detail key={selected.id} cap={selected} /> : <p className="text-muted">No capability matches.</p>}
+      {selected ? <Detail key={selected.id} cap={selected} /> : <EmptyState compact message="No capability matches." />}
     </div>
   );
 }

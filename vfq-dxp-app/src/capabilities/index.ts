@@ -14,6 +14,8 @@ export * from './ActivityComments';
 export * from './ActivationComplete';
 export * from './SelectableCard';
 export * from './Pagination';
+export * from './DocumentUpload';
+export * from './EmptyState';
 export * from './SideDrawer';
 export * from './Toasts';
 export * from './GuidedActivationWizard';

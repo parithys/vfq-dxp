@@ -1,3 +1,4 @@
+import { numberWaiverLabel } from '../../engines/numberWaiver';
 import { formatQar, VAT_RATE } from '../../engines/postpaidPricing';
 import { Button } from '../primitives/Button';
 import type { CheckoutSummaryDerived } from './useCheckoutSummary';
@@ -33,6 +34,8 @@ export function CheckoutDefaultLayout({
   starTier,
   starEntitlementQar,
   numberChargeQar,
+  numberWaiver,
+  numberWaivedQar,
   dueTodayQar,
   creditLimitQar,
   charges,
@@ -100,7 +103,7 @@ export function CheckoutDefaultLayout({
             the Alternate phone # (the service-notification contact, labelled
             to match the Contact step exactly) identify the customer here. */}
         <Row label="Customer Name" value={customerName ?? '-'} />
-        <Row label="Alternate Phone #" value={altPhone ?? '-'} />
+        <Row label="Work Number" value={altPhone ?? '-'} />
         {/* Plan and Discount are separate line items (2026-09-28), each
             carrying its own validity period as a detail line rather than
             leaving lock-in/duration to a separate recap box. */}
@@ -192,6 +195,12 @@ export function CheckoutDefaultLayout({
               )}
             </span>
             <span>QAR {numberChargeQar}</span>
+          </div>
+        )}
+        {numberWaiver && numberWaivedQar > 0 && (
+          <div className="flex justify-between text-fg-2 text-[length:var(--fs-caption)]">
+            <span>{numberWaiverLabel(numberWaiver)}</span>
+            <span>- QAR {numberWaivedQar}</span>
           </div>
         )}
         {hrnAdvance > 0 && (

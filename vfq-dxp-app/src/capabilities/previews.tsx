@@ -8,6 +8,9 @@ import { CustomerTypeStep } from './CustomerType';
 import { EligibilityGateStep, OutcomeActions } from './EligibilityGate';
 import { CARD_HIGHLIGHT, CARD_IDLE, CARD_SELECTED } from './SelectableCard';
 import { Drawer } from './SideDrawer';
+import { AdditionalDocumentsUpload } from './DocumentUpload';
+import { EmptyState } from './EmptyState';
+import type { AdditionalDocument } from './DocumentUpload';
 import { useNotificationStore } from '../stores/notificationStore';
 import { useWorkflowStore } from '../stores/workflowStore';
 import { GuidedActivationWizard } from './GuidedActivationWizard';
@@ -413,6 +416,11 @@ function Complete() {
   );
 }
 
+function DocumentUploadDemo() {
+  const [docs, setDocs] = useState<AdditionalDocument[]>([]);
+  return <AdditionalDocumentsUpload documents={docs} onChange={setDocs} labelOptions={['Employer Letter', 'Utility Bill', 'Proof of Address', 'Other']} whiteBackground />;
+}
+
 function PaginationDemo() {
   const rows = Array.from({ length: 47 }, (_, i) => `Row ${i + 1}`);
   const paging = usePagination(rows, 10);
@@ -450,6 +458,13 @@ export const CAPABILITY_PREVIEWS: Record<string, () => ReactNode> = {
   'eligibility-gate': () => <Eligibility />,
   'selectable-card-styling': () => <Cards />,
   pagination: () => <PaginationDemo />,
+  'empty-state': () => (
+    <div className="space-y-6">
+      <EmptyState title="No Reserved Numbers" message="No numbers have been reserved for this customer." />
+      <EmptyState compact message="No orders match your search or filters." action={<span className="text-link">Clear Filters</span>} />
+    </div>
+  ),
+  'document-upload': () => <DocumentUploadDemo />,
   'side-drawer': () => <DrawerDemo />,
   toasts: () => <ToastDemo />,
   'activation-complete': () => <Complete />,

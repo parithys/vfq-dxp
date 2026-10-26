@@ -177,6 +177,14 @@ export function isPlanOfferedTo(plan: { eligibleNationalities?: string[] }, nati
   return Boolean(nationality) && only.some((n) => n.toLowerCase() === nationality!.toLowerCase());
 }
 
+/**
+ * Whether a plan is chosen on the Offers tab of Offers & Plans: it is in the Offers (specials) group, or flagged a pre-bundled offer. A plan like
+ * that comes with its extras, so the journey skips Addons & Discounts and goes on to Number Selection. Decided from the plan itself - not from a
+ * value the Plan step writes after the choice - so it holds on a resumed draft and whatever the order of events.
+ */
+export const isOffersTabPlan = (p: { popular?: boolean; offer?: boolean; commitmentMonths?: number; preBundledOffer?: boolean }): boolean =>
+  Boolean(p.preBundledOffer) || planGroupOf(p) === 'specials';
+
 export function planGroupOf(p: { popular?: boolean; offer?: boolean; commitmentMonths?: number }): PlanGroupKey {
   if (p.popular || p.offer) return 'specials';
   if (p.commitmentMonths) return 'for-you';

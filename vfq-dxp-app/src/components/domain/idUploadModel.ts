@@ -2,18 +2,13 @@
  * Uploading the identity document as an alternative to scanning it: the files a customer's ID can arrive as, and how one is read.
  * One definition for every ID type, so the rules are the same wherever Customer Verification is used.
  */
-export const ID_UPLOAD_ACCEPT = '.pdf,.jpg,.jpeg,.png';
-export const ID_UPLOAD_MAX_BYTES = 5 * 1024 * 1024;
+import { UPLOAD_RULES, uploadFileProblem } from './documentUploadRules';
 
-const EXTENSIONS = /\.(pdf|jpe?g|png)$/i;
+export const ID_UPLOAD_ACCEPT = UPLOAD_RULES.identity.accept;
+export const ID_UPLOAD_MAX_BYTES = UPLOAD_RULES.identity.maxBytes;
 
-/** What is wrong with a file as an ID upload, or null when it can be used. */
-export function idFileProblem(file: { name: string; size: number }): string | null {
-  if (!EXTENSIONS.test(file.name)) return `${file.name}: only PDF, JPG or PNG files can be uploaded.`;
-  if (file.size > ID_UPLOAD_MAX_BYTES) return `${file.name}: the file is larger than 5 MB.`;
-  if (file.size === 0) return `${file.name}: the file is empty.`;
-  return null;
-}
+/** What is wrong with a file as an ID upload, or null when it can be used (the rules are the Document Upload capability's). */
+export const idFileProblem = (file: { name: string; size: number }): string | null => uploadFileProblem(file, UPLOAD_RULES.identity);
 
 /** A data URL the preview can draw: an image, or a PDF (shown by the browser's PDF viewer). */
 export function readIdFile(file: File): Promise<string | undefined> {

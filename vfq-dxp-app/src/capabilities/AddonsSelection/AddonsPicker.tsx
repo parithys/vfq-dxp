@@ -1,4 +1,5 @@
 import { Button } from '../../components/primitives/Button';
+import { EmptyState } from '../../components/primitives/EmptyState';
 import { useEffect, useState } from 'react';
 import { Icon } from '../../components/primitives/Icon';
 import { TabStrip } from '../../components/primitives/TabStrip';
@@ -6,7 +7,7 @@ import { SegmentedTabs } from '../../components/primitives/SegmentedTabs';
 import { CARD_IDLE, CARD_SELECTED, SelectedCardTexture } from '../../components/primitives/offerCardParts';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { isAddonEligible, type AddonEligibilityContext, type AddonEligibilityRule } from '../../engines/addonEligibility';
-import { ADDON_CATEGORIES, ADDON_PRICING_FILTERS, DEFAULT_ADDON_PRICING, addonsFor, selectedPerCategory, type AddonCategory, type AddonPricing } from '../../engines/addonCategories';
+import { ADDON_CATEGORIES, ADDON_PRICING_FILTERS, DEFAULT_ADDON_PRICING, addonsFor, selectedPerCategory, type AddonCategory, type AddonPricing, type AddonPricingModel, addonPriceDisplay } from '../../engines/addonCategories';
 
 interface AddonProduct {
   productId: string;
@@ -19,6 +20,9 @@ interface AddonProduct {
   /** The add-on's category on the Add-ons page (see addonCategories.ts). */
   addonCategory?: string;
   pricing?: 'free' | 'paid';
+  /** How it is charged (see addonCategories.ts); decides Free / Paid and the price wording. */
+  pricingModel?: AddonPricingModel;
+  introPriceQAR?: number;
   /** The catalogue's own wording for a price that is not a plain QAR amount (TBC, Plan-based, QR 10 after promotional period ...). */
   priceLabel?: string;
   /** The catalogue's status (Confirmed, Demo Only / TBC ...). Kept with the data; not displayed. */
@@ -54,6 +58,12 @@ interface AddonsPickerProps {
    * them, the Free / Paid filter, which applies to the category selected. Rows layout, catalogue add-ons.
    */
   categorized?: boolean;
+  /**
+   * The Paid / Free filter, when the page owns it (it sits in the page's top row, right-aligned, and is kept across the category tabs): the picker
+   * then draws no filter of its own and starts it on Paid, every time it is shown. Omitted: the picker keeps the filter itself, under the categories.
+   */
+  pricing?: AddonPricing;
+  onPricingChange?: (pricing: AddonPricing) => void;
 }
 
 // "Plan & Add-ons" (reference flow step 5) - optional, non-gating multi-select
@@ -63,9 +73,16 @@ const CHEVRON = 'M9 18l6-6-6-6';
 
 const PHONE_ICON = 'M7 2h10a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z M11 18h2';
 
-export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityContext, emptyMessage, layout = 'cards', source = 'catalogue', categorized = false }: AddonsPickerProps) {
+export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityContext, emptyMessage, layout = 'cards', source = 'catalogue', categorized = false, pricing: pricingProp, onPricingChange }: AddonsPickerProps) {
   const [category, setCategory] = useState<AddonCategory>(ADDON_CATEGORIES[0]);
-  const [pricing, setPricing] = useState<AddonPricing>(DEFAULT_ADDON_PRICING);
+  const [ownPricing, setOwnPricing] = useState<AddonPricing>(DEFAULT_ADDON_PRICING);
+  const pricing = pricingProp ?? ownPricing;
+  const setPricing = onPricingChange ?? setOwnPricing;
+  // The page-owned filter opens on Paid whenever the page is loaded; switching category tabs never touches it.
+  useEffect(() => {
+    onPricingChange?.(DEFAULT_ADDON_PRICING);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [allAddons, setAllAddons] = useState<AddonProduct[]>([]);
   const [status, setStatus] = useState<'loading' | 'error' | 'ready'>('loading');
   const [attempt, setAttempt] = useState(0);
@@ -126,9 +143,7 @@ export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityCon
   }
   if (addons.length === 0) {
     return status === 'ready' && emptyMessage ? (
-      <div className="rounded-[var(--radius-card)] border border-border-soft bg-surface px-4 py-6 text-center">
-        <p className="text-fg-2 text-[length:var(--fs-body)]">{emptyMessage}</p>
-      </div>
+      <EmptyState compact message={emptyMessage} />
     ) : null;
   }
 
@@ -169,8 +184,8 @@ export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityCon
             active={category}
             onChange={setCategory}
           />
-          {/* Level 2: Free / Paid (a filter of the same list) - applies to the category selected above. */}
-          <SegmentedTabs label="Free or Paid Add-Ons" items={ADDON_PRICING_FILTERS} active={pricing} onChange={setPricing} />
+          {/* Level 2: Paid / Free (a filter of the same list) - applies to the category selected above. Drawn here only when the page does not own it. */}
+          {pricingProp === undefined && <SegmentedTabs label="Paid or Free Add-Ons" items={ADDON_PRICING_FILTERS} active={pricing} onChange={setPricing} />}
         </div>
       )}
       {/* Add-on cards share the plan cards' standard (shared idle / selected states, selected texture, tick).
@@ -206,7 +221,12 @@ export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityCon
                   {a.description && <p className="text-fg-2 text-[length:var(--fs-caption)]">{a.description}</p>}
                 </div>
                 <div className="shrink-0 text-right">
-                  {a.pricing === 'free' || (!a.pricing && a.mrcQAR === 0) ? (
+                  {addonPriceDisplay(a) ? (
+                    <>
+                      <p className="text-fg text-[length:var(--fs-h4)] font-bold">{addonPriceDisplay(a)!.primary}</p>
+                      {addonPriceDisplay(a)!.secondary && <p className="text-fg-2 text-[length:var(--fs-caption)] max-w-48 ml-auto">{addonPriceDisplay(a)!.secondary}</p>}
+                    </>
+                  ) : a.pricing === 'free' || (!a.pricing && a.mrcQAR === 0) ? (
                     <p className="text-fg text-[length:var(--fs-h4)] font-bold">Free</p>
                   ) : a.priceLabel && /QR\s*\d/.test(a.priceLabel) ? (
                     // Only wording that states a QAR amount ("QR 50 per additional SIM") is shown; open prices (TBC, Plan-based, Plan-dependent) are not displayed.
@@ -257,9 +277,7 @@ export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityCon
         })}
       </div>
       {useTabs && shown.length === 0 && (
-        <p className="rounded-[var(--radius-card)] border border-border-soft bg-surface px-4 py-6 text-center text-fg-2 text-[length:var(--fs-body)]">
-          {`No ${pricing === 'free' ? 'free' : 'paid'} add-ons in ${category}.`}
-        </p>
+        <EmptyState compact message={`No ${pricing === 'free' ? 'free' : 'paid'} add-ons in ${category}.`} />
       )}
     </div>
   );

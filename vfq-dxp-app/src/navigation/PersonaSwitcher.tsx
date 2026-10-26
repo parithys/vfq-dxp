@@ -1,4 +1,5 @@
 import { sortByBusinessUnit } from './personaOrder';
+import { EmptyState } from '../components/primitives/EmptyState';
 import { purgeProtectedDataForRole } from '../engines/roleSwitchPurge';
 import { formatTime } from '../lib/format';
 import { useEffect, useRef, useState } from 'react';
@@ -85,7 +86,7 @@ export function PersonaSwitcher() {
   const navigate = useNavigate();
   const unreadCount = history.filter((h) => !h.read).length + inbox.unseen;
 
-  const [open, setOpen] = useState<'notifications' | 'help' | 'profile' | null>(null);
+  const [open, setOpen] = useState<'notifications' | 'profile' | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -96,7 +97,7 @@ export function PersonaSwitcher() {
     return () => document.removeEventListener('mousedown', onClickOutside);
   }, []);
 
-  const toggle = (panel: 'notifications' | 'help' | 'profile') => {
+  const toggle = (panel: 'notifications' | 'profile') => {
     setOpen((prev) => (prev === panel ? null : panel));
     if (panel === 'notifications') {
       markAllRead();
@@ -274,7 +275,7 @@ export function PersonaSwitcher() {
                   ))}
                 </div>
               )}
-              {history.length === 0 && inbox.items.length === 0 && <p className="px-4 py-6 text-fg-2 text-[length:var(--fs-body)]">No notifications yet.</p>}
+              {history.length === 0 && inbox.items.length === 0 && <EmptyState compact message="No notifications yet." />}
               {history.map((h) => (
                 <div key={h.id} className="px-4 py-3 border-b border-border-soft last:border-0">
                   {/* The reference is rendered here too, not just in the
@@ -297,28 +298,6 @@ export function PersonaSwitcher() {
                   <p className="text-[length:var(--fs-caption)] text-muted mt-0.5">{formatTime(h.at)}</p>
                 </div>
               ))}
-            </div>
-          )}
-        </div>
-
-        <div className="relative">
-          <Tooltip content="Help & support" placement="bottom">
-            <button type="button"
-              onClick={() => toggle('help')}
-              aria-label="Help & support"
-              aria-haspopup="true"
-              aria-expanded={open === 'help'}
-              className="w-10 h-10 rounded-[var(--radius-pill)] border border-border-soft flex items-center justify-center text-fg-2 hover:bg-surface"
-            >
-              <Icon path={ICONS.help} className="w-4.5 h-4.5" />
-            </button>
-          </Tooltip>
-          {open === 'help' && (
-            <div className="absolute right-0 mt-2 w-72 card shadow-raised z-[var(--z-popover)] p-4">
-              <p className="text-fg font-medium mb-1">Help &amp; support</p>
-              <p className="text-fg-2 text-[length:var(--fs-body)]">
-                Contact the IT Service Desk at <span className="text-link">servicedesk@vodafone.qa</span> or extension 4100 for platform issues.
-              </p>
             </div>
           )}
         </div>
@@ -355,6 +334,15 @@ export function PersonaSwitcher() {
               >
                 Edit profile
               </Link>
+              <div className="px-4 py-3 border-t border-border-soft">
+                <p className="flex items-center gap-2 text-fg-2 text-[length:var(--fs-body)]">
+                  <Icon path={ICONS.help} className="w-4 h-4" />
+                  Help &amp; Support
+                </p>
+                <p className="text-muted text-[length:var(--fs-caption)] mt-1">
+                  Contact the IT Service Desk at <span className="text-link">servicedesk@vodafone.qa</span> or extension 4100 for platform issues.
+                </p>
+              </div>
               <div className="px-4 py-3 border-t border-border-soft">
                 <label className="text-[length:var(--fs-caption)] text-fg mb-1 block">Switch Role</label>
                 <Select

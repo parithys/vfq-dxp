@@ -4,7 +4,6 @@ import { formatDate, formatQarLoose, formatTime } from '../../../lib/format';
 import { useEffect, useId, useRef, useState } from 'react';
 import { containerId } from '../queryFlow/containerIndex';
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
-import { TabStrip } from '../../../components/primitives/TabStrip';
 import { SearchField } from '../../../components/primitives/SearchField';
 import { Badge } from '../../../components/primitives/Badge';
 import { Button } from '../../../components/primitives/Button';
@@ -336,11 +335,6 @@ export function GridTable<T>({
       pageSize={Infinity}
     />
   );
-}
-
-/** Underline sub-tabs (All Orders (12) / In Progress (3) ...). */
-export function UnderlineTabs({ items, active, onChange }: { items: { key: string; label: string }[]; active: string; onChange: (key: string) => void }) {
-  return <TabStrip items={items} active={active} onChange={onChange} />;
 }
 
 /** Customer 360's search box: the shared SearchField with the kit's layout (grows to fill the filter row). */

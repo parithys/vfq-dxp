@@ -1,6 +1,7 @@
 import { type CustomerBenefit } from '../../engines/customerBenefitEngine';
 import { BillLimitEditor } from '../domain/BillLimitEditor';
 import { PlanSearchBox } from './PlanSearchBox';
+import type { AddonPricing } from '../../engines/addonCategories';
 import { PlanTabStrip } from './PlanTabStrip';
 import { PlanGroupPanel } from './PlanGroupPanel';
 import { PostpaidAddonsPanel } from './PostpaidAddonsPanel';
@@ -15,6 +16,8 @@ interface PostpaidPlanAddonsStepProps {
   mode?: 'all' | 'plan' | 'extras';
   selectedProductId: string | undefined;
   onSelectProduct: (productId: string) => void;
+  /** Told which tab a plan was chosen from (Offers, Plans, Special Offers ...), so the journey can route by it. */
+  onPlanTabChange?: (tab: string) => void;
   /** Clicking the already-selected plan card unselects it. Omit to make a chosen plan sticky. */
   onDeselectProduct?: () => void;
   discountId: string | undefined;
@@ -27,6 +30,9 @@ interface PostpaidPlanAddonsStepProps {
   onBillLimitChange: (value: number, pass: boolean) => void;
   /** The credit limit the bill limit may not exceed. */
   billLimitMax?: number;
+  /** The Paid / Free add-on filter, owned by the step's header (see postpaidExtrasStep). */
+  addonPricing?: AddonPricing;
+  onAddonPricingChange?: (pricing: AddonPricing) => void;
   /** Agent 360... no - Agent 360 doesn't apply here; this is BR-076's
    * eligibility-derived default (EligibilityGateStep), shown read-only so
    * the agent sees what limit this activation was pre-qualified against. */
@@ -57,6 +63,7 @@ export function PostpaidPlanAddonsStep({
   mode = 'all',
   selectedProductId,
   onSelectProduct,
+  onPlanTabChange,
   onDeselectProduct,
   discountId,
   onSelectDiscount,
@@ -66,6 +73,8 @@ export function PostpaidPlanAddonsStep({
   billLimit,
   onBillLimitChange,
   billLimitMax,
+  addonPricing,
+  onAddonPricingChange,
   customerBenefit,
   specialDiscountType,
   customerBenefits,
@@ -111,6 +120,11 @@ export function PostpaidPlanAddonsStep({
     hiddenProductId,
   });
 
+  // Choosing a plan also records the tab it was chosen from.
+  const selectPlan = (productId: string) => {
+    onSelectProduct(productId);
+    onPlanTabChange?.(activeTab);
+  };
   return (
     <div className="space-y-6">
       {/* The HRN advance ("Please collect QAR ... from the customer") is shown once, on Customer Verification, and not repeated here. */}
@@ -151,11 +165,11 @@ export function PostpaidPlanAddonsStep({
                 setPlanSearch={setPlanSearch}
                 suggestions={suggestions}
                 selectedProductId={selectedProductId}
-                onSelectProduct={onSelectProduct}
+                onSelectProduct={selectPlan}
                 scopeLabel={planGroupTabs.find((g) => g.key === activeTab)?.label}
                 onPickResult={(plan) => {
                   // A result is always on the tab being shown: select it, clear the filter and bring its card into view.
-                  onSelectProduct(plan.productId);
+                  selectPlan(plan.productId);
                   setPlanSearch('');
                   setSearchOpen(false);
                   window.setTimeout(() => {
@@ -181,7 +195,7 @@ export function PostpaidPlanAddonsStep({
                 activeTab={activeTab}
                 selectedProductId={selectedProductId}
                 billLimit={billLimit}
-                onSelectProduct={onSelectProduct}
+                onSelectProduct={selectPlan}
                 onDeselectProduct={onDeselectProduct}
                 setDetailPlan={setDetailPlan}
               />
@@ -211,6 +225,8 @@ export function PostpaidPlanAddonsStep({
                       billLimit={billLimit}
                       onBillLimitChange={onBillLimitChange}
                       billLimitMax={billLimitMax}
+                      addonPricing={addonPricing}
+                      onAddonPricingChange={onAddonPricingChange}
                       hideBillLimit
                     />
                   </div>
@@ -239,7 +255,7 @@ export function PostpaidPlanAddonsStep({
               >
                 <div className="space-y-3">
                   <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">
-                    Eligible Discounts <span className="text-muted font-normal text-[length:var(--fs-caption)]">(optional)</span>
+                    Eligible Discounts
                   </h4>
                   <PostpaidDiscountsPanel
                     selectedProductId={selectedProductId}
@@ -272,7 +288,7 @@ export function PostpaidPlanAddonsStep({
           particular is on every seeded plan and was displayed nowhere - the
           cards show data/voice/speed only, so the contract term the customer is
           signing up to was the one figure an agent could not see. */}
-      <PlanDetailsDrawer detailPlan={detailPlan} onClose={() => setDetailPlan(null)} selectedProductId={selectedProductId} onSelectProduct={onSelectProduct} />
+      <PlanDetailsDrawer detailPlan={detailPlan} onClose={() => setDetailPlan(null)} selectedProductId={selectedProductId} onSelectProduct={selectPlan} />
     </div>
   );
 }

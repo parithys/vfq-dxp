@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { EmptyState } from '../../components/primitives/EmptyState';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getBusinessAccount, type BusinessAccount, type LinkedUser } from '../../engines/businessAccountEngine';
 import { BILLING_LABEL, SEGMENT_LABEL, type LinkedUserSegment } from '../../engines/businessSegment';
@@ -76,10 +77,7 @@ export function Business360Page() {
   if (data === null) return <div className="p-8 text-fg-2">Loading business account…</div>;
   if (data === undefined) {
     return (
-      <div className="p-8">
-        <p className="text-fg font-medium">No business account found for “{accountId}”.</p>
-        <p className="text-fg-2 text-[length:var(--fs-caption)] mt-1">Try Customer Search instead.</p>
-      </div>
+      <EmptyState title="Business Account Not Found" message={<>No business account found for “{accountId}”. Try Customer Search instead.</>} />
     );
   }
 

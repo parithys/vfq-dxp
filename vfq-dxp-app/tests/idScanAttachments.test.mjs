@@ -29,12 +29,13 @@ test('id scan attachments: no scan (manual entry) means no attachment', () => {
 
 test('uploading the ID in place of scanning: files are checked once for every ID type, and the order attachments say "Uploaded"', async () => {
   const up = await load('/src/components/domain/idUploadModel.ts');
-  assert.equal(up.idFileProblem({ name: 'front.png', size: 1000 }), null);
+  assert.equal(up.idFileProblem({ name: 'front.jpeg', size: 1000 }), null);
+  assert.match(up.idFileProblem({ name: 'front.png', size: 1000 }), /only PDF or JPG/);
   assert.equal(up.idFileProblem({ name: 'back.JPG', size: 1000 }), null);
   assert.equal(up.idFileProblem({ name: 'scan.pdf', size: 1000 }), null);
-  assert.match(up.idFileProblem({ name: 'id.gif', size: 10 }), /only PDF, JPG or PNG/);
-  assert.match(up.idFileProblem({ name: 'big.pdf', size: 6 * 1024 * 1024 }), /larger than 5 MB/);
-  assert.match(up.idFileProblem({ name: 'empty.png', size: 0 }), /empty/);
+  assert.match(up.idFileProblem({ name: 'id.gif', size: 10 }), /only PDF or JPG/);
+  assert.match(up.idFileProblem({ name: 'big.pdf', size: 3 * 1024 * 1024 }), /limit is 2 MB/);
+  assert.match(up.idFileProblem({ name: 'empty.jpg', size: 0 }), /empty/);
   const fn = (await load('/src/modules/new-connection/idScanAttachments.ts')).idScanAttachments;
   for (const type of ['QID', 'Passport', 'GCC ID', 'Diplomatic ID']) {
     assert.ok(fn(type, { frontScanned: true, backScanned: true, source: 'upload' }).every((a) => a.detail === 'Uploaded during Contact'), type);

@@ -582,7 +582,8 @@
     "addonCategory": "Local Data",
     "addonStatus": "Confirmed",
     "pricing": "paid",
-    "_note": "Add-ons catalogue from the business workbook Addons.xlsx (2026-10-25), by category (Local Data, Local Calls, International Calls, Roaming, Combo, Others). mrcQAR is the price in QAR where the workbook gives a fixed QR amount, otherwise 0 with priceLabel carrying the workbook's own wording (TBC, Plan-based, Plan-dependent, QR 10 after promotional period ...); pricing is 'free' only where the workbook says included with an eligible plan. addonStatus is the workbook's, unchanged; the workbook's validity is not carried (a postpaid add-on is monthly, so validity does not apply). A prepaid-only add-on (Local Minutes Booster) is not in this postpaid catalogue. Plan restrictions the workbook words in text (Essential / Extra / Unlimited plans) are not applied: the products carry no plan-family field."
+    "_note": "Add-ons catalogue from the business workbook Addons.xlsx (2026-10-25), by category (Local Data, Local Calls, International Calls, Roaming, Combo, Others). mrcQAR is the price in QAR where the workbook gives a fixed QR amount, otherwise 0 with priceLabel carrying the workbook's own wording (TBC, Plan-based, Plan-dependent, QR 10 after promotional period ...); pricing is 'free' only where the workbook says included with an eligible plan. addonStatus is the workbook's, unchanged; the workbook's validity is not carried (a postpaid add-on is monthly, so validity does not apply). A prepaid-only add-on (Local Minutes Booster) is not in this postpaid catalogue. Plan restrictions the workbook words in text (Essential / Extra / Unlimited plans) are not applied: the products carry no plan-family field.",
+    "pricingModel": "standard"
   },
   {
     "productId": "PROD-161",
@@ -592,7 +593,8 @@
     "description": "25 GB full-speed data",
     "addonCategory": "Local Data",
     "addonStatus": "Confirmed",
-    "pricing": "paid"
+    "pricing": "paid",
+    "pricingModel": "standard"
   },
   {
     "productId": "PROD-162",
@@ -612,7 +614,8 @@
         "PROD-133"
       ]
     },
-    "_eligibilityNote": "Limited to the plans of the family the workbook names (2026-10-25): the plan names carry 'Essential' / 'Extra' / 'Unlimited', and the products have no plan-family field of their own."
+    "_eligibilityNote": "Limited to the plans of the family the workbook names (2026-10-25): the plan names carry 'Essential' / 'Extra' / 'Unlimited', and the products have no plan-family field of their own.",
+    "pricingModel": "standard"
   },
   {
     "productId": "PROD-163",
@@ -635,7 +638,8 @@
         "PROD-139"
       ]
     },
-    "_eligibilityNote": "Limited to the plans of the family the workbook names (2026-10-25): the plan names carry 'Essential' / 'Extra' / 'Unlimited', and the products have no plan-family field of their own."
+    "_eligibilityNote": "Limited to the plans of the family the workbook names (2026-10-25): the plan names carry 'Essential' / 'Extra' / 'Unlimited', and the products have no plan-family field of their own.",
+    "pricingModel": "standard"
   },
   {
     "productId": "PROD-164",
@@ -655,7 +659,8 @@
         "PROD-113"
       ]
     },
-    "_eligibilityNote": "Limited to the plans of the family the workbook names (2026-10-25): the plan names carry 'Essential' / 'Extra' / 'Unlimited', and the products have no plan-family field of their own."
+    "_eligibilityNote": "Limited to the plans of the family the workbook names (2026-10-25): the plan names carry 'Essential' / 'Extra' / 'Unlimited', and the products have no plan-family field of their own.",
+    "pricingModel": "standard"
   },
   {
     "productId": "PROD-165",
@@ -665,7 +670,8 @@
     "description": "5 GB",
     "addonCategory": "Local Data",
     "addonStatus": "Confirmed",
-    "pricing": "paid"
+    "pricing": "paid",
+    "pricingModel": "standard"
   },
   {
     "productId": "PROD-166",
@@ -675,7 +681,8 @@
     "description": "100 GB",
     "addonCategory": "Local Data",
     "addonStatus": "Confirmed",
-    "pricing": "paid"
+    "pricing": "paid",
+    "pricingModel": "standard"
   },
   {
     "productId": "PROD-167",
@@ -685,7 +692,8 @@
     "description": "150 local minutes",
     "addonCategory": "Local Calls",
     "addonStatus": "Confirmed, Postpaid",
-    "pricing": "paid"
+    "pricing": "paid",
+    "pricingModel": "standard"
   },
   {
     "productId": "PROD-168",
@@ -695,7 +703,8 @@
     "description": "200 local minutes",
     "addonCategory": "Local Calls",
     "addonStatus": "Confirmed",
-    "pricing": "paid"
+    "pricing": "paid",
+    "pricingModel": "standard"
   },
   {
     "productId": "PROD-169",
@@ -705,7 +714,8 @@
     "description": "300 local minutes",
     "addonCategory": "Local Calls",
     "addonStatus": "Confirmed",
-    "pricing": "paid"
+    "pricing": "paid",
+    "pricingModel": "standard"
   },
   {
     "productId": "PROD-170",
@@ -1001,5 +1011,121 @@
     "addonStatus": "Confirmed",
     "pricing": "free",
     "priceLabel": "Included with an eligible plan"
+  },
+  {
+    "productId": "PROD-210",
+    "name": "Welcome Data",
+    "type": "Add-on",
+    "mrcQAR": 0,
+    "description": "1 GB local data, for every customer",
+    "addonCategory": "Local Data",
+    "addonStatus": "Sample",
+    "pricing": "free",
+    "pricingModel": "free-all",
+    "_note": "SAMPLE catalogue entry (2026-10-26): one example of each pricing model so the Local Data and Local Calls tabs show every case. Replace with the real add-on, its plans and its prices."
+  },
+  {
+    "productId": "PROD-211",
+    "name": "Plan Data Bonus",
+    "type": "Add-on",
+    "mrcQAR": 0,
+    "description": "5 GB local data, included with this plan",
+    "addonCategory": "Local Data",
+    "addonStatus": "Sample",
+    "pricing": "free",
+    "pricingModel": "free-with-plan",
+    "eligibility": {
+      "plans": [
+        "PROD-106",
+        "PROD-110",
+        "PROD-111",
+        "PROD-112",
+        "PROD-113"
+      ]
+    },
+    "_note": "SAMPLE catalogue entry (2026-10-26): one example of each pricing model so the Local Data and Local Calls tabs show every case. Replace with the real add-on, its plans and its prices."
+  },
+  {
+    "productId": "PROD-212",
+    "name": "Data Trial",
+    "type": "Add-on",
+    "mrcQAR": 25,
+    "description": "10 GB local data",
+    "addonCategory": "Local Data",
+    "addonStatus": "Sample",
+    "pricing": "free",
+    "pricingModel": "free-first-3",
+    "_note": "SAMPLE catalogue entry (2026-10-26): one example of each pricing model so the Local Data and Local Calls tabs show every case. Replace with the real add-on, its plans and its prices."
+  },
+  {
+    "productId": "PROD-213",
+    "name": "Data Booster Intro",
+    "type": "Add-on",
+    "mrcQAR": 20,
+    "description": "5 GB full-speed data",
+    "addonCategory": "Local Data",
+    "addonStatus": "Sample",
+    "pricing": "paid",
+    "pricingModel": "intro-discount",
+    "introPriceQAR": 10,
+    "_note": "SAMPLE catalogue entry (2026-10-26): one example of each pricing model so the Local Data and Local Calls tabs show every case. Replace with the real add-on, its plans and its prices."
+  },
+  {
+    "productId": "PROD-214",
+    "name": "Welcome Minutes",
+    "type": "Add-on",
+    "mrcQAR": 0,
+    "description": "50 local minutes, for every customer",
+    "addonCategory": "Local Calls",
+    "addonStatus": "Sample",
+    "pricing": "free",
+    "pricingModel": "free-all",
+    "_note": "SAMPLE catalogue entry (2026-10-26): one example of each pricing model so the Local Data and Local Calls tabs show every case. Replace with the real add-on, its plans and its prices."
+  },
+  {
+    "productId": "PROD-215",
+    "name": "Plan Minutes Bonus",
+    "type": "Add-on",
+    "mrcQAR": 0,
+    "description": "300 local minutes, included with this plan",
+    "addonCategory": "Local Calls",
+    "addonStatus": "Sample",
+    "pricing": "free",
+    "pricingModel": "free-with-plan",
+    "eligibility": {
+      "plans": [
+        "PROD-106",
+        "PROD-110",
+        "PROD-111",
+        "PROD-112",
+        "PROD-113"
+      ]
+    },
+    "_note": "SAMPLE catalogue entry (2026-10-26): one example of each pricing model so the Local Data and Local Calls tabs show every case. Replace with the real add-on, its plans and its prices."
+  },
+  {
+    "productId": "PROD-216",
+    "name": "Local Calls Trial",
+    "type": "Add-on",
+    "mrcQAR": 15,
+    "description": "500 local minutes",
+    "addonCategory": "Local Calls",
+    "addonStatus": "Sample",
+    "pricing": "free",
+    "pricingModel": "free-first-3",
+    "_note": "SAMPLE catalogue entry (2026-10-26): one example of each pricing model so the Local Data and Local Calls tabs show every case. Replace with the real add-on, its plans and its prices."
+  },
+  {
+    "productId": "PROD-217",
+    "name": "Local Booster Intro",
+    "type": "Add-on",
+    "mrcQAR": 20,
+    "description": "150 local minutes",
+    "addonCategory": "Local Calls",
+    "addonStatus": "Sample",
+    "pricing": "paid",
+    "pricingModel": "intro-discount",
+    "introPriceQAR": 8,
+    "_note": "SAMPLE catalogue entry (2026-10-26): one example of each pricing model so the Local Data and Local Calls tabs show every case. Replace with the real add-on, its plans and its prices."
   }
 ]

@@ -17,6 +17,7 @@ import {
 import type { SpecialDiscountsValue } from '../../capabilities';
 import { starEntitlementQar } from '../../engines/postpaidPricing';
 import type { Product } from './newConnectionModel';
+import { isOffersTabPlan } from '../../components/patterns/postpaidPlanModel';
 import type { DeviceType } from '../../lib/deviceType';
 
 /** What the postpaid steps need from the journey: the plan catalogue and the customer's benefits. */
@@ -37,8 +38,13 @@ export const hasValidatedSpecialDiscount = (values: Record<string, unknown>): bo
   return Boolean(t && t.type && t.type !== 'none' && !t.rejected && isSpecialDiscountsValid(t));
 };
 
-/** The Addons & Discounts step is skipped for an accepted offer - unless a validated Special Discount may still apply to the offer's plan, which the agent then sees. */
-const extrasSkip = (values: Record<string, unknown>) => offerAccepted(values) && !hasValidatedSpecialDiscount(values);
+/** The Addons & Discounts step is skipped for an accepted offer, and for a plan chosen on the Offers or Special Offers tab of Offers & Plans: the agent goes on to Number Selection. */
+const extrasSkip = (products: Product[]) => (values: Record<string, unknown>) =>
+  offerAccepted(values) ||
+  values.selectionSource === 'OFFER' ||
+  // A plan chosen under Special Offers goes straight to Number Selection, like an Offers plan (its special discount is applied when the plan is chosen).
+  (Boolean(values.productId) && values.planTab === 'special') ||
+  Boolean(products.find((p) => p.productId === values.productId && isOffersTabPlan(p)));
 
 /**
  * The New Postpaid steps, after Customer Verification and Product Selection: Address, Billing Profile (resolved for the
@@ -50,11 +56,12 @@ export function postpaidSteps({ products, customerBenefits, device }: PostpaidSt
     serviceAddressStep({ mode: 'structured', autoPass: true }),
     billingAccountStep(),
     postpaidPlanStep(planContext),
-    postpaidExtrasStep({ ...planContext, skipWhen: extrasSkip }),
+    postpaidExtrasStep({ ...planContext, skipWhen: extrasSkip(products) }),
     numberSelectionStep({
       priceField: 'numberPriceQAR',
       // Refresh sits at the right of the title row and reloads the number inventory on every tab.
       refresh: true,
+      waiveOff: true,
       plan: (values) => {
         const plan = products.find((p) => p.productId === values.productId);
         return plan ? { mrcQar: plan.mrcQAR, starEntitlementQar: starEntitlementQar(plan) } : undefined;

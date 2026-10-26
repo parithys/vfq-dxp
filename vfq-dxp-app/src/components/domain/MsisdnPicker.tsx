@@ -1,4 +1,5 @@
 import { formatDateTime, formatQar } from '../../lib/format';
+import { EmptyState } from '../primitives/EmptyState';
 import { TabStrip } from '../primitives/TabStrip';
 import { Pagination, pageWindow } from '../primitives/Pagination';
 import { useEffect, useRef, useState } from 'react';
@@ -9,7 +10,6 @@ import { Icon } from '../primitives/Icon';
 import { CARD_IDLE, CARD_SELECTED, SelectedCardTexture } from '../primitives/offerCardParts';
 import { Select } from '../primitives/Select';
 import * as mockDataEngine from '../../engines/mockDataEngine';
-import { useAuthStore } from '../../stores/authStore';
 import { usePersonaStore } from '../../stores/personaStore';
 import { Checkbox } from '../primitives/Checkbox';
 import { SearchField } from '../primitives/SearchField';
@@ -117,11 +117,6 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
   // having touched Star's first.
   const [freeSort, setFreeSort] = useState<'number-asc' | 'number-desc'>('number-asc');
   const [page, setPage] = useState(0);
-  // numbers.json records a reservation against the agent's DISPLAY NAME
-  // ("Fatima Al-Kuwari"), which is the identity resolved from
-  // users-agents.json at sign-in - NOT persona.name, which is the role label
-  // ("Retail Sales") and matches no reservedBy value.
-  const agentName = useAuthStore((s) => s.profile?.name) ?? '';
   // Whether the manual-entry FORM is open. Only consulted once a number is
   // already selected - see the render below - so this starts false with no
   // effect on the unselected case, where the form is always shown inline.
@@ -152,32 +147,31 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
   // later in this same session (choose below) must not yank the agent
   // back to a tab they have since navigated away from.
   const hasAutoSelectedTab = useRef(false);
-  const isHeldForCustomer = (n: { status?: string; reservedBy?: string; reservedForQid?: string }) =>
-    n.status === 'Reserved' && n.reservedBy === agentName && (!customerIdNumber || n.reservedForQid === customerIdNumber);
-  const heldReservations = numbers.filter(isHeldForCustomer).length;
+  // A reservation belongs to the CUSTOMER it was made for, not to the agent who made it: the journey lists the holds placed for the ID in front of
+  // the agent (newest first, at most MAX_RESERVATIONS_PER_AGENT per customer), whoever placed them. With no customer identified there are none.
+  const heldForCustomer = numbers
+    .filter((n) => n.status === 'Reserved' && Boolean(customerIdNumber) && n.reservedForQid === customerIdNumber)
+    .sort((a, b) => String(b.reservedAt ?? '').localeCompare(String(a.reservedAt ?? '')))
+    .slice(0, MAX_RESERVATIONS_PER_AGENT);
+  const heldReservations = heldForCustomer.length;
   useEffect(() => {
     if (hasAutoSelectedTab.current || !numbersLoaded || portalMode) return;
     hasAutoSelectedTab.current = true;
-    // Retail Sales: Reserved when the customer's reservations exist, otherwise Star -
-    // never leaving the agent to switch tabs by hand. Everyone else keeps the
-    // original rule (Reserved if held, else the Free default).
+    // Reserved when the customer has reservations, otherwise Star for Retail Sales (never leaving the agent to switch tabs by hand);
+    // everyone else keeps the Free default.
     if (heldReservations > 0) setTab('Reserved');
     else if (isRetailSales) setTab('Star');
   }, [numbersLoaded, heldReservations, isRetailSales]);
 
-  // Retail Sales sees the Reserved tab only while a reservation is held; before the
-  // numbers have loaded no tab is shown, so the strip never flashes a tab that then vanishes.
+  // The Reserved tab is always shown: first when the customer has reservations, last (with its empty state) when not. Before the numbers have
+  // loaded no tab is shown for Retail Sales, so the strip never flashes a tab that then moves.
   const visibleTabs = portalMode
     ? PORTAL_TAB_ORDER
-    : isRetailSales
-    ? numbersLoaded
-      ? TAB_ORDER.filter((t) => t !== 'Reserved' || heldReservations > 0)
-      : []
-    : TAB_ORDER;
-  // The last reservation was released while the Reserved tab was open: move to Star.
-  useEffect(() => {
-    if (!portalMode && isRetailSales && numbersLoaded && heldReservations === 0 && tab === 'Reserved') setTab('Star');
-  }, [portalMode, isRetailSales, numbersLoaded, heldReservations, tab]);
+    : isRetailSales && !numbersLoaded
+    ? []
+    : heldReservations > 0
+    ? TAB_ORDER
+    : PORTAL_TAB_ORDER;
 
   // Category (Free vs Star/premium) and status (AVAILABLE/Reserved/BLOCKED)
   // are independent axes: the tab filters on CATEGORY, the availability check
@@ -195,9 +189,8 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
   // used to list all five reservations in the dataset, including four held by
   // other agents that this one cannot use - a list where most rows were
   // unusable and nothing on screen said why.
-  const heldByAgent = numbers.filter(isHeldForCustomer);
   // The portal's Reserved tab lists what was reserved in this session, not the holds the agent already had.
-  const myReserved = portalMode ? numbers.filter((n) => reservedHere.includes(n.msisdn)) : heldByAgent;
+  const myReserved = portalMode ? numbers.filter((n) => reservedHere.includes(n.msisdn)) : heldForCustomer;
   const inTab =
     tab === 'Reserved'
       ? myReserved
@@ -403,7 +396,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
           className="flex items-center gap-2 rounded-[var(--radius-card)] border border-[var(--info-banner-border)] bg-[var(--info-banner-bg)] px-3 py-2 text-[var(--tint-blue-fg)] text-[length:var(--fs-caption)]"
         >
           <Icon path="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 11v5 M12 7.5h.01" className="w-4 h-4 shrink-0" />
-          You can hold a maximum of {MAX_RESERVATIONS_PER_AGENT} reserved numbers at a time.
+          A customer can have a maximum of {MAX_RESERVATIONS_PER_AGENT} reserved numbers.
         </div>
       )}
       {/* Hidden on Reserved (2026-09-28): a customer can hold at most
@@ -700,19 +693,24 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
           );
         })}
         {filtered.length === 0 && (
-          <p className="text-muted text-[length:var(--fs-body)] col-span-full">
-            {tab === 'Reserved'
+          <EmptyState
+            className="col-span-full"
+            compact
+            title={tab === 'Reserved' ? 'No Reserved Numbers' : undefined}
+            message={
+              tab === 'Reserved'
               ? portalMode
                 ? 'No numbers reserved yet. Numbers you reserve here appear in this tab.'
-                : 'You have no reserved numbers.'
+                : 'No numbers have been reserved for this customer.'
               : activeRanges.length > 0 && tab === 'Star'
                 ? 'No Star Numbers match the selected price range and filters. Clear the filters to see all.'
                 : showingAllPatterns
                   ? 'No available numbers have an XXYY pattern.'
                   : search
                   ? `No available numbers match \u201c${search}\u201d.`
-                  : 'No available numbers in this category.'}
-          </p>
+                  : 'No available numbers in this category.'
+            }
+          />
         )}
       </div>
       {/* Paged by the Pagination capability (previous, numbered pages, next, under a "Showing a-b of N" count): every journey, the portal and the

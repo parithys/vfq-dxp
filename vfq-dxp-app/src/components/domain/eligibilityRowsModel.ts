@@ -14,7 +14,8 @@ export const ROW_TONE: Record<RowTone, string> = {
   'soft-stop': 'bg-tone-warn-soft',
   // Orange wash (distinct from the soft-stop amber): a diversion for approval, not a stop.
   'approval-routing': 'bg-tone-approval',
-  advisory: 'bg-surface',
+  // The info treatment (the same blue as the info banner and the info toast): the HRN advance is information, not an outcome.
+  advisory: 'bg-[var(--info-banner-bg)]',
 };
 
 export const ICON_TONE: Record<RowTone, string> = {
@@ -22,7 +23,7 @@ export const ICON_TONE: Record<RowTone, string> = {
   'hard-stop': 'text-danger',
   'soft-stop': 'text-[var(--warn-text)]',
   'approval-routing': 'text-[var(--warn-text)]',
-  advisory: 'text-muted',
+  advisory: 'text-[var(--tint-blue-fg)]',
 };
 
 // Circled glyphs, so the outcome is legible without relying on colour alone -

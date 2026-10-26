@@ -36,6 +36,10 @@ export interface Product {
   /** See PostpaidPlanAddonsStep's PostpaidPlan.preBundledOffer for what this
    * drives - the 'plan' step's autoAdvanceWhen below is the other half. */
   preBundledOffer?: boolean;
+  /** What puts a plan on the Offers tab of Offers & Plans (see isOffersTabPlan). */
+  popular?: boolean;
+  offer?: boolean;
+  commitmentMonths?: number;
 }
 
 export type { ConfirmedOrder } from '../../capabilities';

@@ -9,7 +9,7 @@ import type { ActualUserValue } from '../../capabilities/ActualUser';
 import { hrnAdvanceQar } from '../../engines/hrnConfiguration';
 import { usePersonaStore } from '../../stores/personaStore';
 import { monthlyCharges } from '../../engines/postpaidPricing';
-import { emailVerification, maskEmail, persistBillingAccount } from '../../capabilities';
+import { effectiveCreditLimitQar, emailVerification, maskEmail, persistBillingAccount } from '../../capabilities';
 import type { GuidedContactValue } from '../../capabilities';
 import type { BillingAccountValue } from '../../capabilities';
 import { SUPPORTING_ID_DISCOUNT_TYPES } from '../../components/patterns/postpaidPlanModel';
@@ -19,7 +19,7 @@ import type { SimTypeValue } from '../../components/domain/SimTypeStep';
 import type { CheckoutTotals } from '../../components/patterns/checkoutSummaryModel';
 import type { WinCashPaymentValue } from '../../components/patterns/WinCashPaymentStep';
 import type { CafType } from '../../components/patterns/cafTypes';
-import type { AdditionalDocument } from '../../components/domain/AdditionalDocumentsUpload';
+import type { AdditionalDocument } from '../../capabilities';
 import type { CustomerTypeValue } from '../../capabilities';
 import type { CrossSalesValue } from '../../capabilities';
 import { STORE_MANAGER_ROLE, COLLECTION_TEAM_ROLE } from '../../capabilities';
@@ -30,7 +30,7 @@ import type { useEntityStore } from '../../stores/entityStore';
 import type { NewConnectionFlow, ConfirmedOrder } from './newConnectionModel';
 import { idScanAttachments } from './idScanAttachments';
 import { isB2B2COrder } from './approvalRouting';
-import { effectiveCreditLimitQar } from '../../components/patterns/billingAccountModel';
+import { isNumberWaiver, numberWaiverLabel } from '../../engines/numberWaiver';
 import { approvalMessages, decisionRecord, needsCreditControl } from '../../engines/connectionEligibility';
 
 type EntityStore = ReturnType<typeof useEntityStore.getState>;
@@ -99,11 +99,16 @@ export async function submitNewConnectionOrder(
       const lineDecision = eligibility?.connectionDecision;
       const creditControl = lineDecision ? needsCreditControl(lineDecision) : lineLimitApproval;
       const idTypeRouting = eligibility?.checks.some((c) => c.id === 'id-type-routing' && c.outcome === 'approval-routing') ?? false;
+      const waiver = isNumberWaiver(values.numberWaiver) ? values.numberWaiver : undefined;
+      const waivedAmountQar = checkoutTotals?.numberWaivedQar ?? 0;
+      const waived = Boolean(waiver) && waivedAmountQar > 0;
       const pendingApproval =
         manualIdEntry ||
         isB2B2COrder(contact, customerType) ||
         Boolean(eligibility?.requiresHrnAdvance) ||
         Boolean(eligibility?.checks.some((c) => c.outcome === 'approval-routing')) ||
+        // A Waive Off on the Star number's upfront charge is a concession: the order waits for approval.
+        waived ||
         Boolean(discount && SUPPORTING_ID_DISCOUNT_TYPES.has(discount.addonType ?? ''));
 
       // Attachments (2026-09-28) - built from data this wizard already
@@ -168,6 +173,7 @@ export async function submitNewConnectionOrder(
                 eligibility?.checks.some((c) => c.id === 'id-validity' && c.outcome === 'approval-routing') ? 'ID expiry date not on file - routed for approval' : '',
                 eligibility?.requiresHrnAdvance ? `HRN customer - QAR ${hrnAdvanceQar({ nationality: eligibility?.nationality, personaId: usePersonaStore.getState().activePersonaId })} advance payment applies` : '',
                 isB2B2COrder(contact, customerType) ? 'B2B2C employee - Proof of Employment to be verified' : '',
+                waived && waiver ? `${numberWaiverLabel(waiver)} - QAR ${waivedAmountQar} waived off the Star number upfront charge of QAR ${checkoutTotals?.numberChargeQar ?? 0}` : '',
                 discount && SUPPORTING_ID_DISCOUNT_TYPES.has(discount.addonType ?? '') ? `${discount.addonType} - supporting document to be verified` : '',
               ].filter(Boolean).join(' | ') : undefined;
       await createRecord('orders', {
@@ -226,6 +232,8 @@ export async function submitNewConnectionOrder(
         newBillingProfileName: newBillingAccount?.profileName,
         billCardLast4: newBillingAccount?.cardLast4,
         dueTodayQAR: dueTodayQar,
+        // The Waive Off chosen on Number Selection and what it took off the Star number's upfront charge.
+        ...(waived && waiver ? { numberWaiver: waiver, numberWaivedQAR: waivedAmountQar, numberUpfrontChargeQAR: checkoutTotals?.numberChargeQar } : {}),
         monthlyRecurringQAR: monthlyRecurringQar,
         createdBy: currentAgentId(),
         sourceChannel: 'Desktop',
