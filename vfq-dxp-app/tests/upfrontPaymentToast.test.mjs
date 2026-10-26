@@ -28,10 +28,18 @@ test('only the HRN advance row is the upfront-payment row; every other outcome a
   }
 });
 
-test('the step announces the upfront payment as an info toast, hides that one row from the list, and leaves every other row listed', () => {
+test('the step lists the upfront payment row with the other checks and shows no toast for it', () => {
   const src = fs.readFileSync('src/capabilities/EligibilityGate/EligibilityGateStep.tsx', 'utf8');
-  assert.match(src, /pushToast\('info', UPFRONT_PAYMENT_TITLE/);
-  assert.match(src, /row\.tone !== 'pass' && !isUpfrontPaymentRow\(row\)/);
-  // No blanket treatment: the step does not push an info toast for rows in general.
-  assert.equal((src.match(/pushToast\('info'/g) ?? []).length, 1);
+  assert.doesNotMatch(src, /UPFRONT_PAYMENT_TITLE/, 'no upfront-payment toast');
+  assert.match(src, /row\.tone !== 'pass' && \(showRow\?\.\(row\) \?\? true\)/);
+  assert.doesNotMatch(src, /!isUpfrontPaymentRow\(row\) && \(showRow/, 'the HRN row is not filtered out of the list');
+  assert.equal((src.match(/pushToast\('info'/g) ?? []).length, 0, 'no info toast from the step');
+});
+
+test('the upfront payment row carries the info treatment (blue band, icon and text), inline with the other checks', () => {
+  const model = fs.readFileSync('src/components/domain/eligibilityRowsModel.ts', 'utf8');
+  assert.match(model, /advisory: 'bg-\[var\(--info-banner-bg\)\]'/);
+  assert.match(model, /advisory: 'text-\[var\(--tint-blue-fg\)\]'/);
+  const list = fs.readFileSync('src/components/domain/EligibilityRows.tsx', 'utf8');
+  assert.equal((list.match(/row\.tone === 'advisory'/g) ?? []).length, 2, 'title and detail take the info text colour');
 });

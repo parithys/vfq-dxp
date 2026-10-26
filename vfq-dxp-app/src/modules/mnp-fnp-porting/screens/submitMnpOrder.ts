@@ -1,4 +1,5 @@
 import { currentAgentId } from '../../../stores/authStore';
+import { storedAddressLine } from '../../../components/patterns/addressFromBilling';
 import { accountTypeForJourney } from '../../../engines/creditLimit';
 import { saveLinkedIdDocument } from '../../new-connection/saveLinkedIdDocument';
 import { contactIdentityOrderFields } from '../../new-connection/contactIdentityOrderFields';
@@ -88,9 +89,10 @@ export async function submitMnpOrder(
         contactName: contact.moiResult?.name,
         contactEmail: contact.email,
         contactPhone: contact.moiResult?.phone,
-        addressLine: [address?.zone && `Zone ${address.zone}`, address?.streetNo && `Street ${address.streetNo}`, address?.buildingNo && `Building ${address.buildingNo}`].filter(Boolean).join(', ') || undefined,
+        addressLine: storedAddressLine(address),
         creditLimitQar: eligibility?.defaultCreditLimitQar,
         nationality: eligibility?.nationality,
+        segment: eligibility?.segment,
         agentId: currentAgentId() ?? undefined,
       });
 

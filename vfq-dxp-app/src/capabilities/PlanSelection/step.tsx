@@ -1,4 +1,4 @@
-import { PLAN_SELECTION_LABEL } from '../../data/stepLabels';
+import { PLAN_SELECTION_LABEL, ADDONS_DISCOUNTS_LABEL } from '../../data/stepLabels';
 import type { WizardStep } from '../../components/patterns/wizard/guidedWizardTypes';
 import { PlanSelection } from './PlanSelection';
 import { planSummary } from './summary';
@@ -59,7 +59,7 @@ export function planSelectionStep(opts: {
 export function prepaidExtrasStep(opts: { segment?: (values: Record<string, unknown>) => string | undefined }): WizardStep {
   return {
     key: 'planExtras',
-    label: 'Add-Ons',
+    label: ADDONS_DISCOUNTS_LABEL,
     render: ({ values, setValue }) => (
       <PlanSelection
         kind="prepaid"

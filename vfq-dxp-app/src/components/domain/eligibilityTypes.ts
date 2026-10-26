@@ -50,6 +50,8 @@ export interface EligibilityResult {
   portIn?: boolean;
   /** The connection and request kind the line-count rules were judged for; a result is only reused for the same pair. */
   connectionType?: ConnectionType;
+  /** The line-count rules were not judged (Customer Verification before a product is chosen); Product Selection judges them. Such a result is never reused as the product's. */
+  lineLimitSkipped?: boolean;
   requestKind?: RequestKind;
   /**
    * The Connection Eligibility & Approval Rule Engine's decision for this customer and connection (line counts against the limits, the approvals

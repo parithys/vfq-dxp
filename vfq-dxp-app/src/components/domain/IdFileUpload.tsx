@@ -1,3 +1,4 @@
+import { UPLOAD_RULES } from './documentUploadRules';
 import { useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Button } from '../primitives/Button';
@@ -95,7 +96,7 @@ export function IdFileUpload({
         )}
       </div>
       {upload && !side && !pending && (
-        <span className="text-muted text-[length:var(--fs-caption)]">PDF, JPG or PNG, up to 5 MB each.</span>
+        <span className="text-muted text-[length:var(--fs-caption)]">{UPLOAD_RULES.identity.formatsLabel}, up to {UPLOAD_RULES.identity.maxLabel} per file</span>
       )}
       {pending && (
         <div role="group" aria-label={`What ${pending.name} shows`} className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1.5">

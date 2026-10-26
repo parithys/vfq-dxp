@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { EmptyState } from '../../components/primitives/EmptyState';
 import { useCustomerCreditBreakdown } from './useCreditLimitBreakdown';
 import { RestrictedCustomerNotice } from '../../components/patterns/RestrictedCustomerNotice';
 import { canViewCustomerSegment } from '../../engines/agentPrivilegeEngine';
@@ -142,9 +143,7 @@ export function BillingAccountPage() {
   if (profile === null) return <div className="p-8 text-fg-2" role="status">Loading billing account…</div>;
   if (profile === undefined) {
     return (
-      <div className="p-8">
-        <p className="text-fg font-medium">No billing account found for “{billingProfileId}”.</p>
-      </div>
+      <EmptyState title="Billing Account Not Found" message={<>No billing account found for “{billingProfileId}”.</>} />
     );
   }
 

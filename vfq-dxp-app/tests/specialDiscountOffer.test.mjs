@@ -33,6 +33,17 @@ test('a chosen special type keeps only itself among the special three, leaves th
   }
 });
 
+test('a Standard customer (none chosen, or the benefit rejected) is offered none of the three Special Discounts - and keeps every other discount', () => {
+  const out = model.discountsForSpecialType(all, 'none');
+  assert.ok(out.every((d) => !SPECIAL.has(d.addonType)), 'no Special Discount card without a validated benefit behind it');
+  assert.deepEqual(out, all.filter((d) => !SPECIAL.has(d.addonType)));
+  assert.ok(out.some((d) => d.addonType === 'Loyalty Discount'));
+  assert.equal(out.length + all.filter((d) => SPECIAL.has(d.addonType)).length, all.length, 'conservation');
+  // The plan step tells Standard apart from "this journey has no such choice".
+  const step = fs.readFileSync('src/capabilities/PlanSelection/postpaidStep.tsx', 'utf8');
+  assert.match(step, /\(v \? \(v\.type && v\.type !== 'none' && !v\.rejected \? v\.type : 'none'\) : undefined\)/);
+});
+
 test('nothing chosen / unknown: the list is returned as it is', () => {
   assert.equal(model.discountsForSpecialType(all, undefined), all);
 });

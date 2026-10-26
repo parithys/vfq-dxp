@@ -1,4 +1,5 @@
 import { formatQar } from '../../engines/postpaidPricing';
+import { numberWaiverLabel } from '../../engines/numberWaiver';
 import type { SimTypeValue } from '../domain/SimTypeStep';
 import type { Product, StarNumberTier } from './checkoutSummaryModel';
 import type { CheckoutSummaryDerived } from './useCheckoutSummary';
@@ -12,6 +13,8 @@ interface CafSummaryRowsArgs
     | 'numberDelta'
     | 'starEntitlementQar'
     | 'numberChargeQar'
+    | 'numberWaiver'
+    | 'numberWaivedQar'
     | 'dueTodayQar'
     | 'hrnAdvance'
     | 'firstBill'
@@ -49,6 +52,8 @@ export function buildCafSummaryRows({
   starTier,
   starEntitlementQar,
   numberChargeQar,
+  numberWaiver,
+  numberWaivedQar,
   dueTodayQar,
   hrnAdvance,
   firstBill,
@@ -103,7 +108,7 @@ export function buildCafSummaryRows({
       ? [
           {
             label: 'Star Number Lock-In',
-            value: starTier ? `${starTier.lockInDurationMonths} months` : 'Not yet banded - confirm before signature',
+            value: starTier ? `${starTier.lockInDurationMonths} months` : 'To be confirmed',
           },
           {
             label: 'Star Number Charges',
@@ -112,6 +117,9 @@ export function buildCafSummaryRows({
                 ? `QAR ${numberChargeQar} (QAR ${numberDelta} sticker price, QAR ${starEntitlementQar} entitled on this plan)`
                 : `No extra charge${starEntitlementQar !== undefined ? ` - within the QAR ${starEntitlementQar} plan entitlement` : ''}`,
           },
+          ...(numberWaiver && numberWaivedQar > 0
+            ? [{ label: numberWaiverLabel(numberWaiver), value: `QAR ${numberWaivedQar} waived off the Star Number charge` }]
+            : []),
         ]
       : []),
     {
@@ -137,11 +145,11 @@ export function buildCafSummaryRows({
       value: `QAR ${dueTodayQar}${
         [
           hrnAdvance > 0 ? `QAR ${hrnAdvance} HRN advance` : null,
-          isStarNumber && numberChargeQar > 0 ? `QAR ${numberChargeQar} Star Number charge` : null,
+          isStarNumber && numberChargeQar > 0 ? `QAR ${numberChargeQar - numberWaivedQar} Star Number charge${numberWaivedQar > 0 ? ' after waiver' : ''}` : null,
         ].filter(Boolean).length
           ? ` (includes ${[
               hrnAdvance > 0 ? `QAR ${hrnAdvance} HRN advance` : null,
-              isStarNumber && numberChargeQar > 0 ? `QAR ${numberChargeQar} Star Number charge` : null,
+              isStarNumber && numberChargeQar > 0 ? `QAR ${numberChargeQar - numberWaivedQar} Star Number charge${numberWaivedQar > 0 ? ' after waiver' : ''}` : null,
             ]
               .filter(Boolean)
               .join(' + ')})`

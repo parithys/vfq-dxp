@@ -8,6 +8,8 @@ export interface IdTypeDef {
   /** Card / option label, e.g. 'Qatar ID (QID)'. */
   label: string;
   numberLabel: string;
+  /** The number is digits only, so a touch device opens the numeric keypad for it (a passport number carries letters). */
+  numericNumber: boolean;
   placeholder: string;
   /** SVG path data for the selector card. */
   icon: string;
@@ -25,10 +27,10 @@ const GLOBE_ICON = 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M3 12h18 M12 3c2.4 2.6
 const SHIELD_ICON = 'M12 3l7 3v5.5c0 5-3 8.3-7 9.5-4-1.2-7-4.5-7-9.5V6z';
 
 export const ID_TYPES: IdTypeDef[] = [
-  { type: 'QID', label: 'Qatar ID (QID)', numberLabel: 'Qatar ID (QID) Number', placeholder: 'e.g. 28456701234', icon: CARD_ICON, scannable: true, exceptionRouted: false, prepaidCapped: false },
-  { type: 'Passport', label: 'Passport', numberLabel: 'Passport Number', placeholder: 'e.g. P0998812', icon: BOOK_ICON, scannable: true, exceptionRouted: true, prepaidCapped: true },
-  { type: 'GCC ID', label: 'GCC ID', numberLabel: 'GCC ID Number', placeholder: 'e.g. 784202312345678', icon: GLOBE_ICON, scannable: true, exceptionRouted: true, prepaidCapped: true },
-  { type: 'Diplomatic ID', label: 'Diplomatic ID', numberLabel: 'Diplomatic ID Number', placeholder: 'e.g. DIP-QA-004521', icon: SHIELD_ICON, scannable: true, exceptionRouted: false, prepaidCapped: false },
+  { type: 'QID', label: 'Qatar ID (QID)', numberLabel: 'Qatar ID (QID) Number', numericNumber: true, placeholder: 'e.g. 28456701234', icon: CARD_ICON, scannable: true, exceptionRouted: false, prepaidCapped: false },
+  { type: 'Passport', label: 'Passport', numberLabel: 'Passport Number', numericNumber: false, placeholder: 'e.g. P0998812', icon: BOOK_ICON, scannable: true, exceptionRouted: true, prepaidCapped: true },
+  { type: 'GCC ID', label: 'GCC ID', numberLabel: 'GCC ID Number', numericNumber: true, placeholder: 'e.g. 784202312345678', icon: GLOBE_ICON, scannable: true, exceptionRouted: true, prepaidCapped: true },
+  { type: 'Diplomatic ID', label: 'Diplomatic ID', numberLabel: 'Diplomatic ID Number', numericNumber: true, placeholder: 'e.g. DIP-QA-004521', icon: SHIELD_ICON, scannable: true, exceptionRouted: false, prepaidCapped: false },
 ];
 
 export const idTypeDef = (type: IdType): IdTypeDef | undefined => ID_TYPES.find((t) => t.type === type);

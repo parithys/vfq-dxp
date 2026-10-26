@@ -1,6 +1,7 @@
 import { AddonsPicker } from '../../capabilities/AddonsSelection/AddonsPicker';
 import { BillLimitEditor } from '../domain/BillLimitEditor';
 import type { PostpaidPlan } from './postpaidPlanModel';
+import type { AddonPricing } from '../../engines/addonCategories';
 
 interface PostpaidAddonsPanelProps {
   preBundled: boolean;
@@ -11,6 +12,10 @@ interface PostpaidAddonsPanelProps {
   selectedPlan: PostpaidPlan | undefined;
   billLimit: number | undefined;
   onBillLimitChange: (value: number, pass: boolean) => void;
+  billLimitMax?: number;
+  /** The Paid / Free add-on filter, owned by the page header (see AddonsPicker). */
+  addonPricing?: AddonPricing;
+  onAddonPricingChange?: (pricing: AddonPricing) => void;
   /** The bill limit is shown by the caller (full width, apart from the add-ons) instead of under the add-ons. */
   hideBillLimit?: boolean;
 }
@@ -24,6 +29,9 @@ export function PostpaidAddonsPanel({
   selectedPlan,
   billLimit,
   onBillLimitChange,
+  billLimitMax,
+  addonPricing,
+  onAddonPricingChange,
   hideBillLimit = false,
 }: PostpaidAddonsPanelProps) {
   return (preBundled ? (
@@ -41,6 +49,9 @@ export function PostpaidAddonsPanel({
             onChange={onAddonsChange}
             hideHeader
             layout="rows"
+            categorized
+            pricing={addonPricing}
+            onPricingChange={onAddonPricingChange}
             emptyMessage="No add-ons available for this plan"
             eligibilityContext={{ planId: selectedProductId, ...customerContext }}
           />
@@ -51,7 +62,7 @@ export function PostpaidAddonsPanel({
               Discounts, since there is no MRC to default from before
               then. */}
           {selectedPlan && !hideBillLimit && (
-            <BillLimitEditor product="Mobile" layout="row" value={billLimit ?? selectedPlan.mrcQAR} onChange={onBillLimitChange} />
+            <BillLimitEditor product="Mobile" layout="row" value={billLimit ?? selectedPlan.mrcQAR} onChange={onBillLimitChange} maxLimit={billLimitMax} />
           )}
         </div>
       ));

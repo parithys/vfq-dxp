@@ -442,5 +442,35 @@
     "parts": [],
     "previewable": true,
     "publicApi": []
+  },
+  {
+    "id": "document-upload",
+    "name": "Document Upload",
+    "status": "consolidated",
+    "home": "capabilities/DocumentUpload",
+    "entry": "AdditionalDocumentsUpload",
+    "stepBuilders": [],
+    "stepLabel": null,
+    "summary": "The one way to attach documents to an order: Additional Documents (choose the document type, then the file; a type is not offered twice; a document type picked without its file blocks Continue), the signed-CAF upload, and the shared rules every upload reads (accepted types, size limit, refusal wording) so a limit is changed once. Used by the CAF step; the identity-document upload reads the same rules.",
+    "parts": [
+      "components/domain/AdditionalDocumentsUpload.tsx",
+      "components/domain/CafDocumentUpload.tsx",
+      "components/domain/documentUploadRules.ts"
+    ],
+    "previewable": true,
+    "publicApi": []
+  },
+  {
+    "id": "empty-state",
+    "name": "Empty State",
+    "status": "consolidated",
+    "home": "capabilities/EmptyState",
+    "entry": "EmptyState",
+    "stepBuilders": [],
+    "stepLabel": null,
+    "summary": "The one empty state: a picture, an optional title, the scenario's own message and an optional action, centred, in a full-page or compact size. Data tables, the number picker, add-ons and discounts, billing accounts, ticket tabs, notifications and the not-found pages all show nothing through it, so what \"empty\" looks like is changed once.",
+    "parts": [],
+    "previewable": true,
+    "publicApi": []
   }
 ]

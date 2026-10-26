@@ -1,4 +1,5 @@
 import { isBusinessSegment } from '../../engines/businessSegment';
+import { EmptyState } from '../primitives/EmptyState';
 import { CARD_SELECTED, CARD_IDLE } from '../primitives/offerCardParts';
 import { useEffect, useRef, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
@@ -164,7 +165,7 @@ export function BillingAccountStep({
     <div className="space-y-6">
       <div>
         <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-1">Existing Billing Accounts</h3>
-        {profiles.length === 0 && <p className="text-muted text-[length:var(--fs-body)]">No billing accounts on file for this customer yet.</p>}
+        {profiles.length === 0 && <EmptyState compact message="No billing accounts on file for this customer yet." />}
         {/* The customer's accounts and "Create New Billing Account" sit in one row; the new-account form opens below it. */}
         <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${profiles.length === 0 ? 'mt-3' : ''}`}>
           {profiles.map((p, i) => {

@@ -3,7 +3,8 @@ export interface SummaryTable {
   title?: string;
   /** Bold row labels (the summary table) vs plain (Due today / Bill Explainer). */
   boldLabels?: boolean;
-  rows: { label?: string; value: string; detail?: string; boldLabel?: boolean; boldValue?: boolean }[];
+  /** `agentOnly`: an operational figure (credit limit, bill limit) the customer's pop-up does not show. */
+  rows: { label?: string; value: string; detail?: string; boldLabel?: boolean; boldValue?: boolean; agentOnly?: boolean }[];
 }
 
 /** The bordered two-column tables shared by Checkout and the CAF read-back. */
@@ -29,7 +30,7 @@ export function SummaryTables({ tables }: { tables: SummaryTable[] }) {
           )}
           <tbody>
             {t.rows.map((row, i) => (
-              <tr key={i}>
+              <tr key={i} className={row.agentOnly ? 'agent-only' : undefined}>
                 <th scope="row" className={`${cell} bg-surface w-2/5 text-left ${row.boldLabel ?? t.boldLabels ? 'font-semibold' : 'font-normal'}`}>
                   {row.label ?? ''}
                 </th>

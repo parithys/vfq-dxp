@@ -47,5 +47,8 @@ export function useJourneySession<TOrder = unknown>({
     draftCustomerId,
     draftStep,
   });
-  return { navigate, createRecord, confirmedOrder, setConfirmedOrder, isMirrorWindow, draftStep, draftCustomerId, active, heldByAnotherJourney, guardedContactChange };
+  // The person identified is a NEW customer (no customer record is carried): they hold no benefit yet, so no existing-customer discount is theirs.
+  const draftNationality = draftContact?.moiResult?.nationality;
+  const draftIsNewCustomer = Boolean(draftContact?.moiResult?.isNewCustomer) && !draftCustomerId;
+  return { navigate, createRecord, confirmedOrder, setConfirmedOrder, isMirrorWindow, draftStep, draftCustomerId, draftIsNewCustomer, draftNationality, active, heldByAnotherJourney, guardedContactChange };
 }

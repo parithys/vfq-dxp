@@ -10,5 +10,5 @@ export const actualUserSummary: SummaryField[] = [
   { key: 'name', label: 'Actual User', type: 'text', optional: true, value: (v) => identityOf(v)?.moiResult?.name },
   { key: 'id', label: 'ID Number', type: 'text', optional: true, sensitive: true, value: (v) => identityOf(v)?.idNumber },
   { key: 'email', label: 'Email', type: 'text', optional: true, value: (v) => identityOf(v)?.email },
-  { key: 'phone', label: 'Alternate Phone', type: 'text', optional: true, value: (v) => identityOf(v)?.altPhone ?? at(v, 'actualUser', 'identity', 'altPhone') },
+  { key: 'phone', label: 'Work Number', type: 'text', optional: true, value: (v) => identityOf(v)?.altPhone ?? at(v, 'actualUser', 'identity', 'altPhone') },
 ];

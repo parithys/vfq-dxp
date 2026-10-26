@@ -1,4 +1,7 @@
 import type { WizardStep } from '../../../components/patterns/wizard/guidedWizardTypes';
+import { canUseFeature } from '../../../engines/personaEngine';
+import { usePersonaStore } from '../../../stores/personaStore';
+import { HOME_CONNECTION_FEATURE, canStartProduct } from '../productAccess';
 import { NewJourneyButtons, SERVICE_JOURNEYS, crossSalesSummary } from '../../../capabilities';
 import { Button } from '../../../components/primitives/Button';
 import { ProductSelection } from './ProductSelection';
@@ -10,6 +13,8 @@ import type { ConnectionProduct, HomeProduct } from '../products';
 
 /** New Home Connection is its own journey: this button continues there with the customer already identified. */
 const HOME_CONNECTION_ROUTE = '/fixed-line-fibre/new-fixed-line-wizard-contact-step';
+const homeConnectionRoute = (ctx: { flow: 'new' | 'existing'; existingCustomerId: string | undefined }) =>
+  ctx.flow === 'existing' && ctx.existingCustomerId ? `/fibre-home/start-connection/existing/${ctx.existingCustomerId}` : HOME_CONNECTION_ROUTE;
 
 const productSummary = [
   { key: 'product', label: 'Product', type: 'text' as const, value: (v: Record<string, unknown>) => (v.product === 'fixed-line' && v.homeProduct ? homeProductLabel(v.homeProduct as HomeProduct) : productLabel(v.product as ConnectionProduct | undefined)) },
@@ -48,6 +53,7 @@ export function productStep(ctx: ProductStepContext): WizardStep {
     isValid: (values) => Boolean(values.product) && productEligibilityClear(values),
     // The footer is the product choice: one button per product, New Postpaid the primary. Each continues in this wizard.
     primaryAction: ({ values, setValue, goNext }) => {
+      const personaId = usePersonaStore.getState().activePersonaId;
       const choose = (product: ConnectionProduct) => {
         // The same product again, with its eligibility already judged: go on (the agent has seen what the step reported).
         if (values.product === product && productEligibilityClear(values)) {
@@ -59,10 +65,17 @@ export function productStep(ctx: ProductStepContext): WizardStep {
       };
       return (
         <div className="flex items-center gap-3">
-          <Button variant="secondary" onClick={() => handOverToHomeConnection(ctx, values, HOME_CONNECTION_ROUTE)}>
-            New Home Connection
-          </Button>
+          {canUseFeature(personaId, HOME_CONNECTION_FEATURE) && (
+            <Button variant="secondary" onClick={() => handOverToHomeConnection(ctx, values, homeConnectionRoute(ctx))}>
+              New Home Connection
+            </Button>
+          )}
           <NewJourneyButtons
+            // Only the products this role holds a grant for (the journey's own, Postpaid, always stays).
+            allowed={(j) => {
+              const product = PRODUCT_OF_OFFER_JOURNEY[j];
+              return product ? canStartProduct(personaId, product) : true;
+            }}
             onDecline={() => choose('postpaid')}
             // The button's own `goNext` runs one render after onDecline; the step moves on by itself once eligibility is judged.
             goNext={() => {}}

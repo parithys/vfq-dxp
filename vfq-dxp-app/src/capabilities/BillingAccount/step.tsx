@@ -49,6 +49,7 @@ export function billingAccountStep(
           customerId={(values.eligibility as EligibilityResult | undefined)?.customerId}
           customerName={contact.moiResult.name}
           profileSuffix={opts.profileSuffix}
+          accountType={accountTypeForJourney(typeof opts.journey === 'function' ? opts.journey(values) : (opts.journey ?? 'postpaid'))}
           value={(values.billingAccount as BillingAccountValue) ?? {}}
           onChange={(v) => setValue('billingAccount', v)}
         />
@@ -86,6 +87,7 @@ export function billingAccountStep(
             nationality={nationality}
             accountType={accountTypeForJourney(typeof opts.journey === 'function' ? opts.journey(values) : (opts.journey ?? 'postpaid'))}
             hrnFeeApplies={eligibility?.requiresHrnAdvance}
+            customerSegment={eligibility?.segment}
             selected={billing.newAccount?.creditLimitQar}
             onChange={(limit) => setValue('billingAccount', { ...billing, newAccount: { ...billing.newAccount, creditLimitQar: limit } })}
           />

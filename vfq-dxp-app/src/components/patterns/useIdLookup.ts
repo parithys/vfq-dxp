@@ -373,7 +373,8 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
           { name: nasRecord.name, dob: nasRecord.dob, nationality: nasRecord.nationality, linkedPassportNumber: nasRecord.linkedPassportNumber },
           identityDocs,
           customers,
-          requested
+          requested,
+          (c) => canViewCustomerSegment(usePersonaStore.getState().activePersonaId, c.segment)
         );
         if (found.kind === 'conflict') {
           setLinkProblem(found.message);
@@ -392,6 +393,17 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
           }
           linked = { customerId: found.customerId, documentType: 'QID', documentNumber: requested, expiryDate: match.expiryDate, via: found.via, passportNumber: found.passportNumber };
         }
+      }
+      // A journey bound to a customer, and an ID that belongs to no customer at all (the registry knows it, nobody holds it): it is someone
+      // else, never this customer and never a new one created inside their journey.
+      if (explicitCustomerId && !asNewCustomer && !opts.forceCustomerId && nasRecord && !docMatch && !wantedId && !linked) {
+        const bound = customers.find((c) => c.customerId === explicitCustomerId);
+        if (bound && !canViewCustomerSegment(usePersonaStore.getState().activePersonaId, bound.segment)) {
+          setAccessRestricted(true);
+          return;
+        }
+        setOwnerMismatch(bound?.name ?? explicitCustomerId);
+        return;
       }
       const customer = wantedId || linked ? customers.find((c) => c.customerId === (wantedId ?? linked?.customerId)) : undefined;
       // The record this ID points at is missing from the lookup: that is a
@@ -759,9 +771,13 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
     setLinkProblem(undefined);
     const [docs, customers] = await Promise.all([
       mockDataEngine.list<{ customerId: string; documentType: string; documentNumber: string; expiryDate?: string }>('identity-documents'),
-      mockDataEngine.list<{ customerId: string; name: string; dob: string; nationality: string }>('customers'),
+      mockDataEngine.list<{ customerId: string; name: string; dob: string; nationality: string; segment?: string }>('customers'),
     ]);
-    const problem = duplicateCustomerMessage(resolveExistingCustomer({ name: moi.name, dob: moi.dob, nationality: moi.nationality }, docs, customers));
+    // A protected-segment match is refused without naming the customer, ID or QID to a role that may not see them.
+    const personaId = usePersonaStore.getState().activePersonaId;
+    const found = resolveExistingCustomer({ name: moi.name, dob: moi.dob, nationality: moi.nationality }, docs, customers, undefined, (c) => canViewCustomerSegment(personaId, c.segment));
+    const matched = found.kind === 'linked' ? customers.find((c) => c.customerId === found.customerId) : undefined;
+    const problem = duplicateCustomerMessage(found, !matched || canViewCustomerSegment(personaId, matched.segment));
     if (problem) {
       setLinkProblem(problem);
       return;

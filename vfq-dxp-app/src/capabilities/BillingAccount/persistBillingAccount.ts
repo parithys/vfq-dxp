@@ -1,6 +1,6 @@
 import type { EntityKind } from '../../engines/mockDataEngine';
 import type { JourneyAccountType } from '../../engines/creditLimit';
-import { creditLimitAuditRecord, creditLimitOptions, creditSegmentOf } from '../../engines/creditLimit';
+import { creditLimitAuditRecord, creditLimitOptions, creditLimitPolicy, creditSegmentOf } from '../../engines/creditLimit';
 import { isHrn } from '../../engines/hrnConfiguration';
 import { ordinal, profilePatchFromEdit } from '../../components/patterns/billingAccountModel';
 import type { BillingAccountValue } from '../../components/patterns/billingAccountModel';
@@ -37,6 +37,8 @@ export async function persistBillingAccount(
     creditLimitQar?: number;
     /** The customer's nationality, which decides the credit-limit options (an agent's choice outside them is ignored). */
     nationality?: string;
+    /** The customer's segment: for a Safwa, Safwa+ or Royal customer the limit cannot be changed, so an agent's choice is ignored. */
+    segment?: string;
     /** The agent making the change, for the audit trail. */
     agentId?: string;
   }
@@ -55,7 +57,8 @@ export async function persistBillingAccount(
   const accountId = `ACC-${stamp}`;
   // The credit limit: the agent's choice when it is one of the options for this customer's segment (HRN allows none), else the default.
   const defaultQar = ctx.creditLimitQar;
-  const chosen = fresh.creditLimitQar !== undefined && creditLimitOptions(ctx.nationality).includes(fresh.creditLimitQar) ? fresh.creditLimitQar : undefined;
+  const policy = creditLimitPolicy({ segment: ctx.segment, nationality: ctx.nationality });
+  const chosen = policy.editable && fresh.creditLimitQar !== undefined && creditLimitOptions(ctx.nationality).includes(fresh.creditLimitQar) ? fresh.creditLimitQar : undefined;
   const limit = chosen ?? defaultQar;
   const billingProfileId = `BILL-${stamp}`;
   await ctx.createRecord('accounts', {
@@ -104,7 +107,7 @@ export async function persistBillingAccount(
       creditControlLimitQar: null,
       isHrn: isHrn(ctx.nationality),
       setByAgentId: ctx.agentId,
-      restrictionApplied: false,
+      restrictionApplied: Boolean(policy.lock),
       lastUpdated: today,
     });
     await ctx.createRecord(

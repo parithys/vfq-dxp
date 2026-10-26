@@ -1,4 +1,5 @@
 import { currentAgentId } from '../../../stores/authStore';
+import { storedAddressLine } from '../../../components/patterns/addressFromBilling';
 import { accountTypeForJourney } from '../../../engines/creditLimit';
 import { saveLinkedIdDocument } from '../../new-connection/saveLinkedIdDocument';
 import { contactIdentityOrderFields } from '../../new-connection/contactIdentityOrderFields';
@@ -21,6 +22,7 @@ import type { ActivityInput } from '../../../engines/activityEngine';
 import type { useEntityStore } from '../../../stores/entityStore';
 import type { CustomerTypeValue } from '../../../capabilities';
 import type { ConfirmedOrder } from '../../../capabilities';
+import { isB2B2COrder } from '../../new-connection/approvalRouting';
 import { homeProductLabel } from '../../new-connection/products';
 import type { HomeProduct } from '../../new-connection/products';
 import { FIXED_JOURNEY_LABEL, serviceTypeLabel, type FixedInstallationValue } from './fixedActivationModel';
@@ -52,7 +54,7 @@ export async function submitFixedActivationOrder(
   const manualIdEntry = Boolean(contact.manualEntry);
   const approvalChecks = eligibility?.checks.filter((c) => c.outcome === 'approval-routing') ?? [];
   const customerType = values.customerType as CustomerTypeValue | undefined;
-  const pendingApproval = manualIdEntry || (Boolean(contact.isB2B2C) && !customerType?.rejected) || customerType?.type === 'b2b2c' || Boolean(eligibility?.requiresHrnAdvance) || approvalChecks.length > 0;
+  const pendingApproval = manualIdEntry || isB2B2COrder(contact, customerType) || Boolean(eligibility?.requiresHrnAdvance) || approvalChecks.length > 0;
 
   // A customer with no billing account gets the one the journey built, created and set as their default.
   const billingProfileId = await persistBillingAccount(billingAccount, {
@@ -67,8 +69,9 @@ export async function submitFixedActivationOrder(
     // The credit limit rules apply to a fixed-line account as to any other new account: the default for the customer, the agent's choice from the card.
     creditLimitQar: eligibility?.defaultCreditLimitQar,
     nationality: eligibility?.nationality,
+    segment: eligibility?.segment,
     agentId: currentAgentId() ?? undefined,
-    addressLine: [address?.zone && `Zone ${address.zone}`, address?.streetNo && `Street ${address.streetNo}`, address?.buildingNo && `Building ${address.buildingNo}`].filter(Boolean).join(', ') || undefined,
+    addressLine: storedAddressLine(address),
   });
 
   const orderId = `ORD-${Date.now().toString().slice(-6)}`;
@@ -79,7 +82,7 @@ export async function submitFixedActivationOrder(
   await createRecord('orders', {
     orderId,
     orderType: 'New Fixed Line Activation',
-    orderSubType: (contact.isB2B2C && !customerType?.rejected) || customerType?.type === 'b2b2c' ? 'B2B2C' : 'Consumer',
+    orderSubType: isB2B2COrder(contact, customerType) ? 'B2B2C' : 'Consumer',
     customerType: customerType?.type,
     companyName: customerType?.type === 'b2b2c' ? customerType.company?.companyName : undefined,
     createdAt: new Date().toISOString(),

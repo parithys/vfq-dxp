@@ -187,6 +187,7 @@ export function SimSerialScanner({ value, onChange, autoFocus, suppressValidatio
         // suppressValidation (every other journey sharing this component)
         // get `required` unconditionally, unchanged from before.
         required={!suppressValidation}
+        inputMode="numeric"
         placeholder={touch ? "Scan the SIM barcode, or enter the serial number" : "Enter the SIM serial number, or use the barcode scanner"}
         value={value}
         onChange={(e) => onChange(e.target.value, false)}

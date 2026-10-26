@@ -25,12 +25,15 @@ export function NewJourneyButtons({
   goNext,
   onHandOff,
   journey: here = 'new-postpaid',
+  allowed,
 }: {
   onDecline: () => void;
   goNext: () => void;
   onHandOff: (route: string) => void;
   /** The journey the step belongs to: its button is the primary one and declines the offers instead of leaving. */
   journey?: ServiceJourney;
+  /** Which journeys this role may start (its grants): a button for a journey it cannot use is not shown. Omitted: all. The journey's own button always stays. */
+  allowed?: (journey: ServiceJourney) => boolean;
 }) {
   const [pending, setPending] = useState(false);
   useEffect(() => {
@@ -41,7 +44,7 @@ export function NewJourneyButtons({
   return (
     <div className="flex items-center gap-3">
       {/* The journey's own button comes last, as the primary action. */}
-      {[...JOURNEY_BUTTONS].sort((a, b) => Number(a.journey === here) - Number(b.journey === here)).map(({ label, journey }) => {
+      {[...JOURNEY_BUTTONS].filter((b) => b.journey === here || !allowed || allowed(b.journey)).sort((a, b) => Number(a.journey === here) - Number(b.journey === here)).map(({ label, journey }) => {
         const route = SERVICE_JOURNEYS.find((j) => j.key === journey)?.route;
         const current = journey === here;
         return (

@@ -78,7 +78,7 @@ test('5. only the limits that apply to the segment are offered; the agent choose
   assert.deepEqual(cl.creditLimitOptions(undefined), cl.creditLimitOptions('Egyptian'));
   for (const v of cl.CREDIT_LIMIT_PRESETS_QAR) assert.equal(Number.isInteger(v), true);
   const card = read('src/components/patterns/CreditLimitCard.tsx');
-  assert.match(card, /disabled=\{hrn\}/, 'HRN: the selector is locked');
+  assert.match(card, /disabled=\{!policy\.editable\}/, 'HRN and protected segments: the selector is locked');
   assert.match(card, /not allowed for an HRN customer/);
   assert.match(read('src/capabilities/BillingAccount/step.tsx'), /<CreditLimitCard/);
 });

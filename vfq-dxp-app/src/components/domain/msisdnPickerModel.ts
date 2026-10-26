@@ -8,6 +8,8 @@ export interface MsisdnRecord {
   valueTier?: string;
   /** Who holds the reservation, on a Reserved record. */
   reservedBy?: string;
+  /** The ID number of the customer the number is reserved for: a reservation belongs to the customer, not to the agent who made it. */
+  reservedForQid?: string;
   /** When the reservation was made (ISO), on a Reserved record. */
   reservedAt?: string;
 }

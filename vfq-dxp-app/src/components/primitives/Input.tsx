@@ -38,6 +38,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   ref
 ) {
   const autoId = useId();
+  // On a touch device a numeric-only field opens the numeric keypad, not the full keyboard: a number input asks for it by its type
+  // (decimal when its step allows fractions); any other field names it with inputMode.
+  const fractional = rest.step === 'any' || (rest.step !== undefined && !Number.isInteger(Number(rest.step)));
+  const keypad = rest.inputMode ?? (rest.type === 'number' ? (fractional ? 'decimal' : 'numeric') : undefined);
   const inputId = id ?? `input-${autoId}`;
   const helperId = `${inputId}-helper`;
   const errorId = `${inputId}-error`;
@@ -148,6 +152,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
             tabIndex={isReadOnly ? -1 : undefined}
             onMouseDown={blockReadOnlyFocus}
             {...rest}
+            inputMode={keypad}
           />
           {trailingAddon && (
             <span className="flex items-center gap-2 pr-3 pl-2 shrink-0 select-none">{trailingAddon}</span>
@@ -169,6 +174,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           tabIndex={isReadOnly ? -1 : undefined}
           onMouseDown={blockReadOnlyFocus}
           {...rest}
+          inputMode={keypad}
         />
       )}
       {helperText && !error && (

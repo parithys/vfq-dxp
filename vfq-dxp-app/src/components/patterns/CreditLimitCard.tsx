@@ -1,4 +1,5 @@
 import { Select } from '../primitives/Select';
+import { creditLimitPolicy } from '../../engines/creditLimit';
 import { accountTypeForJourney, creditLimitOptions, creditSegmentOf, customerCategoryOf, defaultCreditLimitFor, payableAtActivationQar, type JourneyAccountType } from '../../engines/creditLimit';
 import { isHrn } from '../../engines/hrnConfiguration';
 
@@ -15,6 +16,7 @@ export function CreditLimitCard({
   onChange,
   accountType = accountTypeForJourney('postpaid'),
   hrnFeeApplies = true,
+  customerSegment,
 }: {
   nationality: string | undefined;
   /** The agent's chosen limit; undefined means the default. */
@@ -23,12 +25,15 @@ export function CreditLimitCard({
   accountType?: JourneyAccountType;
   /** The HRN fee (advance) applies to this customer: false when their Credit Risk Exemption is Low or No. Defaults to the nationality's answer. */
   hrnFeeApplies?: boolean;
+  /** The customer's segment: a Safwa, Safwa+ or Royal customer's limit cannot be changed (creditLimitPolicy), as an HRN customer's cannot. */
+  customerSegment?: string;
 }) {
   const segment = creditSegmentOf(nationality);
   const category = customerCategoryOf(nationality);
   const defaultQar = defaultCreditLimitFor(nationality);
   const options = creditLimitOptions(nationality);
   const hrn = isHrn(nationality);
+  const policy = creditLimitPolicy({ segment: customerSegment, nationality });
   const advance = hrn && hrnFeeApplies ? payableAtActivationQar(nationality) : 0;
   const value = selected !== undefined && options.includes(selected) ? selected : defaultQar;
   return (
@@ -59,8 +64,8 @@ export function CreditLimitCard({
       <Select
         label="Credit Limit (QAR)"
         value={String(value)}
-        disabled={hrn}
-        helperText={hrn ? 'Credit limit modification is not allowed for an HRN customer.' : `Choose a limit up to the ${segment ?? 'customer'} default of QAR ${defaultQar}.`}
+        disabled={!policy.editable}
+        helperText={!policy.editable ? (hrn && policy.lock === 'hrn' ? 'Credit limit modification is not allowed for an HRN customer.' : policy.message) : `Choose a limit up to the ${segment ?? 'customer'} default of QAR ${defaultQar}.`}
         options={options.map((o) => ({ value: String(o), label: `QAR ${o}` }))}
         onChange={(e) => onChange(Number(e.target.value) === defaultQar ? undefined : Number(e.target.value))}
       />

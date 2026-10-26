@@ -104,7 +104,8 @@
      inputs share this same chrome via the shared Input component. Dark-mode
      equivalents are set in index.css so this reference only touches the
      light theme. */
-  --field-border: #e0e0e0;
+  /* 2026-10-26: every form control takes the card border, so fields and cards outline alike. */
+  --field-border: var(--field-card-border);
   --field-border-disabled: #cccccc;
   /* Fill for a DISABLED field (2026-09-26) - none existed, so every disabled
      control across the app kept the same white --bg an enabled one uses and
@@ -148,15 +149,16 @@
      colours are separate tokens and unchanged. */
   --color-field-border-focus: #007e91;
   --color-field-text-filled: #212121;
-  /* Hover keeps the dark text colour (it used to share --field-focus-border,
-     which is now the teal focus colour). */
-  --field-hover-border: var(--fg);
+  /* Hover takes the colour of the focus ring (--field-focus-ring), so every form control hovers the same way. The ring is a shadow, not a
+     colour, so the colour it is drawn in is named here. */
+  --field-hover-border: var(--color-field-border-focus);
   /* 2026-10-01: focused fields are a dark 2px outline (1px border + 1px inset
      ring), no outer glow - per the large-input reference. */
   --field-focus-border: var(--color-field-border-focus);
   /* Deliberately darker than --surface (#f5f7f9): that was invisible on a white
      field and on the pale-grey cards some fields sit on. */
-  --field-focus-bg: #e6eaef;
+  /* A light tint of the hover/focus border colour (not a grey), so the highlighted field matches its own outline. */
+  --field-focus-bg: color-mix(in srgb, var(--field-hover-border) 8%, var(--bg));
   --field-focus-ring: inset 0 0 0 1px var(--color-field-border-focus);
   /* Choice-card selected state (2026-09-24, superseding the above for cards
      only): brand-red border, check badge and label on a near-white pink
@@ -611,8 +613,6 @@
   --brand-plum: #e3b8d8;
   --priority: #f5c36a;
   --shadow-icon-tile: none;
-  /* Input boundaries need 3:1 against the page (WCAG 1.4.11); the shared --border is ~1.9:1 on the dark page. */
-  --field-border: color-mix(in oklab, var(--bg), var(--fg) 48%);
   --shadow-dash-card: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px -10px rgba(0,0,0,0.6);
   --shadow-dash-card-hover: 0 2px 4px rgba(0,0,0,0.45), 0 14px 30px -10px rgba(0,0,0,0.7);
   --tint-green-bg: rgba(62,203,110,.16);  --tint-green-fg: #7ee2a0;
@@ -634,7 +634,7 @@
   /* Field chrome (see tokens.css) has no dark-mode design of its own yet -
      reuse the existing dark structural/status tokens so dark mode keeps
      today's appearance unchanged by the light-mode field reference. */
-  --field-border: var(--border);
+  --field-border: var(--field-card-border);
   --field-border-disabled: var(--border-soft);
   --field-bg-disabled: var(--border-soft);
   --field-border-error: var(--danger);
@@ -642,9 +642,9 @@
   --field-divider: var(--border-soft);
   --color-field-border-focus: var(--fg);
   --color-field-text-filled: var(--fg);
-  --field-hover-border: var(--fg);
+  --field-hover-border: var(--color-field-border-focus);
   --field-focus-border: var(--fg);
-  --field-focus-bg: var(--surface);
+  --field-focus-bg: color-mix(in srgb, var(--field-hover-border) 12%, var(--bg));
   --field-focus-ring: inset 0 0 0 1px var(--fg);
   --field-icon: var(--muted);
   --field-icon-active: var(--fg);

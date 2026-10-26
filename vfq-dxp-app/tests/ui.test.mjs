@@ -42,7 +42,7 @@ test('TabStrip: tablist semantics, one tab in the tab order, accent underline an
   assert.match(out, />4</);
 });
 
-test('SegmentedTabs: tablist semantics, one tab in the tab order, selected tab is raised', async () => {
+test('SegmentedTabs: tablist semantics, one tab in the tab order, the Level 2 pill tab', async () => {
   const { SegmentedTabs } = await load('/src/components/primitives/SegmentedTabs.tsx');
   const out = html(h(SegmentedTabs, { items: [{ key: 'a', label: 'Offers' }, { key: 'b', label: 'Plans' }], active: 'a', onChange() {} }));
   assert.match(out, /role="tablist"/);
@@ -50,6 +50,8 @@ test('SegmentedTabs: tablist semantics, one tab in the tab order, selected tab i
   assert.equal((out.match(/aria-selected="true"/g) ?? []).length, 1);
   assert.equal((out.match(/tabindex="0"/g) ?? []).length, 1);
   assert.equal((out.match(/tabindex="-1"/g) ?? []).length, 1);
+  assert.match(out, /icon-tile-bg\)\] p-1/, 'the pill track');
+  assert.doesNotMatch(out, /border-b-\[length:var\(--tab-active-w\)\]/, 'never an underline');
 });
 
 test('Pager: hidden for one page; marks the current page; previous/next disable at the ends', async () => {
@@ -233,4 +235,19 @@ test('Special Discounts Identification is decoupled from Customer Verification',
 test('idCaptureOptions: a step that needs both offers both on any device', async () => {
   const { idCaptureOptions } = await load('/src/components/domain/idUploadModel.ts');
   for (const d of ['web', 'tablet']) assert.deepEqual(idCaptureOptions(d, true, true), { scan: true, upload: true });
+});
+
+test('Tab hierarchy: a page-level TabStrip is the underline; inside a tab panel it is the pill; Tabs nests its content', async () => {
+  const { TabStrip } = await load('/src/components/primitives/TabStrip.tsx');
+  const { NestedTabs } = await load('/src/components/primitives/TabLevel.tsx');
+  const { Tabs } = await load('/src/components/primitives/Tabs.tsx');
+  const strip = () => h(TabStrip, { items: [{ key: 'a', label: 'One' }, { key: 'b', label: 'Two' }], active: 'a', onChange() {} });
+  const page = html(strip());
+  assert.match(page, /border-b-\[length:var\(--tab-active-w\)\]/, 'level 1 is the underline');
+  const nested = html(h(NestedTabs, null, strip()));
+  assert.match(nested, /icon-tile-bg\)\] p-1/, 'level 2 is the pill');
+  assert.doesNotMatch(nested, /border-b-\[length:var\(--tab-active-w\)\]/, 'never an underline when nested');
+  const inTab = html(h(Tabs, { items: [{ key: 'x', label: 'X', content: strip() }] }));
+  assert.equal((inTab.match(/role="tablist"/g) ?? []).length, 2);
+  assert.equal((inTab.match(/border-b-\[length:var\(--tab-active-w\)\]/g) ?? []).length, 1, 'only the page-level strip is an underline');
 });

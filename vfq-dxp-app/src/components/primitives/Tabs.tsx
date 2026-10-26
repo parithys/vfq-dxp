@@ -1,6 +1,7 @@
 import { Tooltip } from './Tooltip';
 import { PanelIcon } from './PanelIcon';
 import { TabStrip } from './TabStrip';
+import { NestedTabs } from './TabLevel';
 import { useState } from 'react';
 import { Icon } from './Icon';
 import type { ReactNode } from 'react';
@@ -50,7 +51,7 @@ export function Tabs({
     return (
       <div className="flex flex-col lg:flex-row items-stretch">
         <IconRail items={items} active={active} onSelect={setActive} />
-        <div className="@container flex-1 min-w-0 w-full p-8">{activeItem?.content}</div>
+        <div className="@container flex-1 min-w-0 w-full p-8"><NestedTabs>{activeItem?.content}</NestedTabs></div>
       </div>
     );
   }
@@ -70,7 +71,7 @@ export function Tabs({
             </button>
           ))}
         </div>
-        <div className="flex-1 min-w-0">{activeItem?.content}</div>
+        <div className="flex-1 min-w-0"><NestedTabs>{activeItem?.content}</NestedTabs></div>
       </div>
     );
   }
@@ -85,7 +86,7 @@ export function Tabs({
       ) : (
         <TabStrip items={items} active={active} onChange={setActive} />
       )}
-      <div className="pt-4">{activeItem?.content}</div>
+      <div className="pt-4"><NestedTabs>{activeItem?.content}</NestedTabs></div>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { currentAgentId } from '../../stores/authStore';
+import { storedAddressLine } from '../../components/patterns/addressFromBilling';
 import { accountTypeForJourney } from '../../engines/creditLimit';
 import { saveLinkedIdDocument } from './saveLinkedIdDocument';
 import { contactIdentityOrderFields } from './contactIdentityOrderFields';
@@ -8,7 +9,7 @@ import type { ActualUserValue } from '../../capabilities/ActualUser';
 import { hrnAdvanceQar } from '../../engines/hrnConfiguration';
 import { usePersonaStore } from '../../stores/personaStore';
 import { monthlyCharges } from '../../engines/postpaidPricing';
-import { emailVerification, maskEmail, persistBillingAccount } from '../../capabilities';
+import { effectiveCreditLimitQar, emailVerification, maskEmail, persistBillingAccount } from '../../capabilities';
 import type { GuidedContactValue } from '../../capabilities';
 import type { BillingAccountValue } from '../../capabilities';
 import { SUPPORTING_ID_DISCOUNT_TYPES } from '../../components/patterns/postpaidPlanModel';
@@ -18,7 +19,7 @@ import type { SimTypeValue } from '../../components/domain/SimTypeStep';
 import type { CheckoutTotals } from '../../components/patterns/checkoutSummaryModel';
 import type { WinCashPaymentValue } from '../../components/patterns/WinCashPaymentStep';
 import type { CafType } from '../../components/patterns/cafTypes';
-import type { AdditionalDocument } from '../../components/domain/AdditionalDocumentsUpload';
+import type { AdditionalDocument } from '../../capabilities';
 import type { CustomerTypeValue } from '../../capabilities';
 import type { CrossSalesValue } from '../../capabilities';
 import { STORE_MANAGER_ROLE, COLLECTION_TEAM_ROLE } from '../../capabilities';
@@ -28,6 +29,8 @@ import type { ActivityInput } from '../../engines/activityEngine';
 import type { useEntityStore } from '../../stores/entityStore';
 import type { NewConnectionFlow, ConfirmedOrder } from './newConnectionModel';
 import { idScanAttachments } from './idScanAttachments';
+import { isB2B2COrder } from './approvalRouting';
+import { isNumberWaiver, numberWaiverLabel } from '../../engines/numberWaiver';
 import { approvalMessages, decisionRecord, needsCreditControl } from '../../engines/connectionEligibility';
 
 type EntityStore = ReturnType<typeof useEntityStore.getState>;
@@ -96,12 +99,16 @@ export async function submitNewConnectionOrder(
       const lineDecision = eligibility?.connectionDecision;
       const creditControl = lineDecision ? needsCreditControl(lineDecision) : lineLimitApproval;
       const idTypeRouting = eligibility?.checks.some((c) => c.id === 'id-type-routing' && c.outcome === 'approval-routing') ?? false;
+      const waiver = isNumberWaiver(values.numberWaiver) ? values.numberWaiver : undefined;
+      const waivedAmountQar = checkoutTotals?.numberWaivedQar ?? 0;
+      const waived = Boolean(waiver) && waivedAmountQar > 0;
       const pendingApproval =
         manualIdEntry ||
-        (Boolean(contact.isB2B2C) && !customerType?.rejected) ||
-        customerType?.type === 'b2b2c' ||
+        isB2B2COrder(contact, customerType) ||
         Boolean(eligibility?.requiresHrnAdvance) ||
         Boolean(eligibility?.checks.some((c) => c.outcome === 'approval-routing')) ||
+        // A Waive Off on the Star number's upfront charge is a concession: the order waits for approval.
+        waived ||
         Boolean(discount && SUPPORTING_ID_DISCOUNT_TYPES.has(discount.addonType ?? ''));
 
       // Attachments (2026-09-28) - built from data this wizard already
@@ -117,7 +124,8 @@ export async function submitNewConnectionOrder(
         ...(customerType?.officeId?.frontScanned && customerType.officeId.backScanned
           ? [
               {
-                label: 'Office ID Card',
+                // Named for what it is for: only a B2B2C customer's is an office ID card.
+                label: customerType.type === 'b2b2c' ? 'Office ID Card' : `${customerType.type === 'retired' ? 'Retiree' : 'MADA'} Supporting Document`,
                 detail: `${customerType.officeId.source === 'upload' ? 'Uploaded' : 'Scanned'} for ${customerType.type === 'b2b2c' ? 'B2B2C' : customerType.type === 'retired' ? 'Retired' : 'MADA'}`,
               },
             ]
@@ -143,9 +151,10 @@ export async function submitNewConnectionOrder(
         contactName: contact.moiResult?.name,
         contactEmail: contact.email,
         contactPhone: contact.moiResult?.phone,
-        addressLine: [address?.zone && `Zone ${address.zone}`, address?.streetNo && `Street ${address.streetNo}`, address?.buildingNo && `Building ${address.buildingNo}`].filter(Boolean).join(', ') || undefined,
+        addressLine: storedAddressLine(address),
         creditLimitQar: eligibility?.defaultCreditLimitQar,
         nationality: eligibility?.nationality,
+        segment: eligibility?.segment,
         agentId: currentAgentId() ?? undefined,
       });
 
@@ -156,6 +165,17 @@ export async function submitNewConnectionOrder(
       await saveLinkedIdDocument(contact.moiResult?.linkedIdUpdate, createRecord);
       // An actual user who is already a customer keeps the contact details confirmed here on their own record.
       await saveActualUserContact(values.actualUser as ActualUserValue | undefined, updateRecord, () => mockDataEngine.list<{ contactRecordId: string; customerId: string }>('customer-contacts'));
+      // Every trigger that routed the order is named, so the approver sees all the reasons; the workflow event carries the same text.
+      const approvalReason = pendingApproval ? [
+                lineLimitApproval ? (lineDecision ? `Line approval required - ${approvalMessages(lineDecision)}` : `Active postpaid line limit reached - ${activeLinesCheck?.message?.split('\nApproval Routing')[0]}`) : '',
+                manualIdEntry ? 'Identity manually entered - Store Manager approval required' : '',
+                idTypeRouting ? 'ID type requires Credit Control approval - routed to Credit Control' : '',
+                eligibility?.checks.some((c) => c.id === 'id-validity' && c.outcome === 'approval-routing') ? 'ID expiry date not on file - routed for approval' : '',
+                eligibility?.requiresHrnAdvance ? `HRN customer - QAR ${hrnAdvanceQar({ nationality: eligibility?.nationality, personaId: usePersonaStore.getState().activePersonaId })} advance payment applies` : '',
+                isB2B2COrder(contact, customerType) ? 'B2B2C employee - Proof of Employment to be verified' : '',
+                waived && waiver ? `${numberWaiverLabel(waiver)} - QAR ${waivedAmountQar} waived off the Star number upfront charge of QAR ${checkoutTotals?.numberChargeQar ?? 0}` : '',
+                discount && SUPPORTING_ID_DISCOUNT_TYPES.has(discount.addonType ?? '') ? `${discount.addonType} - supporting document to be verified` : '',
+              ].filter(Boolean).join(' | ') : undefined;
       await createRecord('orders', {
         orderId,
         ...actualUserOrderFields(values.actualUser as ActualUserValue | undefined),
@@ -169,22 +189,22 @@ export async function submitNewConnectionOrder(
         orderType: 'New Postpaid Activation',
         ...decisionRecord(eligibility?.connectionDecision),
         createdAt: new Date().toISOString(),
-        orderSubType: (contact.isB2B2C && !customerType?.rejected) || customerType?.type === 'b2b2c' ? 'B2B2C' : eligibility?.requiresHrnAdvance ? 'HRN' : 'Consumer',
+        orderSubType: isB2B2COrder(contact, customerType)
+          ? 'B2B2C'
+          : customerType?.type === 'mada' && !customerType.rejected
+          ? 'MADA'
+          : customerType?.type === 'retired' && !customerType.rejected
+          ? 'Retiree'
+          : eligibility?.requiresHrnAdvance
+          ? 'HRN'
+          : 'Consumer',
         status: pendingApproval ? 'Submitted for Approval' : 'Complete',
         ...(pendingApproval
           ? {
               manualIdEntry: manualIdEntry || undefined,
               // Every trigger that routed the order is named, so the approver sees all the reasons (2026-10-10:
               // HRN, B2B2C, MADA / B2B2C discount and a missing ID expiry were routed but carried no reason).
-              approvalReason: [
-                lineLimitApproval ? (lineDecision ? `Line approval required - ${approvalMessages(lineDecision)}` : `Active postpaid line limit reached - ${activeLinesCheck?.message?.split('\nApproval Routing')[0]}`) : '',
-                manualIdEntry ? 'Identity manually entered - Store Manager approval required' : '',
-                idTypeRouting ? 'ID type requires Credit Control approval - routed to Credit Control' : '',
-                eligibility?.checks.some((c) => c.id === 'id-validity' && c.outcome === 'approval-routing') ? 'ID expiry date not on file - routed for approval' : '',
-                eligibility?.requiresHrnAdvance ? `HRN customer - QAR ${hrnAdvanceQar({ nationality: eligibility?.nationality, personaId: usePersonaStore.getState().activePersonaId })} advance payment applies` : '',
-                (Boolean(contact.isB2B2C) && !customerType?.rejected) || customerType?.type === 'b2b2c' ? 'B2B2C employee - Proof of Employment to be verified' : '',
-                discount && SUPPORTING_ID_DISCOUNT_TYPES.has(discount.addonType ?? '') ? `${discount.addonType} - supporting document to be verified` : '',
-              ].filter(Boolean).join(' | '),
+              approvalReason,
               // Line-limit cases go to the Collection Team (Credit Control), a manual-entry order to the Store Manager, and an order
               // routed for its ID type to Credit Control as well.
               approverRole: creditControl ? COLLECTION_TEAM_ROLE : manualIdEntry ? STORE_MANAGER_ROLE : idTypeRouting ? COLLECTION_TEAM_ROLE : undefined,
@@ -203,16 +223,25 @@ export async function submitNewConnectionOrder(
         simType: simType?.simType,
         simSerial: simType?.simSerial,
         billingProfileId,
+        // What the customer was quoted and agreed to: the spending limits, how the amount was taken, and where the line is installed.
+        billLimitQAR: values.billLimit as number | undefined,
+        creditLimitQAR: effectiveCreditLimitQar(eligibility, billingAccount),
+        paymentMethod: (values.payment as WinCashPaymentValue | undefined)?.method,
+        paymentReference: (values.payment as WinCashPaymentValue | undefined)?.reference,
+        address: values.address,
         newBillingProfileName: newBillingAccount?.profileName,
         billCardLast4: newBillingAccount?.cardLast4,
         dueTodayQAR: dueTodayQar,
+        // The Waive Off chosen on Number Selection and what it took off the Star number's upfront charge.
+        ...(waived && waiver ? { numberWaiver: waiver, numberWaivedQAR: waivedAmountQar, numberUpfrontChargeQAR: checkoutTotals?.numberChargeQar } : {}),
         monthlyRecurringQAR: monthlyRecurringQar,
         createdBy: currentAgentId(),
         sourceChannel: 'Desktop',
         attachments,
         customerType: customerType?.type,
         companyName: customerType?.type === 'b2b2c' ? customerType.company?.companyName : undefined,
-        planSource: crossSales?.decision === 'accepted' || (customerType?.type && customerType.type !== 'none') ? 'Sales Offer' : 'General Plan',
+        // A Sales Offer only when an offer was accepted; a special customer type is a discount, not where the plan came from.
+        planSource: crossSales?.decision === 'accepted' || values.selectionSource === 'OFFER' ? 'Sales Offer' : 'General Plan',
         crossSalesOfferId: crossSales?.decision === 'accepted' ? crossSales.offerId : undefined,
       });
 
@@ -236,23 +265,14 @@ export async function submitNewConnectionOrder(
         trigger: 'completed',
         reason: pendingApproval
           ? `Order ${orderId} submitted and is awaiting approval.`
-          : `Order ${orderId} submitted and activated${payment?.reference ? ` (WinCash ref ${payment.reference})` : payment?.method === 'Cash' ? ' (cash received by the agent)' : ''}.`,
+          : `Order ${orderId} submitted and activated${payment?.zeroValue ? ` (zero-value receipt ${payment.reference ?? ''})` : payment?.reference ? ` (WinCash ref ${payment.reference})` : payment?.method === 'Cash' ? ' (cash received by the agent)' : ''}.`,
       };
       if (pendingApproval) {
         await logActivity({
           ...activityCtx,
           trigger: 'workflow-event',
           name: 'Order Routed for Approval',
-          reason:
-            [
-              lineLimitApproval ? (lineDecision ? 'Line approval required' : 'Active postpaid line limit reached') : '',
-              manualIdEntry ? 'Identity entered manually' : '',
-              idTypeRouting ? 'ID type routed to Credit Control approval' : '',
-              eligibility?.requiresHrnAdvance ? 'Upfront payment required' : '',
-              customerType?.type === 'b2b2c' || contact.isB2B2C ? 'B2B2C order' : '',
-            ]
-              .filter(Boolean)
-              .join('; ') || 'Order requires approval before it can complete.',
+          reason: approvalReason || 'Order requires approval before it can complete.',
         });
       }
 

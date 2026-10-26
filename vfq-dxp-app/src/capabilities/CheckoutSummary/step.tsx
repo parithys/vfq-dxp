@@ -1,3 +1,4 @@
+import { isNumberWaiver } from '../../engines/numberWaiver';
 import type { ReactNode } from 'react';
 import { effectiveCreditLimitQar } from '../../components/patterns/billingAccountModel';
 import { CHECKOUT_LABEL, SUBSCRIPTIONS_LABEL } from '../../data/stepLabels';
@@ -60,6 +61,7 @@ export function checkoutSummaryStep(
           creditLimitQar={effectiveCreditLimitQar(values.eligibility as EligibilityResult | undefined, values.billingAccount as BillingAccountValue | undefined)}
           billLimit={values.billLimit as number | undefined}
           simType={values.simType as SimTypeValue | undefined}
+          numberWaiver={isNumberWaiver(values.numberWaiver) ? values.numberWaiver : undefined}
           onTotalsComputed={(totals) => setValue('checkoutTotals', totals)}
           onSummaryComputed={(rows) => setValue('cafSummary', rows)}
           onLegalFactsComputed={(facts) => setValue('legalFacts', facts)}

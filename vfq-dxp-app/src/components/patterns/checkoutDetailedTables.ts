@@ -1,4 +1,5 @@
 import { formatQar, VAT_RATE } from '../../engines/postpaidPricing';
+import { numberWaiverLabel } from '../../engines/numberWaiver';
 import type { SimTypeValue } from '../domain/SimTypeStep';
 import type { SummaryTable } from './CheckoutSummaryTables';
 import type { CheckoutSummaryDerived } from './useCheckoutSummary';
@@ -22,6 +23,9 @@ export function buildDetailedTables({
   starTier,
   starEntitlementQar,
   numberChargeQar,
+  numberWaiver,
+  numberWaivedQar,
+  numberPayableQar,
   dueTodayQar,
   creditLimitQar,
   charges,
@@ -73,7 +77,7 @@ export function buildDetailedTables({
         { label: 'Number Discount Value', value: q(discountValueQar) },
         { label: 'Number Lock-in Value:', value: q(lockInValueQar) },
         ...(isStarNumber
-          ? [{ label: 'Star Number Lock-In', value: starTier ? `${starTier.lockInDurationMonths} months` : 'Not yet banded - confirm before signature' }]
+          ? [{ label: 'Star Number Lock-In', value: starTier ? `${starTier.lockInDurationMonths} months` : 'To be confirmed' }]
           : []),
         { label: 'Plan', value: plan?.name ?? '-' },
         { label: 'Lock-In Period', value: plan?.commitmentMonths ? `${plan.commitmentMonths} months` : 'No lock-in' },
@@ -81,8 +85,8 @@ export function buildDetailedTables({
         { label: 'SIM Type', value: simType?.simType ?? '-' },
         ...(creditLimitQar !== undefined
           ? [
-              { label: 'Credit Limit', value: `QAR ${creditLimitQar}`, boldLabel: true },
-              { label: 'Bill Limit', value: billLimit !== undefined || plan?.mrcQAR !== undefined ? `QAR ${billLimit ?? plan?.mrcQAR}` : `Up to QAR ${creditLimitQar}`, boldLabel: true },
+              { label: 'Credit Limit', value: `QAR ${creditLimitQar}`, boldLabel: true, agentOnly: true },
+              { label: 'Bill Limit', value: billLimit !== undefined || plan?.mrcQAR !== undefined ? `QAR ${billLimit ?? plan?.mrcQAR}` : `Up to QAR ${creditLimitQar}`, boldLabel: true, agentOnly: true },
             ]
           : []),
       ],
@@ -91,8 +95,15 @@ export function buildDetailedTables({
       // What the customer pays at the counter today; the Total Payable Today line that used to end the explainer lives here.
       title: 'Upfront Charges',
       rows: [
-        { label: 'Number Charge After Discount', value: q(numberChargeQar) },
-        { label: 'HRN Advance', value: q(hrnAdvance) },
+        // Waive Off (Number Selection): the charge, what was waived and what is left, so the Total Payable Today can be followed line by line.
+        ...(numberWaiver && numberWaivedQar > 0
+          ? [
+              { label: 'Number Upfront Charge', value: q(numberChargeQar) },
+              { label: numberWaiverLabel(numberWaiver), value: `- ${q(numberWaivedQar)}` },
+              { label: 'Number Charge After Waiver', value: q(numberPayableQar) },
+            ]
+          : [{ label: 'Number Charge After Discount', value: q(numberChargeQar) }]),
+        { label: 'Advance Payment', value: q(hrnAdvance) },
         { label: 'Total Payable Today', value: q(dueTodayQar), boldLabel: true, boldValue: true },
       ],
     },

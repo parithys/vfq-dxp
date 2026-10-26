@@ -272,7 +272,7 @@ test('postpaid port-in uses the shared Plan, Add-ons, Checkout Summary and full 
   assert.equal(prepaidCaf.locksAfter, undefined);
   const [postpaidCheckout] = all.filter((s) => s.key === 'checkout');
   assert.equal(postpaidCheckout.label, 'Checkout');
-  assert.equal(all.find((s) => s.key === 'planExtras').label, 'Add-Ons');
+  assert.equal(all.find((s) => s.key === 'planExtras').label, 'Addons & Discounts');
 });
 
 test('the prepaid port-in checkout is the shared prepaid checkout, gated on the validations and storing what is due as dueTodayQar', () => {
@@ -356,7 +356,7 @@ test('"Port the number onto" is the first MNP step, not part of Product Selectio
   assert.equal(step.label, 'Plan Type');
   assert.notEqual(step.heading, 'Port the number onto', 'the heading must not repeat the cards\' legend');
   // the New MNP button and a New MNP offer both leave product 'mnp'; only the offer names the type. Neither is asked on the product page.
-  const clearFor = (mnpType) => ({ product: 'mnp', mnpType, eligibility: { scope: 'product', journeyType: mnpType === 'prepaid' ? 'prepaid' : 'postpaid', hardStop: false, softStop: false, checks: [] } });
+  const clearFor = (mnpType) => ({ product: 'mnp', mnpType, eligibility: { scope: 'product', portIn: true, journeyType: mnpType === 'prepaid' ? 'prepaid' : 'postpaid', hardStop: false, softStop: false, checks: [] } });
   assert.equal(productEligibilityClear(clearFor(undefined)), true, 'Product Selection no longer waits for the plan type');
   assert.equal(step.isValid(clearFor(undefined)), false, 'the step needs a type chosen');
   assert.equal(step.isValid(clearFor('postpaid')), true);

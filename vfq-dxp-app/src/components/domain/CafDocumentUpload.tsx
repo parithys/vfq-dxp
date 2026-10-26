@@ -5,6 +5,7 @@ import { ID_TYPES } from '../../data/idTypes';
 import { Button } from '../primitives/Button';
 import { Select } from '../primitives/Select';
 import { Icon } from '../primitives/Icon';
+import { UPLOAD_RULES, uploadFileProblem } from './documentUploadRules';
 
 export interface CafDocument {
   /** Local id - these are session artefacts, not persisted records. */
@@ -30,15 +31,10 @@ interface CafDocumentUploadProps {
  */
 const DOC_TYPES = ['Signed CAF', ...ID_TYPES.map((t) => t.label), 'Other ID'];
 
-/** 2026-09-28 direction. Note this DIVERGES from the corpus's only evidenced
- * attachment limit - the MNP rule specifies "file size under 2 MB, in PDF or
- * JPG format" - so MNP is not governed by this constant. */
-const MAX_FILE_BYTES = 5 * 1024 * 1024;
+// The size and type rules are the Document Upload capability's (documentUploadRules.ts), shared with every other upload.
+const RULES = UPLOAD_RULES.supporting;
 // 5, matching the New Connection journey's document upload.
 const MAX_DOCUMENTS = 5;
-/** PDF/JPG is the evidenced format pair (same MNP rule); PNG added because a
- * counter scanner producing one would otherwise be rejected for no reason. */
-const ACCEPTED = '.pdf,.jpg,.jpeg,.png';
 
 const TRASH = 'M3 6h18 M8 6V4h8v2 M19 6l-1 14H6L5 6 M10 11v6 M14 11v6';
 const DOC = 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6';
@@ -64,10 +60,9 @@ export function CafDocumentUpload({ documents, onChange }: CafDocumentUploadProp
       setError('Choose a document type before uploading.');
       return;
     }
-    if (file.size > MAX_FILE_BYTES) {
-      // Names the actual size, so the agent knows how far over it is rather
-      // than only that it failed.
-      setError(`${file.name} is ${formatSize(file.size)}. The limit is 5 MB per file.`);
+    const problem = uploadFileProblem(file, RULES);
+    if (problem) {
+      setError(problem);
       return;
     }
     setError(null);
@@ -84,7 +79,7 @@ export function CafDocumentUpload({ documents, onChange }: CafDocumentUploadProp
       <div>
         <h4 className="text-fg font-medium text-[length:var(--fs-body)]">Signed Documents</h4>
         <p className="text-muted text-[length:var(--fs-caption)]">
-          Up to {MAX_DOCUMENTS} files, 5 MB each. PDF or image.
+          Up to {MAX_DOCUMENTS} files, {RULES.maxLabel} each. {RULES.formatsLabel}.
         </p>
       </div>
 
@@ -131,7 +126,7 @@ export function CafDocumentUpload({ documents, onChange }: CafDocumentUploadProp
           <input
             ref={fileRef}
             type="file"
-            accept={ACCEPTED}
+            accept={RULES.accept}
             className="sr-only"
             onChange={(e) => handleFile(e.target.files?.[0])}
           />

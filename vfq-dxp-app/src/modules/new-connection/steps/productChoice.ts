@@ -1,8 +1,10 @@
 import { useWorkflowStore } from '../../../stores/workflowStore';
+import { usePersonaStore } from '../../../stores/personaStore';
+import { canStartProduct } from '../productAccess';
 import { useCustomerContext } from '../../../stores/customerContextStore';
 import { HOME_WIZARD_ID_BY_FLOW } from '../newConnectionModel';
 import type { CrossSalesValue } from '../../../capabilities';
-import { PRODUCT_OWNED_KEYS, billingStepActive, eligibilityJourney } from '../products';
+import { PRODUCT_OWNED_KEYS, billingStepActive, connectionOf, eligibilityJourney } from '../products';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
 import type { ConnectionProduct, HomeProduct, MnpType } from '../products';
 import type { ProductStepContext } from './ProductSelection';
@@ -33,6 +35,8 @@ export function selectProduct(
   next: ConnectionProduct,
   opts: { mnpType?: MnpType; homeProduct?: HomeProduct; advance?: boolean } = {}
 ): boolean {
+  // A role is not carried into a product it holds no grant for.
+  if (!canStartProduct(usePersonaStore.getState().activePersonaId, next)) return false;
   const product = values.product as ConnectionProduct | undefined;
   const mnpType = next === 'mnp' ? opts.mnpType : undefined;
   const homeProduct = next === 'fixed-line' ? opts.homeProduct : undefined;
@@ -52,7 +56,10 @@ export function productEligibilityClear(values: Record<string, unknown>, opts: {
   // New Home Connection picks the connection type on this page (its product cards). In New Connection, Fixed Line's connection type and
   // MNP's plan type are asked on the step after, not on the Recommended Offers page.
   const needsKind = Boolean(opts.requireHomeKind) && values.product === 'fixed-line' && !values.homeProduct;
-  return !needsKind && Boolean(e) && e!.scope === 'product' && e!.journeyType === eligibilityJourney(values) && !e!.hardStop && !e!.softStop;
+  // Judged for THIS product: the line type (Fixed/FWA vs mobile) and port-in, not only the journey, so a decision made for another product is not reused.
+  const judgedFor = e && e.scope === 'product' && !e.lineLimitSkipped && e.journeyType === eligibilityJourney(values) && Boolean(e.portIn) === (values.product === 'mnp') &&
+    (e.connectionType ?? (e.journeyType === 'prepaid' ? 'MOBILE_PREPAID' : 'MOBILE_POSTPAID')) === connectionOf(values);
+  return !needsKind && Boolean(judgedFor) && !e!.hardStop && !e!.softStop;
 }
 
 /** The plan type of a New MNP journey (Postpaid / Prepaid). Changing it drops what the other type chose, as changing product does, and returns progress to the plan-type step. */
@@ -80,7 +87,9 @@ export const clearAndQuiet = (values: Record<string, unknown>, opts: { requireHo
  */
 export function handOverToHomeConnection(ctx: ProductStepContext, values: Record<string, unknown>, route: string): void {
   const store = useWorkflowStore.getState();
-  const home = HOME_WIZARD_ID_BY_FLOW.new;
+  // The journey continues in its own flow: an existing customer stays an existing customer (their record, hold and account), not a new one.
+  // The existing flow's draft is keyed by the customer, as useNewConnectionJourney keys it.
+  const home = ctx.flow === 'existing' && ctx.existingCustomerId ? `${HOME_WIZARD_ID_BY_FLOW.existing}-${ctx.existingCustomerId}` : HOME_WIZARD_ID_BY_FLOW[ctx.flow];
   store.clearDraft(home);
   store.patchDraft(home, {
     set: { contact: values.contact, eligibility: values.eligibility, customerType: values.customerType },

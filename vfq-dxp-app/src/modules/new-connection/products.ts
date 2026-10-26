@@ -1,5 +1,6 @@
 import type { WizardStep } from '../../components/patterns/wizard/guidedWizardTypes';
 import type { ServiceJourney } from '../../capabilities';
+import type { ConnectionType } from '../../domain/eligibility';
 
 // New Connection is ONE journey: Customer Verification once, then the product the agent chooses by the customer's intent,
 // and that product's steps continue in the same wizard (same draft, same customer lock). This is the product model.
@@ -62,6 +63,10 @@ export function eligibilityJourney(values: Record<string, unknown>): 'postpaid' 
   return product === 'prepaid' || (product === 'mnp' && values.mnpType === 'prepaid') ? 'prepaid' : 'postpaid';
 }
 
+/** The line the product adds, for the line-count rules: Fixed Line is Fixed/FWA; MNP is the mobile line of the plan type it ports onto. */
+export const connectionOf = (values: Record<string, unknown>): ConnectionType =>
+  values.product === 'fixed-line' ? 'FIXED_FWA' : eligibilityJourney(values) === 'prepaid' ? 'MOBILE_PREPAID' : 'MOBILE_POSTPAID';
+
 /** Whether the product keeps a billing account (a prepaid line has none; MNP onto a prepaid plan has none either). */
 /** Whether New Connection's shared Billing Profile step (before Recommended Offers) applies: until a product is chosen, and for a product that has one. */
 export const billingStepActive = (values: Record<string, unknown>): boolean => values.product === undefined || hasBillingAccount(values);
@@ -75,15 +80,15 @@ export const hasBillingAccount = (values: Record<string, unknown>): boolean =>
  * billing profile and the offers decision are collected before or at the product step, so they stay.
  */
 export const PRODUCT_OWNED_KEYS = [
-  'productId', 'discountId', 'addonIds', 'selectionSource', 'bundledItems',
-  'msisdn', 'numberPriceQAR', 'priceQAR', 'numberRefresh', 'prePaired',
+  'productId', 'planTab', 'discountId', 'addonIds', 'selectionSource', 'bundledItems',
+  'msisdn', 'numberWaiver', 'numberPriceQAR', 'priceQAR', 'numberRefresh', 'prePaired',
   'simType', 'simSerial', 'simValid', 'cart',
   'billLimit', 'billLimitPass',
   'creditCheckPass', 'creditCheckAcknowledged',
   'installation', 'devices', 'appointment',
   'donorDetails', 'donorAttachment', 'comments',
   'checkoutTotals', 'cafSummary', 'legalFacts', 'caf', 'payment',
-  'homeProduct',
+  'homeProduct', 'actualUser',
 ] as const;
 
 /** Wraps a product's steps so they are active only while that product is chosen (and, for each, its own `skip` as well). */

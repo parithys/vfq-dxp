@@ -51,6 +51,8 @@ export interface PostpaidPlan {
   offer?: boolean;
   /** False keeps a plan in the catalogue (existing orders, discounts, assets) but out of the plan picker. */
   listed?: boolean;
+  /** A nationality promotion: offered only to customers of these nationalities (see isPlanOfferedTo). Omitted: offered to everyone. */
+  eligibleNationalities?: string[];
   /** Promotional price: `mrcQAR` is charged for `promoMonths` months, then `originalMrcQAR`. */
   originalMrcQAR?: number;
   promoMonths?: number;
@@ -143,15 +145,45 @@ export const SPECIAL_DISCOUNT_ADDON_TYPES: ReadonlySet<string> = new Set(Object.
 export const SPECIAL_DISCOUNT_CARD_TITLE = 'Special Discount';
 
 /**
- * The discounts to offer once the Special Discount chosen at Customer Verification is known: of the three special types only that one
- * stays (a customer holds one), and every other discount (Loyalty, ...) is untouched. `chosen` undefined = nothing chosen / not known here:
- * the list is returned as it is.
+ * The Special Discount to select by itself on the Add-ons and Discounts page: the plan's discount of the type the customer holds, once that type is
+ * validated (accepted evidence for Retiree / MADA, a supported company for B2B2C). Undefined when no Special Discount applies to this customer or
+ * this plan has none - Eligible Discounts then stays on "No Discount", its default.
  */
-export function discountsForSpecialType<T extends { addonType: string }>(discounts: T[], chosen: keyof typeof SPECIAL_DISCOUNT_TYPE | undefined): T[] {
+export function specialDiscountToPreselect<T extends { addonType: string }>(discounts: readonly T[], benefit: 'mada' | 'b2b2c' | 'retired' | 'none' | undefined): T | undefined {
+  if (!benefit || benefit === 'none') return undefined;
+  return discounts.find((d) => d.addonType === SPECIAL_DISCOUNT_TYPE[benefit].addonType);
+}
+
+/**
+ * The discounts to offer once the Special Discount chosen at Customer Verification is known: of the three special types only that one
+ * stays (a customer holds one); for a Standard customer ('none': no Special Discount chosen, or the benefit rejected) none of the three is offered,
+ * so a Special Discount card is never shown without a validated Consumer B2B2C, Retiree or MADA behind it. Every other discount (Loyalty, ...) is
+ * untouched. `chosen` undefined = this journey has no such choice: the list is returned as it is.
+ */
+export function discountsForSpecialType<T extends { addonType: string }>(discounts: T[], chosen: keyof typeof SPECIAL_DISCOUNT_TYPE | 'none' | undefined): T[] {
   if (!chosen) return discounts;
+  if (chosen === 'none') return discounts.filter((d) => !SPECIAL_DISCOUNT_ADDON_TYPES.has(d.addonType));
   const keep = SPECIAL_DISCOUNT_TYPE[chosen].addonType;
   return discounts.filter((d) => !SPECIAL_DISCOUNT_ADDON_TYPES.has(d.addonType) || d.addonType === keep);
 }
+
+/**
+ * Whether a plan is offered to a customer of this nationality: a plan that names its eligible nationalities (a nationality promotion) is offered to those
+ * only - and, with no nationality known, to nobody, since a restriction cannot be shown to be met; a plan that names none is offered to everyone.
+ */
+export function isPlanOfferedTo(plan: { eligibleNationalities?: string[] }, nationality: string | undefined): boolean {
+  const only = plan.eligibleNationalities;
+  if (!only || only.length === 0) return true;
+  return Boolean(nationality) && only.some((n) => n.toLowerCase() === nationality!.toLowerCase());
+}
+
+/**
+ * Whether a plan is chosen on the Offers tab of Offers & Plans: it is in the Offers (specials) group, or flagged a pre-bundled offer. A plan like
+ * that comes with its extras, so the journey skips Addons & Discounts and goes on to Number Selection. Decided from the plan itself - not from a
+ * value the Plan step writes after the choice - so it holds on a resumed draft and whatever the order of events.
+ */
+export const isOffersTabPlan = (p: { popular?: boolean; offer?: boolean; commitmentMonths?: number; preBundledOffer?: boolean }): boolean =>
+  Boolean(p.preBundledOffer) || planGroupOf(p) === 'specials';
 
 export function planGroupOf(p: { popular?: boolean; offer?: boolean; commitmentMonths?: number }): PlanGroupKey {
   if (p.popular || p.offer) return 'specials';

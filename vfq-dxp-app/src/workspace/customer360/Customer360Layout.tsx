@@ -1,4 +1,5 @@
 import { vipTagOf } from '../../data/customerSegments';
+import { EmptyState } from '../../components/primitives/EmptyState';
 import { overallCreditLimitOf } from './creditLimitView';
 import { useEntityStore } from '../../stores/entityStore';
 import { creditRiskPatch, type BigDataCreditRisk, type CreditRiskSource } from '../../engines/creditLimit';
@@ -245,10 +246,7 @@ export function Customer360Layout() {
   }
   if (data === undefined) {
     return (
-      <div className="p-8">
-        <p className="text-fg font-medium">No customer found for “{customerId}”.</p>
-        <p className="text-fg-2 text-[length:var(--fs-caption)] mt-1">Try Customer Search instead.</p>
-      </div>
+      <EmptyState title="Customer Not Found" message={<>No customer found for “{customerId}”. Try Customer Search instead.</>} />
     );
   }
 

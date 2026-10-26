@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useStartNewConnection } from '../useStartNewConnection';
+import { useCanStartNewConnection, useStartNewConnection } from '../useStartNewConnection';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../../components/primitives/Icon';
 import type { Customer360Data } from '../../../engines/customer360Engine';
@@ -58,6 +58,7 @@ type TabKey = 'all' | 'progress' | 'completed' | 'cancelled' | 'pending';
 export function C360Orders({ data }: { data: Customer360Data; services: CustomerService[]; goToTab?: (key: string) => void }) {
   const navigate = useNavigate();
   const startNewConnection = useStartNewConnection(data.customer.customerId);
+  const canStartNewConnection = useCanStartNewConnection();
   const [tab, setTab] = useState<TabKey>('all');
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -144,7 +145,7 @@ export function C360Orders({ data }: { data: Customer360Data; services: Customer
       subtitle="View and track all customer orders, including current, historical and in-progress requests"
       actions={
         <>
-          <ActionButton primary icon={IC.plus} onClick={startNewConnection}>
+          <ActionButton primary icon={IC.plus} onClick={startNewConnection} disabled={!canStartNewConnection}>
             New Order
           </ActionButton>
         </>

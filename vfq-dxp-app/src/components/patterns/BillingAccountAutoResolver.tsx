@@ -20,6 +20,7 @@ export function BillingAccountAutoResolver({
   customerId,
   customerName,
   profileSuffix = 'Postpaid',
+  accountType,
   value,
   onChange,
 }: {
@@ -27,6 +28,11 @@ export function BillingAccountAutoResolver({
   customerName?: string;
   /** What the new profile is for, appended to the customer's name in its name ("... - Postpaid"). */
   profileSuffix?: string;
+  /**
+   * The account type this journey bills on (see accountTypeForJourney). Only an account of that type (or a variant of it - "... (HRN)") is selected;
+   * an account of another type, or of none stated, is never chosen for it. Absent, any account of the customer.
+   */
+  accountType?: string;
   value: BillingAccountValue;
   onChange: (value: BillingAccountValue) => void;
 }) {
@@ -48,7 +54,7 @@ export function BillingAccountAutoResolver({
         : [[], [], [], []];
       if (cancelled) return;
       const own = (accounts as AccountRecord[])
-        .filter((a) => a.customerId === customerId)
+        .filter((a) => a.customerId === customerId && (!accountType || a.accountType === accountType || a.accountType.startsWith(`${accountType} (`)))
         .map((a) => allProfiles.find((pr) => pr.billingProfileId === a.billingProfileId))
         .filter((p): p is BillingProfileRecord => Boolean(p));
       if (own.length > 0) {

@@ -1,3 +1,4 @@
+import { chargeAfterWaiverQar, waivedQar, type NumberWaiver } from '../../engines/numberWaiver';
 import { hrnAdvanceQar } from '../../engines/hrnConfiguration';
 import { usePersonaStore } from '../../stores/personaStore';
 import { useEffect, useState } from 'react';
@@ -19,6 +20,8 @@ interface UseCheckoutSummaryArgs {
   /** The credit limit in force for the order's new account (the agent's choice, else the default); when absent the default applies. */
   creditLimitQar?: number;
   simType: SimTypeValue | undefined;
+  /** The Waive Off chosen on Number Selection, when one was. */
+  numberWaiver?: NumberWaiver;
   onTotalsComputed: (totals: CheckoutTotals) => void;
   onSummaryComputed?: (rows: { label: string; value: string }[]) => void;
   onLegalFactsComputed?: (facts: TncLegalFacts) => void;
@@ -39,6 +42,7 @@ export function useCheckoutSummary({
   eligibility,
   creditLimitQar: creditLimitOverride,
   simType,
+  numberWaiver,
   onTotalsComputed,
   onSummaryComputed,
   onLegalFactsComputed,
@@ -87,7 +91,10 @@ export function useCheckoutSummary({
   // a NaN entitlement rather than assuming the order of steps holds forever).
   const starEntitlementQar = plan ? planStarEntitlementQar(plan) : undefined;
   const numberChargeQar = isStarNumber && plan ? starNumberOverageQar(plan.mrcQAR, numberDelta, planStarEntitlementQar(plan)) : numberDelta;
-  const dueTodayQar = numberChargeQar + hrnAdvance;
+  // Waive Off (Number Selection) takes all or half of the number's upfront charge off what is paid today.
+  const numberWaivedQar = waivedQar(numberChargeQar, numberWaiver);
+  const numberPayableQar = chargeAfterWaiverQar(numberChargeQar, numberWaiver);
+  const dueTodayQar = numberPayableQar + hrnAdvance;
   // "Maximum Bill Limit equals account Credit Limit" (business-rules.json).
   // This journey dropped its Bill Limit editor on 2026-09-25, so there is no
   // agent-set value to show - what the customer must be told is the cap, which
@@ -114,9 +121,9 @@ export function useCheckoutSummary({
   const firstBill = firstBillCharges(charges, new Date());
 
   useEffect(() => {
-    onTotalsComputed({ dueTodayQar, monthlyRecurringQar, hrnAdvanceQar: hrnAdvance });
+    onTotalsComputed({ dueTodayQar, monthlyRecurringQar, hrnAdvanceQar: hrnAdvance, numberChargeQar, numberWaiver: numberWaivedQar > 0 ? numberWaiver : undefined, numberWaivedQar });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dueTodayQar, monthlyRecurringQar, hrnAdvance]);
+  }, [dueTodayQar, monthlyRecurringQar, hrnAdvance, numberChargeQar, numberWaiver, numberWaivedQar]);
 
   useEffect(() => {
     if (!onLegalFactsComputed || !plan) return;
@@ -150,6 +157,8 @@ export function useCheckoutSummary({
         starTier,
         starEntitlementQar,
         numberChargeQar,
+        numberWaiver,
+        numberWaivedQar,
         dueTodayQar,
         hrnAdvance,
         firstBill,
@@ -167,6 +176,7 @@ export function useCheckoutSummary({
     msisdn,
     numberDelta,
     dueTodayQar,
+    numberWaiver,
     monthlyRecurringQar,
     starTier?.tierId,
     simType?.simType,
@@ -184,6 +194,9 @@ export function useCheckoutSummary({
     starTier,
     starEntitlementQar,
     numberChargeQar,
+    numberWaiver,
+    numberWaivedQar,
+    numberPayableQar,
     dueTodayQar,
     creditLimitQar,
     charges,

@@ -13,7 +13,7 @@ import { assertEligibilityChecked } from '../../../engines/eligibilityGuard';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
 import type { WinCashPaymentValue } from '../../../components/patterns/WinCashPaymentStep';
 import type { CafType } from '../../../components/patterns/cafTypes';
-import type { AdditionalDocument } from '../../../components/domain/AdditionalDocumentsUpload';
+import type { AdditionalDocument } from '../../../capabilities';
 import type { useEntityStore } from '../../../stores/entityStore';
 import { DEVICE_LABEL, type DeviceType } from '../../../lib/deviceType';
 import { idScanAttachments } from '../../new-connection/idScanAttachments';

@@ -218,11 +218,14 @@ test('the four home products are Fibre, Fixed-Line, FWA and 5G Home, with no ser
 test('Fixed Line\'s connection type is asked on its own step, not on Recommended Offers; New Home Connection still picks it on Product Selection', () => {
   const e = { scope: 'product', journeyType: 'postpaid', hardStop: false, softStop: false, checks: [] };
   const step = pstep.productStep(ctx);
-  assert.equal(step.isValid({ product: 'fixed-line', eligibility: e }), true, 'Recommended Offers does not wait for the connection type');
+  const eFixed = { ...e, connectionType: 'FIXED_FWA' };
+  assert.equal(step.isValid({ product: 'fixed-line', eligibility: eFixed }), true, 'Recommended Offers does not wait for the connection type');
+  assert.equal(step.isValid({ product: 'fixed-line', eligibility: e }), false, 'a decision judged for a mobile line is not the Fixed Line one');
+  assert.equal(step.isValid({ product: 'fixed-line', eligibility: { ...eFixed, lineLimitSkipped: true } }), false, 'a result whose line count was not judged is not clear');
   assert.equal(step.isValid({ product: 'postpaid', eligibility: { ...e, journeyType: 'postpaid' } }), true);
   const home = pstep.productStep({ ...ctx, journey: 'home' });
-  assert.equal(home.isValid({ product: 'fixed-line', eligibility: e }), false, 'New Home Connection: no home product chosen yet');
-  assert.equal(home.isValid({ product: 'fixed-line', homeProduct: '5g-home', eligibility: e }), true);
+  assert.equal(home.isValid({ product: 'fixed-line', eligibility: eFixed }), false, 'New Home Connection: no home product chosen yet');
+  assert.equal(home.isValid({ product: 'fixed-line', homeProduct: '5g-home', eligibility: eFixed }), true);
   assert.ok(products.PRODUCT_OWNED_KEYS.includes('homeProduct'));
 });
 

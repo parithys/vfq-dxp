@@ -1,3 +1,4 @@
+import { numberWaiverLabel } from '../../engines/numberWaiver';
 import { formatQar, VAT_RATE } from '../../engines/postpaidPricing';
 import { Button } from '../primitives/Button';
 import type { CheckoutSummaryDerived } from './useCheckoutSummary';
@@ -11,8 +12,8 @@ interface CheckoutDefaultLayoutProps extends CheckoutSummaryDerived {
   onEdit: () => void;
 }
 
-const Row = ({ label, value, detail }: { label: string; value: string; detail?: string }) => (
-  <div className="flex justify-between gap-4 py-2 border-b border-border-soft last:border-0">
+const Row = ({ label, value, detail, agentOnly }: { label: string; value: string; detail?: string; agentOnly?: boolean }) => (
+  <div className={`flex justify-between gap-4 py-2 border-b border-border-soft last:border-0 ${agentOnly ? 'agent-only' : ''}`}>
     <dt className="text-fg">{label}</dt>
     <dd className="text-fg text-right">
       {value}
@@ -33,6 +34,8 @@ export function CheckoutDefaultLayout({
   starTier,
   starEntitlementQar,
   numberChargeQar,
+  numberWaiver,
+  numberWaivedQar,
   dueTodayQar,
   creditLimitQar,
   charges,
@@ -68,7 +71,7 @@ export function CheckoutDefaultLayout({
         isStarNumber
           ? starTier
             ? `${starTier.lockInDurationMonths}-month lock-in`
-            : 'Lock-in not banded - confirm before signature'
+            : 'Lock-in to be confirmed'
           : 'No lock-in',
       ]
         .filter(Boolean)
@@ -81,7 +84,8 @@ export function CheckoutDefaultLayout({
           goToStepKey rather than a bespoke navigation path - the agent then
           walks Continue back through Number/SIM Type as normal, both of
           which keep their prior values, landing back here unchanged. */}
-      <div className="flex items-center justify-between">
+      {/* The agent's prompt and Edit are not part of the customer's pop-up. */}
+      <div className="agent-only flex items-center justify-between">
         <p className="text-fg-2 text-[length:var(--fs-caption)]">Review with the customer before generating the CAF.</p>
         <Button variant="secondary" compact onClick={onEdit}>
           Edit
@@ -99,7 +103,7 @@ export function CheckoutDefaultLayout({
             the Alternate phone # (the service-notification contact, labelled
             to match the Contact step exactly) identify the customer here. */}
         <Row label="Customer Name" value={customerName ?? '-'} />
-        <Row label="Alternate Phone #" value={altPhone ?? '-'} />
+        <Row label="Work Number" value={altPhone ?? '-'} />
         {/* Plan and Discount are separate line items (2026-09-28), each
             carrying its own validity period as a detail line rather than
             leaving lock-in/duration to a separate recap box. */}
@@ -138,13 +142,14 @@ export function CheckoutDefaultLayout({
             (Free/Star), its own value, its own discount, and its own
             lock-in - see numberDetail above. */}
         <Row label="Number" value={msisdn ? `${msisdn} - ${isStarNumber ? 'Star' : 'Free'}` : '-'} detail={numberDetail} />
-        {creditLimitQar !== undefined && <Row label="Credit Limit" value={`QAR ${creditLimitQar}`} />}
+        {creditLimitQar !== undefined && <Row agentOnly label="Credit Limit" value={`QAR ${creditLimitQar}`} />}
         {/* Bill limit (2026-09-28): the agent's own figure from Plan &
             Add-ons' BillLimitEditor once they have set one, falling back to
             the plan's own figure (what Plan & Add-ons shows by default), then the credit-limit cap - never a made-up
             number, and never silently absent. */}
         {creditLimitQar !== undefined && (
           <Row
+            agentOnly
             label="Bill Limit"
             value={billLimit !== undefined || plan?.mrcQAR !== undefined ? `QAR ${billLimit ?? plan?.mrcQAR}` : `Up to QAR ${creditLimitQar}`}
             detail={`Capped at the QAR ${creditLimitQar} credit limit`}
@@ -163,7 +168,7 @@ export function CheckoutDefaultLayout({
             surfaced here (rather than a separate customer-input placeholder)
             because there is nothing for either party to fill in: this is the
             consequence of that classification, not a form field. */}
-        {hrnAdvance > 0 && <Row label="HRN Advance Payment" value={`QAR ${hrnAdvance}`} />}
+        {hrnAdvance > 0 && <Row label="Advance Payment" value={`QAR ${hrnAdvance}`} />}
       </dl>
 
       <div className="rounded-[var(--radius-card)] border border-accent-border bg-surface-warm p-4 space-y-1">
@@ -190,6 +195,12 @@ export function CheckoutDefaultLayout({
               )}
             </span>
             <span>QAR {numberChargeQar}</span>
+          </div>
+        )}
+        {numberWaiver && numberWaivedQar > 0 && (
+          <div className="flex justify-between text-fg-2 text-[length:var(--fs-caption)]">
+            <span>{numberWaiverLabel(numberWaiver)}</span>
+            <span>- QAR {numberWaivedQar}</span>
           </div>
         )}
         {hrnAdvance > 0 && (

@@ -14,7 +14,8 @@ export const ROW_TONE: Record<RowTone, string> = {
   'soft-stop': 'bg-tone-warn-soft',
   // Orange wash (distinct from the soft-stop amber): a diversion for approval, not a stop.
   'approval-routing': 'bg-tone-approval',
-  advisory: 'bg-surface',
+  // The info treatment (the same blue as the info banner and the info toast): the HRN advance is information, not an outcome.
+  advisory: 'bg-[var(--info-banner-bg)]',
 };
 
 export const ICON_TONE: Record<RowTone, string> = {
@@ -22,7 +23,7 @@ export const ICON_TONE: Record<RowTone, string> = {
   'hard-stop': 'text-danger',
   'soft-stop': 'text-[var(--warn-text)]',
   'approval-routing': 'text-[var(--warn-text)]',
-  advisory: 'text-muted',
+  advisory: 'text-[var(--tint-blue-fg)]',
 };
 
 // Circled glyphs, so the outcome is legible without relying on colour alone -
@@ -110,7 +111,7 @@ export function buildEligibilityRows(
 // not derived from `rows`: it describes the four possible outcomes in
 // general, not which ones this particular customer hit.
 /** Whether a row is the HRN advance-payment advisory (the one eligibility row shown as an info toast, not in the list). */
-export const isUpfrontPaymentRow = (row: { id: string; tone: RowTone }): boolean => row.id === 'hrn' && row.tone === 'advisory';
+export const isUpfrontPaymentRow = (row: { id: string; tone: string }): boolean => row.id === 'hrn' && row.tone === 'advisory';
 
 export const OUTCOME_LEGEND: { title: string; example: string; detail: string }[] = [
   {

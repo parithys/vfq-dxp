@@ -93,7 +93,7 @@ test('#4 a route-bound journey for a protected customer is blocked before the ba
   const look = read('src/components/patterns/useIdLookup.ts');
   assert.match(look, /cardRestrictedRef\.current = Boolean\(c && !canViewCustomerSegment/);
   assert.match(look, /if \(cardRestrictedRef\.current\) return undefined;/, 'the simulated scan reads nothing');
-  assert.ok((look.match(/!canViewCustomerSegment\(usePersonaStore\.getState\(\)\.activePersonaId, bound\.segment\)/g) ?? []).length === 2, 'the owner-mismatch message never names a protected customer');
+  assert.ok((look.match(/!canViewCustomerSegment\(usePersonaStore\.getState\(\)\.activePersonaId, bound\.segment\)/g) ?? []).length === 3, 'the owner-mismatch message never names a protected customer');
   const ownerAt = look.indexOf('setOwnerMismatch(bound?.name');
   assert.ok(look.lastIndexOf('setAccessRestricted(true)', ownerAt) > look.lastIndexOf('const bound = customers.find', ownerAt));
 });

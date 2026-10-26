@@ -2,6 +2,9 @@ import { NUMBER_SELECTION_LABEL } from '../../data/stepLabels';
 import type { WizardStep } from '../../components/patterns/wizard/guidedWizardTypes';
 import { NumberSelection } from './NumberSelection';
 import { numberSummary } from './summary';
+import { WaiveOff } from './WaiveOff';
+import { FREE_NUMBER_PRICE_CEILING_QAR, starNumberOverageQar } from '../../engines/postpaidPricing';
+import { isNumberWaiver } from '../../engines/numberWaiver';
 import { Button } from '../../components/primitives/Button';
 import { Icon } from '../../components/primitives/Icon';
 
@@ -17,6 +20,8 @@ export function numberSelectionStep(
     refresh?: boolean;
     /** Offer "Use a Pre-Paired SIM" (Mobile Prepaid): the choice is kept under `prePaired`, and the number then comes from the SIM. */
     prePairedOption?: boolean;
+    /** Offer "Waive Off" beside Continue: Partial or Full waiver of the Star number's upfront charge (postpaid journeys that price the number). */
+    waiveOff?: boolean;
  } = {}
 ): WizardStep {
   return {
@@ -42,6 +47,7 @@ export function numberSelectionStep(
         value={values.msisdn as string | undefined}
         refreshKey={opts.refresh ? (values.numberRefresh as number | undefined) : undefined}
         plan={opts.plan?.(values)}
+        customerIdNumber={(values.contact as { idNumber?: string } | undefined)?.idNumber}
         prePaired={
           opts.prePairedOption
             ? {
@@ -57,11 +63,30 @@ export function numberSelectionStep(
             : undefined
         }
         onChange={(msisdn, price) => {
+          // A different number has a different charge: a waiver chosen for the old one does not carry over.
+          if (msisdn !== values.msisdn) setValue('numberWaiver', undefined);
           setValue('msisdn', msisdn);
           if (opts.priceField) setValue(opts.priceField, price);
  }}
       />
     ),
+    // Waive Off sits before Continue.
+    ...(opts.waiveOff
+      ? {
+          primaryAction: ({ values, setValue, defaultButton }) => {
+            const plan = opts.plan?.(values);
+            const price = values[opts.priceField ?? 'numberPriceQAR'] as number | undefined;
+            const charge =
+              plan && price !== undefined && price >= FREE_NUMBER_PRICE_CEILING_QAR ? starNumberOverageQar(plan.mrcQar ?? 0, price, plan.starEntitlementQar) : 0;
+            return (
+              <div className="flex items-center gap-3">
+                <WaiveOff chargeQar={values.msisdn ? charge : 0} waiver={isNumberWaiver(values.numberWaiver) ? values.numberWaiver : undefined} onChange={(w) => setValue('numberWaiver', w)} />
+                {defaultButton}
+              </div>
+            );
+          },
+        }
+      : {}),
     isValid: (values) => Boolean(values.msisdn) || (opts.prePairedOption === true && values.prePaired === true),
  };
 }

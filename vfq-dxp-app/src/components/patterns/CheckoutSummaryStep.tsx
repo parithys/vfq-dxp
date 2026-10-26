@@ -1,3 +1,4 @@
+import type { NumberWaiver } from '../../engines/numberWaiver';
 import type { EligibilityResult } from '../domain/eligibilityTypes';
 import type { SimTypeValue } from '../domain/SimTypeStep';
 import type { CheckoutTotals, TncLegalFacts } from './checkoutSummaryModel';
@@ -7,6 +8,8 @@ import { buildDetailedTables } from './checkoutDetailedTables';
 import { useCheckoutSummary } from './useCheckoutSummary';
 
 interface CheckoutSummaryStepProps {
+  /** The Waive Off chosen on Number Selection; Checkout shows the waived amount and the revised upfront charge. */
+  numberWaiver?: NumberWaiver;
   customerName: string | undefined;
   /**
    * Service-notification contact, echoed here under the SAME label the
@@ -92,6 +95,7 @@ export function CheckoutSummaryStep({
   creditLimitQar,
   billLimit,
   simType,
+  numberWaiver,
   onTotalsComputed,
   onSummaryComputed,
   onEdit,
@@ -108,6 +112,7 @@ export function CheckoutSummaryStep({
     eligibility,
     creditLimitQar,
     simType,
+    numberWaiver,
     onTotalsComputed,
     onSummaryComputed,
     onLegalFactsComputed,
@@ -123,7 +128,7 @@ export function CheckoutSummaryStep({
     });
     return (
       <div className="space-y-6">
-        <p className="text-fg-2 text-[length:var(--fs-caption)]">Review with the customer before generating the CAF.</p>
+        <p className="agent-only text-fg-2 text-[length:var(--fs-caption)]">Review with the customer before generating the CAF.</p>
         <SummaryTables tables={tables} />
       </div>
     );

@@ -1,3 +1,4 @@
+import { EmptyState } from './EmptyState';
 import { Pagination, pageWindow } from './Pagination';
 import { useState, type KeyboardEvent, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
@@ -55,6 +56,8 @@ interface DataTableProps<T> {
   rowKey: (row: T) => string;
   onRowClick?: (row: T) => void;
   emptyMessage?: string;
+  /** Shown under the empty message when the empty table has a next step (clear the filters, start something). */
+  emptyAction?: ReactNode;
   loading?: boolean;
   /** Rows per page; `Infinity` shows every row (no pager). */
   pageSize?: number;
@@ -79,6 +82,7 @@ export function DataTable<T>({
   rowKey,
   onRowClick,
   emptyMessage = 'No records.',
+  emptyAction,
   loading,
   pageSize = 50,
   variant = 'framed',
@@ -128,7 +132,7 @@ export function DataTable<T>({
   };
 
   if (plain && !loading && rows.length === 0) {
-    return <p className="text-muted text-[length:var(--fs-body)] py-4 text-center">{emptyMessage}</p>;
+    return <EmptyState compact message={emptyMessage} action={emptyAction} />;
   }
 
   return (
@@ -176,8 +180,8 @@ export function DataTable<T>({
             )}
             {!loading && rows.length === 0 && (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-6 text-center text-muted">
-                  {emptyMessage}
+                <td colSpan={columns.length}>
+                  <EmptyState compact message={emptyMessage} action={emptyAction} />
                 </td>
               </tr>
             )}

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { EmptyState } from '../../components/primitives/EmptyState';
 import { Badge } from '../../components/primitives/Badge';
 import { Icon } from '../../components/primitives/Icon';
 import type { CustomerService } from '../../engines/customerServicesEngine';
@@ -44,7 +45,7 @@ export function ServiceList({ services, selectedRef, emptyMessage, personaId, re
   }, [selectedRef]);
 
   if (services.length === 0) {
-    return <p className="text-fg-2 text-[length:var(--fs-body)] mb-4">{emptyMessage}</p>;
+    return <EmptyState compact message={emptyMessage} className="mb-4" />;
   }
 
   return (

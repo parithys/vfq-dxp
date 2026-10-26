@@ -5,6 +5,7 @@ import { Input } from '../primitives/Input';
 import { Select } from '../primitives/Select';
 import { Button } from '../primitives/Button';
 import { Icon } from '../primitives/Icon';
+import { UPLOAD_RULES, uploadFileProblem } from './documentUploadRules';
 
 export interface AdditionalDocument {
   /** Local id - a session artefact, not a persisted record, same as CafDocument. */
@@ -31,9 +32,8 @@ interface AdditionalDocumentsUploadProps {
   onPendingChange?: (pending: boolean) => void;
 }
 
-const MAX_FILE_BYTES = 5 * 1024 * 1024;
 const MAX_DOCUMENTS = 10;
-const ACCEPTED = '.pdf,.jpg,.jpeg,.png';
+const RULES = UPLOAD_RULES.supporting;
 
 const TRASH = 'M3 6h18 M8 6V4h8v2 M19 6l-1 14H6L5 6 M10 11v6 M14 11v6';
 const DOC = 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6';
@@ -66,8 +66,9 @@ export function AdditionalDocumentsUpload({ documents, onChange, labelOptions, m
       setError(labelOptions ? 'Select a document type before uploading.' : 'Enter a label for this document before uploading.');
       return;
     }
-    if (file.size > MAX_FILE_BYTES) {
-      setError(`${file.name} is ${formatSize(file.size)}. The limit is 5 MB per file.`);
+    const problem = uploadFileProblem(file, RULES);
+    if (problem) {
+      setError(problem);
       return;
     }
     setError(null);
@@ -81,7 +82,7 @@ export function AdditionalDocumentsUpload({ documents, onChange, labelOptions, m
       <div>
         <h4 className="text-fg font-bold text-[length:var(--fs-body)]">Additional Documents</h4>
         <p className="text-muted text-[length:var(--fs-caption)]">
-          Optional - label and attach anything else this order needs. No signature required. Up to {maxDocuments} files, 5 MB each.
+          Optional - label and attach anything else this order needs. No signature required. Up to {maxDocuments} files, {RULES.maxLabel} each.
         </p>
       </div>
 
@@ -136,7 +137,7 @@ export function AdditionalDocumentsUpload({ documents, onChange, labelOptions, m
               />
             )}
           </div>
-          <input ref={fileRef} type="file" accept={ACCEPTED} className="sr-only" onChange={(e) => handleFile(e.target.files?.[0])} />
+          <input ref={fileRef} type="file" accept={RULES.accept} className="sr-only" onChange={(e) => handleFile(e.target.files?.[0])} />
           <Button
             variant="secondary"
             onClick={() => fileRef.current?.click()}

@@ -7,6 +7,14 @@ import type { DraftOrderRecord, WizardStep } from './guidedWizardTypes';
 /** Draft value naming the customer a journey was opened for. */
 export const LAUNCH_CUSTOMER_KEY = 'launchCustomerId';
 
+/**
+ * Where a resumed draft opens. Its eligibility is dropped (it is re-judged), and that happens on the first page, so a draft saved at a later step
+ * opens on the first page and keeps the saved step as the furthest reached (the agent goes forward once the checks have run).
+ */
+export function resumePosition(savedStep: number): { currentStep: number; maxStepReached: number } {
+  return { currentStep: 0, maxStepReached: Math.max(savedStep, 0) };
+}
+
 export function useJourneyStartResume(wizardId: string, steps: WizardStep[]) {
   const clearDraft = useWorkflowStore((s) => s.clearDraft);
   const hydrateDraft = useWorkflowStore((s) => s.hydrateDraft);
@@ -59,11 +67,16 @@ export function useJourneyStartResume(wizardId: string, steps: WizardStep[]) {
             0
           );
           // Eligibility is NEVER carried over from a saved draft: the customer's
-          // status may have changed since, so it is re-evaluated on resume.
+          // status may have changed since, so it is re-evaluated on resume - and it is
+          // judged on the first page (Customer Verification), so a draft saved further on
+          // reopens there, with the way forward to where it was left kept open once the
+          // checks are clear. (Landing on Checkout with no eligibility priced the order as
+          // non-HRN and refused it only after payment.)
           const { eligibility: _staleEligibility, ...resumedValues } = order.draftValues;
+          const position = resumePosition(stepIndex);
           hydrateDraft(wizardId, {
-            currentStep: stepIndex,
-            maxStepReached: stepIndex,
+            currentStep: position.currentStep,
+            maxStepReached: position.maxStepReached,
             values: resumedValues,
             draftOrderId: order.orderId,
           });

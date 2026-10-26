@@ -2,12 +2,7 @@ import { EligibilityGateStep } from '../../../capabilities';
 import type { GuidedContactValue } from '../../../capabilities';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
 import { LAUNCH_CUSTOMER_KEY } from '../../../components/patterns/wizard/useJourneyStartResume';
-import { eligibilityJourney } from '../products';
-import type { ConnectionType } from '../../../domain/eligibility';
-
-/** The line the product adds, for the line-count rules: Fixed Line is Fixed/FWA; MNP is the mobile line of the plan type it ports onto. */
-const connectionOf = (values: Record<string, unknown>): ConnectionType =>
-  values.product === 'fixed-line' ? 'FIXED_FWA' : eligibilityJourney(values) === 'prepaid' ? 'MOBILE_PREPAID' : 'MOBILE_POSTPAID';
+import { connectionOf, eligibilityJourney } from '../products';
 
 /** Passport BAU/Credit Control approvals (PB-*) come from the ID type, so they are announced at Customer Verification, not repeated here. */
 const isPassportOnly = (ruleIds: string[] | undefined) => !!ruleIds?.length && ruleIds.every((id) => id.startsWith('PB-'));

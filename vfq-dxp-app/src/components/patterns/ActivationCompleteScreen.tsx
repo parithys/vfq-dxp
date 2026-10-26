@@ -5,8 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { OrderConfirmationScreen } from './OrderConfirmationScreen';
 import { EsimActivationPanel } from '../domain/EsimActivationPanel';
-import { usePersonaStore } from '../../stores/personaStore';
-import { getPersona } from '../../engines/configEngine';
 import { useEntityStore } from '../../stores/entityStore';
 import { useAuthStore } from '../../stores/authStore';
 import { closeOrderActivities, logActivity } from '../../engines/activityEngine';
@@ -73,11 +71,8 @@ export interface ActivationCompleteOrder {
 const FIBRE_ACTIVATION_ROUTE = '/fixed-line-fibre/new-fixed-line-wizard-contact-step';
 const ORDER_DETAIL_ROUTE = '/order-management/order-approval-detail-attachments-order-details-activities-a';
 
-// Heading by who submitted (2026-10-01): Direct Sales and Mass Market orders go
-// for approval; Retail orders are submitted outright. Any other role keeps the
-// previous behaviour (approval wording only when the order was actually held).
-const APPROVAL_SUBMITTERS = new Set(['Direct Sales', 'Mass Market']);
-const RETAIL_SUBMITTERS = new Set(['Retail Sales']);
+// The heading follows the ORDER: "for approval" only when it was actually held (its Status row and the email say the same), "Activation complete"
+// when it went through. (It used to follow the submitter's role, which could say "for approval" over a Complete order.)
 
 // Orders whose confirmation email has already been sent this session, so re-rendering (or React's
 // double-invoked effects) can never send it twice.
@@ -115,7 +110,10 @@ export function ActivationCompleteScreen({
   // to the customer's VERIFIED email address as soon as the order is submitted. An address that is
   // missing or could not be verified against the ID record is never sent to. The prototype has no
   // mail service, so "sending" records the message against the customer.
+  const isMirrorWindow = new URLSearchParams(window.location.search).get('mirror') === '1';
   useEffect(() => {
+    // The customer's pop-up only displays: it never sends the email (the agent's window does).
+    if (isMirrorWindow) return;
     if (!order.customerEmail || !order.customerEmailVerified) {
       setEmailStatus('blocked');
       return;
@@ -133,7 +131,7 @@ export function ActivationCompleteScreen({
       `SIM: ${order.simType ?? '-'}`,
       ...(order.dueTodayQar !== undefined ? [`Due today: QAR ${order.dueTodayQar}`] : []),
       ...(order.monthlyRecurringQar !== undefined ? [`Monthly: QAR ${order.monthlyRecurringQar}`] : []),
-      ...(order.esimActivationCode ? [`eSIM QR code attached. Activation code: ${order.esimActivationCode}`] : []),
+      ...(order.esimActivationCode && !order.pendingApproval ? [`eSIM QR code attached. Activation code: ${order.esimActivationCode}`] : []),
     ];
     void createRecord('customer-communications', {
       communicationId: `COM-${Date.now().toString(36).toUpperCase()}`,
@@ -202,21 +200,23 @@ export function ActivationCompleteScreen({
     setLeadId(id);
     pushToast('success', `Lead ${id} created`, { key: `lead-${id}` });
   };
-  const submitter = getPersona(usePersonaStore((s) => s.activePersonaId))?.name ?? '';
-  const forApproval = order.pendingApproval || APPROVAL_SUBMITTERS.has(submitter);
-  const heading = order.heading ?? (forApproval
-    ? 'Order submitted for approval'
-    : RETAIL_SUBMITTERS.has(submitter)
-      ? 'Order submitted successfully'
-      : 'Activation complete');
+  const heading = order.heading ?? (order.pendingApproval ? 'Order submitted for approval' : 'Activation complete');
   return (
     <div className="p-8">
       <OrderConfirmationScreen
         heading={heading}
         orderId={order.orderId}
         activityId={order.activityId}
+        // Two columns only while the QR code is shown (the handover panel); otherwise one column. An eSIM held for approval shows its notice in the
+        // header, not in a second column.
         headerNote={
-          order.esimActivationCode ? undefined : emailStatus === 'sent' ? (
+          order.esimActivationCode ? (
+            order.pendingApproval ? (
+              <p className="rounded-[var(--radius-card)] border border-border-soft bg-surface px-4 py-3 text-fg-2 text-[length:var(--fs-body)]">
+                The eSIM QR code and activation code are released once the order is approved.
+              </p>
+            ) : undefined
+          ) : emailStatus === 'sent' ? (
             <p className="text-success text-[length:var(--fs-body)]">Your order details have been sent to your email.</p>
           ) : (
             <p className="text-[var(--warn-text)] text-[length:var(--fs-caption)]">
@@ -227,7 +227,7 @@ export function ActivationCompleteScreen({
           )
         }
         handoverPanel={
-          order.esimActivationCode ? (
+          order.esimActivationCode && !order.pendingApproval ? (
             <EsimActivationPanel activationCode={order.esimActivationCode} emailSent={emailStatus === 'sent'} />
           ) : undefined
         }
