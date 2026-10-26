@@ -40,6 +40,7 @@ export type NavKey =
   | 'leads'
   | 'support'
   | 'orders'
+  | 'bill-formatter'
   | 'administration';
 
 export interface NavPlannedCopy {
@@ -110,6 +111,7 @@ const ICONS = {
     'M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z M12 9v3 M12 15h.01',
   orders:
     'M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1z M6 6h12v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1z M9 13l2 2 4-4',
+  billFormatter: 'M6 3h12a1 1 0 0 1 1 1v17l-3-2-2 2-2-2-2 2-2-2-3 2V4a1 1 0 0 1 1-1z M9 8h6 M9 12h6 M9 16h3',
   administration: 'M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6z M9.5 12l2 2 3-3',
 };
 
@@ -177,6 +179,7 @@ export const NAV_MANIFEST: readonly NavItem[] = [
   { key: 'leads', label: 'Leads', to: '/leads', icon: ICONS.leads, implemented: true },
   { key: 'support', label: 'Support', to: '/support', icon: ICONS.support, implemented: true },
   { key: 'orders', label: 'Orders', to: '/orders', icon: ICONS.orders, implemented: true },
+  { key: 'bill-formatter', label: 'Bill Formatter', to: '/bill-formatter', icon: ICONS.billFormatter, implemented: true },
   {
     key: 'administration',
     label: 'Administration',
@@ -198,13 +201,13 @@ export const NAV_BY_KEY: ReadonlyMap<NavKey, NavItem> = new Map(
 );
 
 /** Closed-set guard (INV-1). Growing the rail must be a deliberate edit here.
- * 20 = 10 top-level destinations (including the 2 product lines) + the 10
+ * 20 = 11 top-level destinations (including the 2 product lines) + the 10
  * product-line journey categories. */
-export const NAV_MANIFEST_SIZE = 19;
+export const NAV_MANIFEST_SIZE = 20;
 /** Top-level cap per role (INV-2). 10 is the maximum reachable by
  * construction: the widest approach ordering is Hybrid at 10, plus
  * Administration for the roles that hold its feature grant. */
-export const NAV_MAX_TOP_LEVEL = 11;
+export const NAV_MAX_TOP_LEVEL = 12;
 
 if (IS_DEV && NAV_BY_KEY.size !== NAV_MANIFEST_SIZE) {
   throw new Error(

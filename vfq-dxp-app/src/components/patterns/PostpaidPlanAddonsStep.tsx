@@ -235,13 +235,6 @@ export function PostpaidPlanAddonsStep({
                     />
                   </div>
                 )}
-                {/* The bill limit, full width below the row, under a separator and without a box: it is a spending control for the
-                    whole plan, not one of the add-ons. */}
-                {selectionSource === 'PLAN' && !preBundled && (
-                  <div className="border-t border-[var(--field-card-border)] pt-6">
-                    <BillLimitEditor product="Mobile" layout="row" bare value={billLimit ?? defaultBillLimitQar(selectedPlan.mrcQAR, billLimitMax)} onChange={onBillLimitChange} maxLimit={billLimitMax} />
-                  </div>
-                )}
               </section>
             )}
             {mode === 'extras' && !selectedPlan && (
@@ -272,6 +265,13 @@ export function PostpaidPlanAddonsStep({
                   />
                 </div>
               </section>
+            )}
+            {/* The bill limit, after the add-ons and the eligible discounts, full width under a separator and without a box: it is a spending control for the
+                whole plan, not one of the add-ons. */}
+            {mode === 'extras' && selectedPlan && selectionSource === 'PLAN' && !preBundled && (
+              <div className="border-t border-[var(--field-card-border)] pt-6">
+                <BillLimitEditor product="Mobile" layout="row" bare value={billLimit ?? defaultBillLimitQar(selectedPlan.mrcQAR, billLimitMax)} onChange={onBillLimitChange} maxLimit={billLimitMax} />
+              </div>
             )}
           </>
         )}

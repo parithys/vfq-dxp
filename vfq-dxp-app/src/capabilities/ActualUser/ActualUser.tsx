@@ -45,7 +45,7 @@ export function ActualUser({
   const samePerson = isOtherUser(value) && sameId(identity?.idNumber, primaryIdNumber);
   return (
     <div className="space-y-4">
-      <div role="radiogroup" aria-label="Who will use this line" className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))]">
+      <div role="radiogroup" aria-label="Actual User" className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))]">
         {OPTIONS.map((o) => {
           const checked = choice === o.key;
           return (

@@ -208,3 +208,11 @@ test('the first months\' charge of an add-on (what the monthly summary, checkout
   assert.equal(m.addonChargeNowQar({ mrcQAR: 20 }), 20, 'a record with no model is charged its price');
   for (const a of addons) assert.ok(m.addonChargeNowQar(a) <= a.mrcQAR, a.productId);
 });
+
+test('Addons & Discounts reads in this order: Add-ons, Eligible Discounts, Bill Limit (Mobile), Monthly Summary', () => {
+  const s = fs.readFileSync('src/components/patterns/PostpaidPlanAddonsStep.tsx', 'utf8');
+  const at = (needle) => s.indexOf(needle);
+  const order = [at('<PostpaidAddonsPanel'), at('<PostpaidDiscountsPanel'), at('<BillLimitEditor'), at('<PostpaidMonthlySummary')];
+  assert.ok(order.every((i) => i > 0), 'all four are on the step');
+  assert.deepEqual([...order].sort((a, b) => a - b), order, 'in source order, so in page order');
+});

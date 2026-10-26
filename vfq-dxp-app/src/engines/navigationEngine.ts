@@ -28,8 +28,8 @@ import type { PersonaApproach } from '../types/config';
 // an item declaring `requiresFeature` (Administration), which is a genuine
 // boundary rather than IA.
 const APPROACH_NAV: Record<PersonaApproach, NavKey[]> = {
-  'Customer-First': ['dashboard', 'customer-search', 'sales', 'support', 'orders'],
-  'Product-First': ['dashboard', 'new-connections', 'mobile', 'fibre-home', 'operations', 'leads'],
+  'Customer-First': ['dashboard', 'customer-search', 'sales', 'support', 'orders', 'bill-formatter'],
+  'Product-First': ['dashboard', 'new-connections', 'mobile', 'fibre-home', 'operations', 'leads', 'bill-formatter'],
   Hybrid: [
     'dashboard',
     'customer-search',
@@ -41,6 +41,7 @@ const APPROACH_NAV: Record<PersonaApproach, NavKey[]> = {
     'leads',
     'support',
     'orders',
+    'bill-formatter',
   ],
   // View Only: a read-only reviewer needs to find a record and read its
   // history, nothing more.

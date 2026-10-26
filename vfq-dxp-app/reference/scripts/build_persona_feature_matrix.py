@@ -348,8 +348,8 @@ def parse_navigation():
     problems = []
     if set(approach_nav) != {'Customer-First', 'Product-First', 'Hybrid', 'None'}:
         problems.append(f'APPROACH_NAV keys parsed as {sorted(approach_nav)}')
-    if len(items) != 19:
-        problems.append(f'navManifest parsed {len(items)} items, expected 19')
+    if len(items) != 20:
+        problems.append(f'navManifest parsed {len(items)} items, expected 20')
     if not gated:
         problems.append('no requiresFeature found in navManifest')
     for lk, cats in lines.items():
