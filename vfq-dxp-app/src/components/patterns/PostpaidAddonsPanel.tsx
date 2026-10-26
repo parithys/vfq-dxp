@@ -1,3 +1,4 @@
+import { defaultBillLimitQar } from '../../engines/postpaidPricing';
 import { AddonsPicker } from '../../capabilities/AddonsSelection/AddonsPicker';
 import { BillLimitEditor } from '../domain/BillLimitEditor';
 import type { PostpaidPlan } from './postpaidPlanModel';
@@ -62,7 +63,7 @@ export function PostpaidAddonsPanel({
               Discounts, since there is no MRC to default from before
               then. */}
           {selectedPlan && !hideBillLimit && (
-            <BillLimitEditor product="Mobile" layout="row" value={billLimit ?? selectedPlan.mrcQAR} onChange={onBillLimitChange} maxLimit={billLimitMax} />
+            <BillLimitEditor product="Mobile" layout="row" value={billLimit ?? defaultBillLimitQar(selectedPlan.mrcQAR, billLimitMax)} onChange={onBillLimitChange} maxLimit={billLimitMax} />
           )}
         </div>
       ));

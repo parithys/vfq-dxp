@@ -3,6 +3,7 @@ import { ServiceTypeTag } from '../primitives/ServiceTypeTag';
 import { CARD_IDLE, CARD_SELECTED } from '../primitives/offerCardParts';
 import { loadCustomerLines, lineIneligibility } from './lineSelectionModel';
 import type { CustomerLine, LineType } from './lineSelectionModel';
+import { formatQar } from '../../lib/format';
 
 interface LineSelectionStepProps {
   /** The identified customer; nothing is listed until there is one. */
@@ -66,7 +67,7 @@ export function LineSelectionStep({ customerId, lineType, value, onChange, requi
             </div>
             <p className="text-fg text-[length:var(--fs-body)]">{line.productName}</p>
             <p className="text-fg-2 text-[length:var(--fs-caption)]">
-              {line.priceQAR === undefined ? 'Price not on file' : line.lineType === 'postpaid' ? `QAR ${line.priceQAR} / month` : `QAR ${line.priceQAR} starter pack`} · {line.status}
+              {line.priceQAR === undefined ? 'Price not on file' : line.lineType === 'postpaid' ? `${formatQar(line.priceQAR)} / month` : `${formatQar(line.priceQAR)} starter pack`} · {line.status}
             </p>
             {reason && <p className="text-danger text-[length:var(--fs-caption)] mt-1">{reason}</p>}
           </button>

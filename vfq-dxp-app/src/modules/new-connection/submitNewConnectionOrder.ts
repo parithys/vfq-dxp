@@ -8,7 +8,7 @@ import { actualUserOrderFields, saveActualUserContact } from '../../capabilities
 import type { ActualUserValue } from '../../capabilities/ActualUser';
 import { hrnAdvanceQar } from '../../engines/hrnConfiguration';
 import { usePersonaStore } from '../../stores/personaStore';
-import { monthlyCharges } from '../../engines/postpaidPricing';
+import { defaultBillLimitQar, formatQar, monthlyCharges } from '../../engines/postpaidPricing';
 import { effectiveCreditLimitQar, emailVerification, maskEmail, persistBillingAccount } from '../../capabilities';
 import type { GuidedContactValue } from '../../capabilities';
 import type { BillingAccountValue } from '../../capabilities';
@@ -30,6 +30,7 @@ import type { useEntityStore } from '../../stores/entityStore';
 import type { NewConnectionFlow, ConfirmedOrder } from './newConnectionModel';
 import { idScanAttachments } from './idScanAttachments';
 import { isB2B2COrder } from './approvalRouting';
+import { addonChargeNowQar } from '../../engines/addonCategories';
 import { isNumberWaiver, numberWaiverLabel } from '../../engines/numberWaiver';
 import { approvalMessages, decisionRecord, needsCreditControl } from '../../engines/connectionEligibility';
 
@@ -67,7 +68,7 @@ export async function submitNewConnectionOrder(
       const charges = monthlyCharges({
         planQar: plan?.mrcQAR ?? 0,
         discountRate: discount?.price,
-        addonsQar: addons.reduce((sum, a) => sum + a.mrcQAR, 0),
+        addonsQar: addons.reduce((sum, a) => sum + addonChargeNowQar(a), 0),
       });
       const monthlyRecurringQar = charges.totalQar;
       // BR-268: HRN/credit-limit variant routes to manager approval rather
@@ -171,9 +172,9 @@ export async function submitNewConnectionOrder(
                 manualIdEntry ? 'Identity manually entered - Store Manager approval required' : '',
                 idTypeRouting ? 'ID type requires Credit Control approval - routed to Credit Control' : '',
                 eligibility?.checks.some((c) => c.id === 'id-validity' && c.outcome === 'approval-routing') ? 'ID expiry date not on file - routed for approval' : '',
-                eligibility?.requiresHrnAdvance ? `HRN customer - QAR ${hrnAdvanceQar({ nationality: eligibility?.nationality, personaId: usePersonaStore.getState().activePersonaId })} advance payment applies` : '',
+                eligibility?.requiresHrnAdvance ? `HRN customer - ${formatQar(hrnAdvanceQar({ nationality: eligibility?.nationality, personaId: usePersonaStore.getState().activePersonaId }))} advance payment applies` : '',
                 isB2B2COrder(contact, customerType) ? 'B2B2C employee - Proof of Employment to be verified' : '',
-                waived && waiver ? `${numberWaiverLabel(waiver)} - QAR ${waivedAmountQar} waived off the Star number upfront charge of QAR ${checkoutTotals?.numberChargeQar ?? 0}` : '',
+                waived && waiver ? `${numberWaiverLabel(waiver)} - ${formatQar(waivedAmountQar)} waived off the Star number upfront charge of ${formatQar(checkoutTotals?.numberChargeQar ?? 0)}` : '',
                 discount && SUPPORTING_ID_DISCOUNT_TYPES.has(discount.addonType ?? '') ? `${discount.addonType} - supporting document to be verified` : '',
               ].filter(Boolean).join(' | ') : undefined;
       await createRecord('orders', {
@@ -224,7 +225,7 @@ export async function submitNewConnectionOrder(
         simSerial: simType?.simSerial,
         billingProfileId,
         // What the customer was quoted and agreed to: the spending limits, how the amount was taken, and where the line is installed.
-        billLimitQAR: values.billLimit as number | undefined,
+        billLimitQAR: (values.billLimit as number | undefined) ?? (plan ? defaultBillLimitQar(plan.mrcQAR, effectiveCreditLimitQar(eligibility, billingAccount)) : undefined),
         creditLimitQAR: effectiveCreditLimitQar(eligibility, billingAccount),
         paymentMethod: (values.payment as WinCashPaymentValue | undefined)?.method,
         paymentReference: (values.payment as WinCashPaymentValue | undefined)?.reference,

@@ -71,10 +71,10 @@ export function buildCafSummaryRows({
     // (2026-09-28 "show its actual price"), it's simply not charged.
     {
       label: 'Number Value',
-      value: msisdn ? (isStarNumber ? `QAR ${numberDelta} one-time` : `QAR ${numberDelta} (no charge to customer)`) : '-',
+      value: msisdn ? (isStarNumber ? `${formatQar(numberDelta)} one-time` : `${formatQar(numberDelta)} (no charge to customer)`) : '-',
     },
     { label: 'Plan', value: plan.name },
-    { label: 'Plan Price', value: `QAR ${plan.mrcQAR}/mo` },
+    { label: 'Plan Price', value: `${formatQar(plan.mrcQAR)}/mo` },
     {
       label: 'Discount',
       value: discount
@@ -85,7 +85,7 @@ export function buildCafSummaryRows({
       label: 'Discount Duration',
       value: discount ? (discount.durationMonths ? `${discount.durationMonths} months` : 'No expiry') : 'N/A',
     },
-    { label: 'Add-Ons', value: addons.length ? addons.map((a) => `${a.name} (QAR ${a.mrcQAR}/mo)`).join(', ') : 'None' },
+    { label: 'Add-Ons', value: addons.length ? addons.map((a) => `${a.name} (${formatQar(a.mrcQAR)}/mo)`).join(', ') : 'None' },
     { label: 'SIM Type', value: simType?.simType ?? '-' },
     {
       label: 'SIM Number / ICCID',
@@ -114,17 +114,17 @@ export function buildCafSummaryRows({
             label: 'Star Number Charges',
             value:
               starEntitlementQar !== undefined && numberChargeQar > 0
-                ? `QAR ${numberChargeQar} (QAR ${numberDelta} sticker price, QAR ${starEntitlementQar} entitled on this plan)`
-                : `No extra charge${starEntitlementQar !== undefined ? ` - within the QAR ${starEntitlementQar} plan entitlement` : ''}`,
+                ? `${formatQar(numberChargeQar)} (${formatQar(numberDelta)} sticker price, ${formatQar(starEntitlementQar)} entitled on this plan)`
+                : `No extra charge${starEntitlementQar !== undefined ? ` - within the ${formatQar(starEntitlementQar)} plan entitlement` : ''}`,
           },
           ...(numberWaiver && numberWaivedQar > 0
-            ? [{ label: numberWaiverLabel(numberWaiver), value: `QAR ${numberWaivedQar} waived off the Star Number charge` }]
+            ? [{ label: numberWaiverLabel(numberWaiver), value: `${formatQar(numberWaivedQar)} waived off the Star Number charge` }]
             : []),
         ]
       : []),
     {
       label: 'Key Charges',
-      value: `QAR ${dueTodayQar} today · QAR ${firstBill.totalQar} first bill · QAR ${monthlyRecurringQar}/mo thereafter`,
+      value: `${formatQar(dueTodayQar)} today · ${formatQar(firstBill.totalQar)} first bill · ${formatQar(monthlyRecurringQar)}/mo thereafter`,
     },
     {
       label: 'Cancellation Implications',
@@ -142,14 +142,14 @@ export function buildCafSummaryRows({
     },
     {
       label: 'Total Payable Today',
-      value: `QAR ${dueTodayQar}${
+      value: `${formatQar(dueTodayQar)}${
         [
-          hrnAdvance > 0 ? `QAR ${hrnAdvance} HRN advance` : null,
-          isStarNumber && numberChargeQar > 0 ? `QAR ${numberChargeQar - numberWaivedQar} Star Number charge${numberWaivedQar > 0 ? ' after waiver' : ''}` : null,
+          hrnAdvance > 0 ? `${formatQar(hrnAdvance)} HRN advance` : null,
+          isStarNumber && numberChargeQar > 0 ? `${formatQar(numberChargeQar - numberWaivedQar)} Star Number charge${numberWaivedQar > 0 ? ' after waiver' : ''}` : null,
         ].filter(Boolean).length
           ? ` (includes ${[
-              hrnAdvance > 0 ? `QAR ${hrnAdvance} HRN advance` : null,
-              isStarNumber && numberChargeQar > 0 ? `QAR ${numberChargeQar - numberWaivedQar} Star Number charge${numberWaivedQar > 0 ? ' after waiver' : ''}` : null,
+              hrnAdvance > 0 ? `${formatQar(hrnAdvance)} HRN advance` : null,
+              isStarNumber && numberChargeQar > 0 ? `${formatQar(numberChargeQar - numberWaivedQar)} Star Number charge${numberWaivedQar > 0 ? ' after waiver' : ''}` : null,
             ]
               .filter(Boolean)
               .join(' + ')})`
@@ -158,8 +158,8 @@ export function buildCafSummaryRows({
     },
     {
       label: 'Prorated First Bill',
-      value: `QAR ${firstBill.totalQar} (${firstBill.proratedDays} of ${firstBill.cycleDays} days this cycle)`,
+      value: `${formatQar(firstBill.totalQar)} (${firstBill.proratedDays} of ${firstBill.cycleDays} days this cycle)`,
     },
-    { label: 'Approximate Subsequent Bill', value: `QAR ${monthlyRecurringQar}/mo` },
+    { label: 'Approximate Subsequent Bill', value: `${formatQar(monthlyRecurringQar)}/mo` },
   ];
 }

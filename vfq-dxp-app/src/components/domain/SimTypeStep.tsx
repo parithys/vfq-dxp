@@ -35,6 +35,8 @@ interface SimTypeStepProps {
    * offered, since a Pre-Paired SIM is a card.
    */
   prePaired?: boolean;
+  /** The order will be held for approval, so an eSIM's QR code is released on approval rather than on submission. */
+  approvalRequired?: boolean;
 }
 
 // Mock GSMA SGP.22-style activation string (LPA:1$smdp-address$matching-id) -
@@ -64,7 +66,7 @@ function generateActivationCode(): string {
 // kept deliberately lightweight (no fabricated eSIM provisioning API), and
 // still does NOT auto-advance: selecting eSIM is a choice to review, not a
 // validation result to act on immediately.
-export function SimTypeStep({ value, customerEmail, onChange, device, prePaired }: SimTypeStepProps) {
+export function SimTypeStep({ value, customerEmail, onChange, device, prePaired, approvalRequired = false }: SimTypeStepProps) {
   const [issuing, setIssuing] = useState(false);
 
   if (prePaired) {
@@ -185,7 +187,7 @@ export function SimTypeStep({ value, customerEmail, onChange, device, prePaired 
                 selecting - the agent should know this before choosing eSIM,
                 not discover it afterward. */}
             <p className="text-muted text-[length:var(--fs-caption)]">
-              The eSIM QR code is generated only after successful payment and order submission.
+              The eSIM QR code will be generated only after successful payment and order {approvalRequired ? 'approval' : 'submission'}.
             </p>
           </>
         )}

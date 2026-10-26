@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Badge } from '../../../components/primitives/Badge';
 import { computeBillingSummary, type Customer360Data } from '../../../engines/customer360Engine';
+import { formatAmountAny } from '../../../lib/format';
 
 type Resolver = (data: Customer360Data) => ReactNode | undefined;
 
@@ -15,7 +16,7 @@ export const blacklistResolvers: Record<string, Resolver> = {
       <Badge variant="success">Not Blacklisted</Badge>
     ),
   'Account Number': (data) => (data.accounts.length > 0 ? data.accounts.map((a) => a.accountId).join(', ') : undefined),
-  'Total amount': (data) => `${computeBillingSummary(data).outstanding} QAR`,
+  'Total amount': (data) => `${formatAmountAny(computeBillingSummary(data).outstanding)} QAR`,
   'Bill Period': (data) => {
     const { latestBill } = computeBillingSummary(data);
     return latestBill ? String(latestBill.billPeriod) : undefined;

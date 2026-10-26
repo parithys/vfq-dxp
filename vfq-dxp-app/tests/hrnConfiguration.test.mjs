@@ -51,7 +51,7 @@ test('the default credit limit: HRN 50 (the category\'s), Qatari 4000, Expat 100
   assert.equal(rules.defaultCreditLimitQar(false), 1000);
   assert.equal(rules.defaultCreditLimitQar(false, 'Qatari'), 4000);
   assert.equal(rules.defaultCreditLimitQar(true, 'Qatari'), 50, 'HRN wins');
-  assert.match(rules.evaluateRule('BR-076', { hrnFlag: false, nationality: 'Qatari' }).message, /QAR 4000/);
+  assert.match(rules.evaluateRule('BR-076', { hrnFlag: false, nationality: 'Qatari' }).message, /QAR 4,000/);
 });
 
 test('several categories for one nationality: the most cautious applies unless one is named (supported, not configured)', () => {

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { isFixedLineOffer } from '../../../capabilities';
 import type { Customer360Data } from '../../../engines/customer360Engine';
+import { formatAmountAny } from '../../../lib/format';
 
 type Resolver = (data: Customer360Data) => ReactNode | undefined;
 
@@ -15,7 +16,7 @@ export const contactAssetsResolvers: Record<string, Resolver> = {
     data.crossSalesOffers.length > 0 ? data.crossSalesOffers.map((o) => String(o.offerName)).join(', ') : undefined,
   'Eligible Discount': (data) => {
     const withDiscount = data.crossSalesOffers.find((o) => Number(o.addOnMonthly ?? 0) > 0);
-    return withDiscount ? `${String(withDiscount.addOnMonthly)} QAR/mo` : undefined;
+    return withDiscount ? `${formatAmountAny(String(withDiscount.addOnMonthly))} QAR/mo` : undefined;
   },
   'Next Best Offer': (data) => {
     const top = [...data.crossSalesOffers].sort((a, b) => String(a.priorityCode ?? '').localeCompare(String(b.priorityCode ?? '')))[0];

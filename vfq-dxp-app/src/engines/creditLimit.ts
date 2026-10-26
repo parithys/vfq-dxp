@@ -8,6 +8,7 @@
 //   The limit is shown as: Overall, Default, Credit Control Team, and the increase due to a deposit.
 import { defaultCreditLimit, hrnAdvanceQar, isHrn, isQatariNationality } from './hrnConfiguration';
 import { restrictedSegmentOf } from '../data/customerSegments';
+import { formatQar } from '../lib/format';
 
 export type CreditSegment = 'Qatari' | 'Expat';
 export type CustomerCategory = 'HRN' | 'Non-HRN';
@@ -168,8 +169,8 @@ export function creditLimitAuditRecord(i: CreditLimitAuditInput): Record<string,
     recordId: i.recordId,
     employeeUser: i.by,
     fieldModified: 'Credit Limit',
-    oldValue: i.fromQar === undefined ? undefined : `QAR ${i.fromQar}`,
-    newValue: `QAR ${i.toQar}`,
+    oldValue: i.fromQar === undefined ? undefined : `${formatQar(i.fromQar)}`,
+    newValue: `${formatQar(i.toQar)}`,
     changeBasis: i.how,
     timestamp: now.toISOString(),
   };

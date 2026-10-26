@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { computeBillingSummary, withinBillHistoryWindow, type Customer360Data } from '../../../engines/customer360Engine';
+import { formatAmountAny } from '../../../lib/format';
 
 type Resolver = (data: Customer360Data) => ReactNode | undefined;
 
@@ -18,23 +19,23 @@ export const billingResolvers: Record<string, Resolver> = {
   'Due Date': (data) => computeBillingSummary(data).latestBill?.dueDate as string | undefined,
   'Postpaid - Monthly Recurring Charge': (data) => {
     const { latestBill } = computeBillingSummary(data);
-    return latestBill?.mrc !== undefined ? `${String(latestBill.mrc)} QAR` : undefined;
+    return latestBill?.mrc !== undefined ? `${formatAmountAny(String(latestBill.mrc))} QAR` : undefined;
   },
   'Postpaid - Average Bill/Spend': (data) => {
     const billsInWindow = data.bills.filter((b) => withinBillHistoryWindow(b.billPeriod));
     if (billsInWindow.length === 0) return undefined;
     const avg = billsInWindow.reduce((sum, b) => sum + Number(b.totalAmount ?? 0), 0) / billsInWindow.length;
-    return `${avg.toFixed(2)} QAR (avg over ${billsInWindow.length} bill${billsInWindow.length === 1 ? '' : 's'})`;
+    return `${formatAmountAny(avg.toFixed(2))} QAR (avg over ${billsInWindow.length} bill${billsInWindow.length === 1 ? '' : 's'})`;
   },
   'Latest Bill': (data) => {
     const { latestBill, formattedBillPeriod } = computeBillingSummary(data);
-    return latestBill ? `${String(latestBill.totalAmount ?? '-')} QAR - ${formattedBillPeriod} - ${capitalize(latestBill.status)}` : undefined;
+    return latestBill ? `${formatAmountAny(String(latestBill.totalAmount ?? '-'))} QAR - ${formattedBillPeriod} - ${capitalize(latestBill.status)}` : undefined;
   },
-  'Outstanding Balance': (data) => `${computeBillingSummary(data).outstanding} QAR`,
+  'Outstanding Balance': (data) => `${formatAmountAny(computeBillingSummary(data).outstanding)} QAR`,
   'Unbilled Usage': (data) => {
     const { latestBill } = computeBillingSummary(data);
     const charges = latestBill?.currentChargesQAR;
-    return charges !== undefined ? `${String(charges)} QAR` : undefined;
+    return charges !== undefined ? `${formatAmountAny(String(charges))} QAR` : undefined;
   },
   'PTP Eligible (Y/N)': (data) => {
     const status = data.billingProfiles[0]?.promiseToPayStatus;
@@ -43,6 +44,6 @@ export const billingResolvers: Record<string, Resolver> = {
   'Last Payment & Channel': (data) => {
     const { previousPayment } = computeBillingSummary(data);
     if (!previousPayment) return undefined;
-    return `${String(previousPayment.amountQar ?? '-')} QAR via ${String(previousPayment.paymentMethod ?? '-')} on ${String(previousPayment.capturedAt ?? '-')}`;
+    return `${formatAmountAny(String(previousPayment.amountQar ?? '-'))} QAR via ${String(previousPayment.paymentMethod ?? '-')} on ${String(previousPayment.capturedAt ?? '-')}`;
   },
 };

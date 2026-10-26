@@ -6,6 +6,7 @@ import { computeBillingSummary, withinBillHistoryWindow, type Customer360Data } 
 import { MetricCard } from '../MetricCard';
 import { isHrn as isHrnNationality } from '../../../engines/hrnConfiguration';
 import { InvoiceActions } from '../InvoiceActions';
+import { formatAmountAny } from '../../../lib/format';
 
 function capitalize(value: unknown): string {
   const s = String(value ?? '');
@@ -61,7 +62,7 @@ export function BillingSection({ data }: { data: Customer360Data }) {
           {creditLimit && (
             <MetricCard
               label="Credit Limit"
-              value={`${String(creditBreakdownOf(data).overall ?? creditLimit.creditLimitQar ?? creditLimit.creditLimitQAR ?? '-')} QAR`}
+              value={`${formatAmountAny(String(creditBreakdownOf(data).overall ?? creditLimit.creditLimitQar ?? creditLimit.creditLimitQAR ?? '-'))} QAR`}
               subtext={
                 creditLimit.restrictionApplied
                   ? 'Restriction applied'
@@ -72,14 +73,14 @@ export function BillingSection({ data }: { data: Customer360Data }) {
           {latestBill && (
             <MetricCard
               label="Current Bill"
-              value={`${String(latestBill.totalAmount ?? '-')} QAR`}
+              value={`${formatAmountAny(String(latestBill.totalAmount ?? '-'))} QAR`}
               subtext={`${formattedBillPeriod} · ${capitalize(latestBill.status)}`}
             />
           )}
           {latestBill && (
             <MetricCard
               label="Outstanding"
-              value={`${outstanding} QAR`}
+              value={`${formatAmountAny(outstanding)} QAR`}
               subtext={outstanding > 0 ? 'Overdue balance' : 'No overdue balance'}
             />
           )}
@@ -89,17 +90,17 @@ export function BillingSection({ data }: { data: Customer360Data }) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <MetricCard
           label="Current Charges"
-          value={latestBill ? `${String((latestBill as Record<string, unknown>).currentChargesQAR ?? '-')} QAR` : '-'}
+          value={latestBill ? `${formatAmountAny(String((latestBill as Record<string, unknown>).currentChargesQAR ?? '-'))} QAR` : '-'}
           subtext="CUS-001-BIV-03"
         />
         <MetricCard
           label="Previous Payment"
-          value={previousPayment ? `${String(previousPayment.amountQar ?? '-')} QAR` : '-'}
+          value={previousPayment ? `${formatAmountAny(String(previousPayment.amountQar ?? '-'))} QAR` : '-'}
           subtext={previousPayment ? String(previousPayment.chargeType ?? 'CUS-001-BIV-04') : 'No payments on file'}
         />
         <MetricCard
           label="Previous Outstanding"
-          value={profile ? `${String(profile.previousOutstandingQAR ?? 0)} QAR` : '-'}
+          value={profile ? `${formatAmountAny(String(profile.previousOutstandingQAR ?? 0))} QAR` : '-'}
           subtext="CUS-001-BIV-05"
         />
       </div>
@@ -133,7 +134,7 @@ export function BillingSection({ data }: { data: Customer360Data }) {
             value={<Badge variant={hrnRequired ? 'warning' : 'filled-neutral'}>{hrnRequired ? 'Yes' : 'No'}</Badge>}
           />
           {profile?.hrnAdvancePaymentQAR !== undefined && (
-            <Field label="HRN Advance Payment Amount" value={`${String(profile.hrnAdvancePaymentQAR)} QAR`} />
+            <Field label="HRN Advance Payment Amount" value={`${formatAmountAny(String(profile.hrnAdvancePaymentQAR))} QAR`} />
           )}
         </div>
       </section>
@@ -155,7 +156,7 @@ export function BillingSection({ data }: { data: Customer360Data }) {
             ) : undefined
           }
         />
-        <Field label="Amount" value={profile?.promiseToPayAmountQAR != null ? `${String(profile.promiseToPayAmountQAR)} QAR` : undefined} />
+        <Field label="Amount" value={profile?.promiseToPayAmountQAR != null ? `${formatAmountAny(String(profile.promiseToPayAmountQAR))} QAR` : undefined} />
         <Field label="Created" value={profile?.promiseToPayCreatedDate ? String(profile.promiseToPayCreatedDate) : undefined} />
         <Field label="Expires" value={profile?.promiseToPayExpiryDate ? String(profile.promiseToPayExpiryDate) : undefined} />
       </SectionCard>
@@ -188,11 +189,11 @@ export function BillingSection({ data }: { data: Customer360Data }) {
               <Field label="Current Voice Usage" value={usage ? `${String(usage.currentVoiceUsageMinutes)} min` : undefined} />
               <Field label="Current Data Usage" value={usage ? `${String(usage.currentDataUsageGB)} GB` : undefined} />
               <Field label="Available Data Balance" value={usage?.availableDataBalanceGB != null ? `${String(usage.availableDataBalanceGB)} GB` : undefined} />
-              <Field label="Current Spend" value={usage ? `${String(usage.currentSpendQAR)} QAR` : undefined} />
+              <Field label="Current Spend" value={usage ? `${formatAmountAny(String(usage.currentSpendQAR))} QAR` : undefined} />
             </SectionCard>
 
             <SectionCard title="IN Platform Balance" note={DR_NOTE}>
-              <Field label="Main Balance" value={balance ? `${String(balance.mainBalanceQAR)} QAR` : undefined} />
+              <Field label="Main Balance" value={balance ? `${formatAmountAny(String(balance.mainBalanceQAR))} QAR` : undefined} />
               <Field label="Data Balance" value={balance?.dataBalanceGB != null ? `${String(balance.dataBalanceGB)} GB` : undefined} />
               <Field label="Voice Balance" value={balance?.voiceBalanceMinutes != null ? `${String(balance.voiceBalanceMinutes)} min` : undefined} />
               <Field label="SMS Balance" value={balance?.smsBalanceCount != null ? String(balance.smsBalanceCount) : undefined} />

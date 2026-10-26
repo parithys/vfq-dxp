@@ -1,6 +1,7 @@
 import { EXCEPTION_ROUTED_ID_TYPES } from '../data/idTypes';
 import type { EligibilityDecision } from '../domain/eligibility';
 import { PORT_IN_DUES_THRESHOLD_QAR } from '../data/portInRules';
+import { formatQar } from '../lib/format';
 /**
  * The customer fields these checks read - a structural shape rather than an
  * import of the full CustomerRecord, so both that type and the narrower local
@@ -246,8 +247,8 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
     outcome: collectionsBlocked && !prepaid ? 'soft-stop' : 'pass',
     message: collectionsBlocked
       ? prepaid
-        ? `This account has an outstanding balance of QAR ${outstandingQar}. This does not restrict a prepaid connection.`
-        : `This account has an outstanding balance of QAR ${outstandingQar}. Postpaid cannot be issued. Prepaid is available on this QID.`
+        ? `This account has an outstanding balance of ${formatQar(outstandingQar)}. This does not restrict a prepaid connection.`
+        : `This account has an outstanding balance of ${formatQar(outstandingQar)}. Postpaid cannot be issued. Prepaid is available on this QID.`
       : 'No collections block on this account',
   });
 
@@ -353,12 +354,12 @@ export function evaluateEligibilityChecks(ctx: EligibilityContext, asOf: Date): 
       passed: !exceeded,
       outcome: exceeded ? 'hard-stop' : 'pass',
       message: exceeded
-        ? `This account has outstanding dues of QAR ${outstandingQar}, above the QAR ${threshold} threshold for a port-in. The port-in cannot proceed until the dues are settled.`
+        ? `This account has outstanding dues of ${formatQar(outstandingQar)}, above the ${formatQar(threshold)} threshold for a port-in. The port-in cannot proceed until the dues are settled.`
         : threshold === undefined
           ? outstandingQar > 0
-            ? `Outstanding dues of QAR ${outstandingQar}. The port-in dues threshold is not defined yet, so it does not restrict this request.`
+            ? `Outstanding dues of ${formatQar(outstandingQar)}. The port-in dues threshold is not defined yet, so it does not restrict this request.`
             : 'No outstanding dues'
-          : `Outstanding dues are within the QAR ${threshold} port-in threshold`,
+          : `Outstanding dues are within the ${formatQar(threshold)} port-in threshold`,
     });
   }
 

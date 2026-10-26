@@ -198,3 +198,13 @@ test('the Paid | Free filter: Paid first and the default, owned by the page head
   assert.match(picker, /onPricingChange\?\.\(DEFAULT_ADDON_PRICING\)/, 'opens on Paid whenever the page is loaded');
   assert.doesNotMatch(picker, /setCategory\([^)]*\)[^;]*setPricing/, 'switching category does not touch the filter');
 });
+
+test('the first months\' charge of an add-on (what the monthly summary, checkout and the order carry): free models and the free trial cost nothing, the intro price applies, standard is its price', () => {
+  assert.equal(m.addonChargeNowQar({ mrcQAR: 25, pricingModel: 'free-first-3' }), 0);
+  assert.equal(m.addonChargeNowQar({ mrcQAR: 0, pricingModel: 'free-all' }), 0);
+  assert.equal(m.addonChargeNowQar({ mrcQAR: 0, pricingModel: 'free-with-plan' }), 0);
+  assert.equal(m.addonChargeNowQar({ mrcQAR: 20, introPriceQAR: 10, pricingModel: 'intro-discount' }), 10);
+  assert.equal(m.addonChargeNowQar({ mrcQAR: 20, pricingModel: 'standard' }), 20);
+  assert.equal(m.addonChargeNowQar({ mrcQAR: 20 }), 20, 'a record with no model is charged its price');
+  for (const a of addons) assert.ok(m.addonChargeNowQar(a) <= a.mrcQAR, a.productId);
+});

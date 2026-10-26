@@ -14,6 +14,7 @@ import { Badge } from '../primitives/Badge';
 import { Button } from '../primitives/Button';
 import { Modal } from '../primitives/Modal';
 import { Textarea } from '../primitives/Textarea';
+import { formatQar } from '../../lib/format';
 
 /**
  * The standard "Activation complete" page, for every activation journey.
@@ -129,8 +130,8 @@ export function ActivationCompleteScreen({
       `Plan: ${order.planName}`,
       `Number: ${order.msisdn}`,
       `SIM: ${order.simType ?? '-'}`,
-      ...(order.dueTodayQar !== undefined ? [`Due today: QAR ${order.dueTodayQar}`] : []),
-      ...(order.monthlyRecurringQar !== undefined ? [`Monthly: QAR ${order.monthlyRecurringQar}`] : []),
+      ...(order.dueTodayQar !== undefined ? [`Due today: ${formatQar(order.dueTodayQar)}`] : []),
+      ...(order.monthlyRecurringQar !== undefined ? [`Monthly: ${formatQar(order.monthlyRecurringQar)}`] : []),
       ...(order.esimActivationCode && !order.pendingApproval ? [`eSIM QR code attached. Activation code: ${order.esimActivationCode}`] : []),
     ];
     void createRecord('customer-communications', {
@@ -236,9 +237,9 @@ export function ActivationCompleteScreen({
           { label: numberLabel, value: order.msisdn },
           { label: 'Plan', value: order.planName },
           ...(hideSimType ? [] : [{ label: 'SIM Type', value: order.simType ?? '-' }]),
-          ...(order.dueTodayQar !== undefined ? [{ label: 'Due Today', value: `QAR ${order.dueTodayQar}` }] : []),
+          ...(order.dueTodayQar !== undefined ? [{ label: 'Due Today', value: `${formatQar(order.dueTodayQar)}` }] : []),
           ...(order.monthlyRecurringQar !== undefined
-            ? [{ label: 'Monthly Recurring', value: `QAR ${order.monthlyRecurringQar}/mo` }]
+            ? [{ label: 'Monthly Recurring', value: `${formatQar(order.monthlyRecurringQar)}/mo` }]
             : []),
           { label: 'Status', value: order.statusLabel ?? (order.pendingApproval ? 'Submitted for Approval' : 'Complete') },
           ...(order.extraLines ?? []),

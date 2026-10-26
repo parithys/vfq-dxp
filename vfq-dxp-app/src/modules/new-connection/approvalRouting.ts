@@ -42,3 +42,23 @@ export function routesToApproval(args: {
     SUPPORTING_ID_DISCOUNT_TYPES.has(discountType ?? '')
   );
 }
+
+/**
+ * Whether the Mobile Postpaid order is going to be held for approval, judged from what the journey holds before it is submitted (the SIM step
+ * says so to the agent: an eSIM's QR code is released on approval, not on submission). The same triggers the order is routed on: a manual
+ * identity, B2B2C, an HRN advance, an eligibility check that routes, a MADA / B2B2C discount, and a Waive Off on the Star number's charge.
+ */
+export function expectsApproval(values: Record<string, unknown>): boolean {
+  const contact = values.contact as GuidedContactValue | undefined;
+  if (!contact) return false;
+  const customerType = values.customerType as CustomerTypeValue | undefined;
+  const discountType =
+    values.discountId && customerType && !customerType.rejected
+      ? customerType.type === 'mada' ? 'MADA Discount' : customerType.type === 'b2b2c' ? 'B2B2C Discount' : undefined
+      : undefined;
+  return (
+    routesToApproval({ contact, eligibility: values.eligibility as EligibilityResult | undefined, customerType, discountType }) ||
+    values.numberWaiver === 'partial' ||
+    values.numberWaiver === 'full'
+  );
+}

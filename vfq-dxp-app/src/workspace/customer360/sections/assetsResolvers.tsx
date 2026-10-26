@@ -1,6 +1,7 @@
 import type { Customer360Data } from '../../../engines/customer360Engine';
 import type { CustomerService } from '../../../engines/customerServicesEngine';
 import { DataTable } from '../../../components/primitives/DataTable';
+import { formatAmountAny } from '../../../lib/format';
 
 /**
  * customer360-fields.json's Assets topic is per-line (MSISDN Status, Plan
@@ -55,7 +56,7 @@ export function buildAssetsFieldResolver(service: CustomerService | undefined, d
           : undefined;
       case 'Current Balance (Data,Voice, Text, Primary Balance)':
         return balance
-          ? `Data ${String(balance.dataBalanceGB ?? '-')} GB · Voice ${String(balance.voiceBalanceMinutes ?? '-')} min · SMS ${String(balance.smsBalanceCount ?? '-')} · Main ${String(balance.mainBalanceQAR ?? '-')} QAR`
+          ? `Data ${String(balance.dataBalanceGB ?? '-')} GB · Voice ${String(balance.voiceBalanceMinutes ?? '-')} min · SMS ${String(balance.smsBalanceCount ?? '-')} · Main ${formatAmountAny(String(balance.mainBalanceQAR ?? '-'))} QAR`
           : undefined;
       case 'Usage Behaviour (High Data, High Roaming, High Local Call, High International Calls)':
         return usage
@@ -66,17 +67,17 @@ export function buildAssetsFieldResolver(service: CustomerService | undefined, d
       case 'DOI Handset Type':
         return doi?.deviceName as string | undefined;
       case 'DOI Price':
-        return doi?.devicePriceQar !== undefined ? `${String(doi.devicePriceQar)} QAR` : undefined;
+        return doi?.devicePriceQar !== undefined ? `${formatAmountAny(String(doi.devicePriceQar))} QAR` : undefined;
       case 'DOI Remaining Amount': {
         if (!doi) return undefined;
         const price = Number(doi.devicePriceQar ?? 0);
         const down = Number(doi.downPaymentQar ?? 0);
-        return `${Math.max(0, price - down)} QAR`;
+        return `${formatAmountAny(Math.max(0, price - down))} QAR`;
       }
       case 'DOI Tennure':
         return doi?.installmentMonths !== undefined ? `${String(doi.installmentMonths)} months` : undefined;
       case 'Last Recharge Amount':
-        return digital?.lastRechargeAmountQar != null ? `${String(digital.lastRechargeAmountQar)} QAR on ${String(digital.lastRechargeAt ?? '').slice(0, 10)}` : undefined;
+        return digital?.lastRechargeAmountQar != null ? `${formatAmountAny(String(digital.lastRechargeAmountQar))} QAR on ${String(digital.lastRechargeAt ?? '').slice(0, 10)}` : undefined;
       case 'Last Recharge Type':
         return digital?.lastRechargeType as string | undefined;
       case 'App Recent/Last Login (Date & Time)':

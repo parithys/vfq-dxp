@@ -8,6 +8,7 @@ import { BarChart, Field, ICON, PillTabs, SectionHeader, StatStrip, TableCard, y
 import { rowDate, demoOf, arr, type Rec } from './shared';
 import { strOrEmpty as str } from '../../../lib/values';
 import { catalogOf, qar } from './billingShared';
+import { formatQarAny } from '../../../lib/format';
 
 // ============================================================================ Usage & Behaviour
 export function UsageSection({ ctx }: { ctx: Ctx }) {
@@ -35,7 +36,7 @@ export function UsageSection({ ctx }: { ctx: Ctx }) {
   const addons = data.addonsDiscounts.filter((a) => a.category !== 'Discount');
   const discounts = data.addonsDiscounts.filter((a) => a.category === 'Discount');
   const creditLimit = data.creditLimits[0];
-  const billLimit = res('Bill Limit') ?? (creditLimit ? `QAR ${overallCreditLimitOf(data) ?? str(creditLimit.creditLimitQar ?? creditLimit.creditLimitQAR)}` : '-');
+  const billLimit = res('Bill Limit') ?? (creditLimit ? `${formatQarAny(overallCreditLimitOf(data) ?? str(creditLimit.creditLimitQar ?? creditLimit.creditLimitQAR))}` : '-');
   const used = (left: number, total: number) => (total ? `${Math.round(((total - left) / total) * 100)}% Used` : '');
   const chart = trend.map((t) => ({
     label: t.month,

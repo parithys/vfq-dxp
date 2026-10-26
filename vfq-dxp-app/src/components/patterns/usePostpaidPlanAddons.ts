@@ -1,3 +1,4 @@
+import { addonChargeNowQar } from '../../engines/addonCategories';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { discountsForCustomer, type CustomerBenefit } from '../../engines/customerBenefitEngine';
@@ -37,6 +38,8 @@ export function usePostpaidPlanAddons({
   hiddenProductId,
 }: UsePostpaidPlanAddonsArgs) {
   const [plans, setPlans] = useState<PostpaidPlan[]>([]);
+  // Whether the catalogue has been read: an empty list before that is loading, not "no plans".
+  const [plansLoaded, setPlansLoaded] = useState(false);
   const [addonProducts, setAddonProducts] = useState<AddonProduct[]>([]);
   const [planDiscounts, setPlanDiscounts] = useState<Discount[]>([]);
   // Of the three special types only the one chosen at Customer Verification is offered (a customer holds one).
@@ -132,6 +135,7 @@ export function usePostpaidPlanAddons({
     mockDataEngine.list<PostpaidPlan & AddonProduct>('products').then((all) => {
       setPlans(all.filter((p) => p.type === 'Postpaid Plan' && p.listed !== false && p.productId !== hiddenProductId && isPlanOfferedTo(p, customerNationality)).sort((a, b) => a.mrcQAR - b.mrcQAR));
       setAddonProducts(all.filter((p) => p.type === 'Add-on'));
+      setPlansLoaded(true);
     });
   }, [hiddenProductId, customerNationality]);
 
@@ -234,7 +238,7 @@ export function usePostpaidPlanAddons({
   }, [selectedProductId]);
 
   const selectedAddons = addonProducts.filter((a) => addonIds.includes(a.productId));
-  const addonsMonthlyQar = selectedAddons.reduce((sum, a) => sum + a.mrcQAR, 0);
+  const addonsMonthlyQar = selectedAddons.reduce((sum, a) => sum + addonChargeNowQar(a), 0);
   // One itemisation, shared with Checkout and with the order payload - see
   // engines/postpaidPricing.ts for why that is a module and not three copies.
   // No device instalment here: this step has not reached Device & DOI yet, so
@@ -249,6 +253,7 @@ export function usePostpaidPlanAddons({
     : undefined;
 
   return {
+    plansLoaded,
     plans,
     discounts,
     detailPlan,

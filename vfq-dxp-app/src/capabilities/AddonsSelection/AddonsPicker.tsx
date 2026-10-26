@@ -8,6 +8,7 @@ import { CARD_IDLE, CARD_SELECTED, SelectedCardTexture } from '../../components/
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { isAddonEligible, type AddonEligibilityContext, type AddonEligibilityRule } from '../../engines/addonEligibility';
 import { ADDON_CATEGORIES, ADDON_PRICING_FILTERS, DEFAULT_ADDON_PRICING, addonsFor, selectedPerCategory, type AddonCategory, type AddonPricing, type AddonPricingModel, addonPriceDisplay } from '../../engines/addonCategories';
+import { formatAmount } from '../../lib/format';
 
 interface AddonProduct {
   productId: string;
@@ -234,7 +235,7 @@ export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityCon
                   ) : a.priceLabel ? null : (
                     <p className="text-fg">
                       <span className="text-[length:var(--fs-caption)]">QAR </span>
-                      <span className="text-[length:var(--fs-h4)] font-bold">{a.mrcQAR}</span>
+                      <span className="text-[length:var(--fs-h4)] font-bold">{formatAmount(a.mrcQAR)}</span>
                       <span className="text-fg-2 text-[length:var(--fs-caption)]">{source === 'prepaid' ? ' one-off' : ' /mo'}</span>
                     </p>
                   )}
@@ -269,7 +270,7 @@ export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityCon
               {a.description && <p className="text-fg-2 text-[length:var(--fs-caption)]">{a.description}</p>}
               <p className="text-accent mt-auto">
                 <span className="text-[length:var(--fs-body)] font-semibold">QAR </span>
-                <span className="text-[length:var(--fs-h3)] font-bold">{a.mrcQAR}</span>
+                <span className="text-[length:var(--fs-h3)] font-bold">{formatAmount(a.mrcQAR)}</span>
                 <span className="text-fg-2 text-[length:var(--fs-caption)]">{source === 'prepaid' ? ' one-off' : ' /mo'}</span>
               </p>
             </div>

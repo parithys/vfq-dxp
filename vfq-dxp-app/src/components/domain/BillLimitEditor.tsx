@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Input } from '../primitives/Input';
 import { Button } from '../primitives/Button';
 import { evaluateRule } from '../../engines/ruleEngine';
+import { formatQarAny } from '../../lib/format';
 
 export type BillLimitProduct = 'Mobile' | 'Mobile Plus';
 
@@ -63,7 +64,7 @@ export function BillLimitEditor({ product, value, onChange, layout = 'default', 
         {row && !editing ? (
           <div>
             <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Bill Limit ({product})</h4>
-            {value !== undefined && <p className="text-fg-2 text-[length:var(--fs-caption)]">Current limit · QAR {value}</p>}
+            {value !== undefined && <p className="text-fg-2 text-[length:var(--fs-caption)]">Current limit · {formatQarAny(value)}</p>}
           </div>
         ) : (
           <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Bill Limit ({product})</h4>
@@ -88,7 +89,7 @@ export function BillLimitEditor({ product, value, onChange, layout = 'default', 
           </Button>
         </div>
       ) : (
-        !row && value !== undefined && <div className="text-fg mt-1">QAR {value}</div>
+        !row && value !== undefined && <div className="text-fg mt-1">{formatQarAny(value)}</div>
       )}
       {result && !result.pass && <p className="text-danger text-[length:var(--fs-caption)] mt-2">{result.message}</p>}
     </div>

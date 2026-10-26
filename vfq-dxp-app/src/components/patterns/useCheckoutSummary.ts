@@ -1,3 +1,4 @@
+import { addonChargeNowQar } from '../../engines/addonCategories';
 import { chargeAfterWaiverQar, waivedQar, type NumberWaiver } from '../../engines/numberWaiver';
 import { hrnAdvanceQar } from '../../engines/hrnConfiguration';
 import { usePersonaStore } from '../../stores/personaStore';
@@ -109,7 +110,7 @@ export function useCheckoutSummary({
   const charges = monthlyCharges({
     planQar: plan?.mrcQAR ?? 0,
     discountRate: discount?.price,
-    addonsQar: addons.reduce((sum, a) => sum + a.mrcQAR, 0),
+    addonsQar: addons.reduce((sum, a) => sum + addonChargeNowQar(a), 0),
   });
   const monthlyRecurringQar = charges.totalQar;
   // The first INVOICE, distinct from dueTodayQar (paid at the counter today)

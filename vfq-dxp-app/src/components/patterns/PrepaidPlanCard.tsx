@@ -3,6 +3,7 @@ import { Button } from '../primitives/Button';
 import { ConnectionTypeTag } from '../primitives/ConnectionTypeTag';
 import { CARD_HIGHLIGHT, CARD_IDLE, CARD_SELECTED, ICON_CALL, ICON_CARD, ICON_DATA, STAR_ICON } from '../primitives/offerCardParts';
 import type { PrepaidPlan } from './prepaidPlanModel';
+import { formatQar, formatAmount } from '../../lib/format';
 
 interface PrepaidPlanCardProps {
   p: PrepaidPlan;
@@ -57,11 +58,11 @@ export function PrepaidPlanCard({ p, selectedProductId, onSelectProduct, onDesel
         <p className="text-fg font-bold text-[length:var(--fs-h5)] leading-snug">{p.name}</p>
         <p className="text-accent pt-1">
           <span className="text-[length:var(--fs-body)] font-semibold">QAR </span>
-          <span className="text-[length:var(--fs-h3)] font-bold">{p.starterPackChargeQAR}</span>
+          <span className="text-[length:var(--fs-h3)] font-bold">{formatAmount(p.starterPackChargeQAR)}</span>
           <span className="text-fg-2 text-[length:var(--fs-caption)]"> starter pack</span>
         </p>
         <ul className="space-y-1.5">
-          {[...rows, { icon: ICON_CARD, text: `Starter pack charge: QAR ${p.starterPackChargeQAR}` }].map((f) => (
+          {[...rows, { icon: ICON_CARD, text: `Starter pack charge: ${formatQar(p.starterPackChargeQAR)}` }].map((f) => (
             <li key={f.text} className="flex items-center gap-2 text-fg-2 text-[length:var(--fs-caption)]">
               <Icon path={f.icon} className="w-4 h-4 shrink-0 text-accent" />
               {f.text}

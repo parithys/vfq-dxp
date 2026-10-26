@@ -3,6 +3,7 @@ import { Button } from '../primitives/Button';
 import { ConnectionTypeTag } from '../primitives/ConnectionTypeTag';
 import { CARD_HIGHLIGHT, CARD_IDLE, CARD_SELECTED, ICON_CALL, ICON_CARD, ICON_DATA, ICON_GIFT, STAR_ICON, planFeatureRows } from '../primitives/offerCardParts';
 import type { PostpaidPlan } from './postpaidPlanModel';
+import { formatQar, formatAmount } from '../../lib/format';
 
 interface PostpaidPlanCardProps {
   p: PostpaidPlan;
@@ -60,12 +61,12 @@ export function PostpaidPlanCard({ p, selectedProductId, billLimit, onSelectProd
         <p className="text-fg font-bold text-[length:var(--fs-h5)] leading-snug">{p.name}</p>
         <p className="text-accent pt-1">
           <span className="text-[length:var(--fs-body)] font-semibold">QAR </span>
-          <span className="text-[length:var(--fs-h3)] font-bold">{p.mrcQAR}</span>
+          <span className="text-[length:var(--fs-h3)] font-bold">{formatAmount(p.mrcQAR)}</span>
           <span className="text-fg-2 text-[length:var(--fs-caption)]"> /month</span>
         </p>
         {p.promoMonths && <p className="text-fg-2 text-[length:var(--fs-caption)] -mt-1">for {p.promoMonths} months</p>}
         <ul className="space-y-1.5">
-          {[...(p.features?.length ? p.features.map((f, i) => ({ icon: i === 0 ? ICON_DATA : /minute|call/i.test(f) ? ICON_CALL : ICON_CARD, text: f })) : planFeatureRows(p)), { icon: ICON_CARD, text: `Bill limit: QAR ${shownLimit}` }].map((f) => (
+          {[...(p.features?.length ? p.features.map((f, i) => ({ icon: i === 0 ? ICON_DATA : /minute|call/i.test(f) ? ICON_CALL : ICON_CARD, text: f })) : planFeatureRows(p)), { icon: ICON_CARD, text: `Bill limit: ${formatQar(shownLimit)}` }].map((f) => (
             <li key={f.text} className="flex items-center gap-2 text-fg-2 text-[length:var(--fs-caption)]">
               <Icon path={f.icon} className="w-4 h-4 shrink-0 text-accent" />
               {f.text}

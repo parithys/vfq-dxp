@@ -88,3 +88,11 @@ test('Reserved Numbers: always a tab, first when the customer has holds, by cust
   assert.match(m, /No numbers have been reserved for this customer\./);
   assert.match(m, /Reserved \{formatDateTime\(n\.reservedAt\)\}/);
 });
+
+test('the default bill limit is the plan charge, never above the credit limit', async () => {
+  const { defaultBillLimitQar } = await load('/src/engines/postpaidPricing.ts');
+  assert.equal(defaultBillLimitQar(115, 50), 50);
+  assert.equal(defaultBillLimitQar(115, 4000), 115);
+  assert.equal(defaultBillLimitQar(115, undefined), 115);
+  assert.equal(defaultBillLimitQar(50, 50), 50);
+});

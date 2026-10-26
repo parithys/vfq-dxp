@@ -14,6 +14,7 @@ import type { BillingAccountValue } from '../../components/patterns/billingAccou
 import type { EligibilityResult } from '../../components/domain/eligibilityTypes';
 import type { SimTypeValue } from '../../components/domain/SimTypeStep';
 import type { GuidedContactValue } from '../../components/patterns/guidedContactModel';
+import { formatQar } from '../../lib/format';
 
 /**
  * Checkout summary: reads the order's facts from the standard value keys (contact, billingAccount, productId,
@@ -137,7 +138,7 @@ export function prepaidCheckoutStep(opts: {
     label: CHECKOUT_LABEL,
     summary: [{ key: 'due', label: 'Total Payable Today', type: 'text', value: (v) => {
       const due = at(v, 'checkoutTotals', 'totalDueQar') ?? at(v, 'checkoutTotals', 'dueTodayQar');
-      return typeof due === 'number' ? `QAR ${due.toLocaleString('en-GB')}` : undefined;
+      return typeof due === 'number' ? formatQar(due) : undefined;
     } }],
     render: ({ values, setValue, goToStepKey }) => {
       const checkout = (

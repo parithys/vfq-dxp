@@ -8,6 +8,7 @@ import { OrdersSection } from './OrdersSection';
 import { TicketsSection } from './TicketsSection';
 import { AccountHierarchySection } from './AccountHierarchySection';
 import { ProductsAssetsSection } from './MiscSections';
+import { formatAmountAny } from '../../../lib/format';
 
 export interface AccountInfoContext {
   data: Customer360Data;
@@ -76,7 +77,7 @@ export const accountInformationResolvers: Record<string, Resolver> = {
   'Credit Limit': ({ data }) => {
     const cl = data.creditLimits[0];
     if (!cl) return undefined;
-    return `${String(overallCreditLimitOf(data) ?? cl.creditLimitQar ?? cl.creditLimitQAR ?? '-')} QAR`;
+    return `${formatAmountAny(String(overallCreditLimitOf(data) ?? cl.creditLimitQar ?? cl.creditLimitQAR ?? '-'))} QAR`;
   },
 };
 
