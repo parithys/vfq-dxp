@@ -46,7 +46,7 @@ Rules the script enforces — do not work around them:
   feature key or permission level; a catalogue entry references a screen absent
   from `routes.json`; a Staff ID or role id is duplicated; a role binds an
   identity absent from `users-agents.json`; or the navigation source no longer
-  parses to the expected shape (4 approaches, 19 manifest entries, 4 categories
+  parses to the expected shape (4 approaches, 20 manifest entries, 4 categories
   per product line).
 - It **also aborts on app wiring that is broken rather than merely
   undocumented**, because a generated workbook would otherwise report broken

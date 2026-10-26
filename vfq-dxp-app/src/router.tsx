@@ -23,6 +23,7 @@ const CustomerSearchPage = lazy(() => import('./workspace/customer-search/Custom
 const BillingAccountPage = lazy(() => import('./workspace/customer360/BillingAccountPage').then((m) => ({ default: m.BillingAccountPage })));
 const SalesWorkspace = lazy(() => import('./workspace/sales/SalesWorkspace').then((m) => ({ default: m.SalesWorkspace })));
 const SupportWorkspace = lazy(() => import('./workspace/support/SupportWorkspace').then((m) => ({ default: m.SupportWorkspace })));
+const BillFormatterWorkspace = lazy(() => import('./workspace/bill-formatter/BillFormatterWorkspace').then((m) => ({ default: m.BillFormatterWorkspace })));
 const OrdersWorkspace = lazy(() => import('./workspace/orders/OrdersWorkspace').then((m) => ({ default: m.OrdersWorkspace })));
 const AdministrationWorkspace = lazy(() => import('./workspace/administration/AdministrationWorkspace').then((m) => ({ default: m.AdministrationWorkspace })));
 const AgentProfileWorkspace = lazy(() => import('./workspace/profile/AgentProfileWorkspace').then((m) => ({ default: m.AgentProfileWorkspace })));
@@ -87,6 +88,7 @@ export function AppRouter() {
       <Route path="/trouble-ticketing-complaints/approval-queue" element={<TicketApprovalQueue />} />
       <Route path="/trouble-ticketing-complaints/approval-review" element={<TicketApprovalReview />} />
       <Route path="/orders" element={<OrdersWorkspace />} />
+      <Route path="/bill-formatter" element={<BillFormatterWorkspace />} />
       <Route path="/administration" element={<RequireFeature featureKey="workspace.admin-role-access-viewer"><AdministrationWorkspace /></RequireFeature>} />
       <Route path="/profile" element={<AgentProfileWorkspace />} />
       <Route path="/tasks" element={<TaskListView />} />
