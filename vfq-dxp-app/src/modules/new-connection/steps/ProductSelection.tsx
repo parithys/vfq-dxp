@@ -187,7 +187,7 @@ export function ProductSelection({
           setValue={setValue}
           flow={ctx.flow}
           existingCustomerId={ctx.existingCustomerId}
-          onSwitchToPrepaid={product === 'prepaid' ? undefined : () => chooseProduct('prepaid')}
+          onSwitchToPrepaid={product === 'prepaid' || product === 'fixed-line' ? undefined : () => chooseProduct('prepaid')}
         />
       </div>
     </div>

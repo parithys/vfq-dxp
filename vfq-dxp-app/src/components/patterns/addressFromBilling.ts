@@ -28,3 +28,9 @@ export function addressFromBillingLine(line: string | null | undefined): ZsbAddr
 /** Whether the Address holds anything an agent (or a registry fetch) put there, as opposed to nothing or an automatic prefill. */
 export const addressIsEntered = (a: PrefilledAddress | undefined): boolean =>
   Boolean(a) && !a?.prefilledKey && Object.values(a ?? {}).some((v) => v !== undefined && v !== '');
+
+/** The address as one line for a stored billing profile: only what is a value (the placeholder "-" is none), or undefined when nothing is. */
+export function storedAddressLine(a: { zone?: string; streetNo?: string; buildingNo?: string } | undefined): string | undefined {
+  const real = (v: string | undefined) => (v && v.trim() && v.trim() !== ADDRESS_PLACEHOLDER ? v.trim() : undefined);
+  return [real(a?.zone) && `Zone ${real(a?.zone)}`, real(a?.streetNo) && `Street ${real(a?.streetNo)}`, real(a?.buildingNo) && `Building ${real(a?.buildingNo)}`].filter(Boolean).join(', ') || undefined;
+}

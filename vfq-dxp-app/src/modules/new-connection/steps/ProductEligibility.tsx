@@ -2,6 +2,7 @@ import { EligibilityGateStep } from '../../../capabilities';
 import type { GuidedContactValue } from '../../../capabilities';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
 import { LAUNCH_CUSTOMER_KEY } from '../../../components/patterns/wizard/useJourneyStartResume';
+import { isUpfrontPaymentRow } from '../../../components/domain/eligibilityRowsModel';
 import { connectionOf, eligibilityJourney } from '../products';
 
 /** Passport BAU/Credit Control approvals (PB-*) come from the ID type, so they are announced at Customer Verification, not repeated here. */
@@ -46,7 +47,7 @@ export function ProductEligibility({
       portIn={product === 'mnp'}
       // The customer's checks were shown at Customer Verification. Here only what this product changes: everything for Prepaid (it judges
       // ID type and line limit by its own rules), otherwise just what blocks the product, the port-in dues and the approval the line count asks for.
-      showRow={eligibilityJourney(values) === 'prepaid' ? undefined : (row) => row.tone === 'hard-stop' || row.tone === 'soft-stop' || row.id === 'port-in-dues' || (row.id === 'active-lines' && row.tone === 'approval-routing' && (deferredApprovals || !isPassportOnly(row.approvalRuleIds))) || (deferredApprovals && row.id === 'id-type-routing' && row.tone === 'approval-routing')}
+      showRow={eligibilityJourney(values) === 'prepaid' ? undefined : (row) => isUpfrontPaymentRow(row) || row.tone === 'hard-stop' || row.tone === 'soft-stop' || row.id === 'port-in-dues' || (row.id === 'active-lines' && row.tone === 'approval-routing' && (deferredApprovals || !isPassportOnly(row.approvalRuleIds))) || (deferredApprovals && row.id === 'id-type-routing' && row.tone === 'approval-routing')}
       result={eligibility}
       onResult={(r) => setValue('eligibility', r)}
       onSwitchToPrepaid={onSwitchToPrepaid}

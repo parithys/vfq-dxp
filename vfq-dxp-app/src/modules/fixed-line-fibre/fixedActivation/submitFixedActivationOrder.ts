@@ -1,4 +1,5 @@
 import { currentAgentId } from '../../../stores/authStore';
+import { storedAddressLine } from '../../../components/patterns/addressFromBilling';
 import { accountTypeForJourney } from '../../../engines/creditLimit';
 import { saveLinkedIdDocument } from '../../new-connection/saveLinkedIdDocument';
 import { contactIdentityOrderFields } from '../../new-connection/contactIdentityOrderFields';
@@ -70,7 +71,7 @@ export async function submitFixedActivationOrder(
     nationality: eligibility?.nationality,
     segment: eligibility?.segment,
     agentId: currentAgentId() ?? undefined,
-    addressLine: [address?.zone && `Zone ${address.zone}`, address?.streetNo && `Street ${address.streetNo}`, address?.buildingNo && `Building ${address.buildingNo}`].filter(Boolean).join(', ') || undefined,
+    addressLine: storedAddressLine(address),
   });
 
   const orderId = `ORD-${Date.now().toString().slice(-6)}`;

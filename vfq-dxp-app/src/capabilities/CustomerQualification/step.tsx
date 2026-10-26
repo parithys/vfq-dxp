@@ -7,6 +7,7 @@ import type { GuidedContactValue } from '../../components/patterns/guidedContact
 import { BillingAccountAutoResolver } from '../../components/patterns/BillingAccountAutoResolver';
 import type { BillingAccountValue } from '../../components/patterns/billingAccountModel';
 import { EligibilityGateStep } from '../EligibilityGate/EligibilityGateStep';
+import { isUpfrontPaymentRow } from '../../components/domain/eligibilityRowsModel';
 import { accountTypeForJourney } from '../../engines/creditLimit';
 import type { EligibilityResult } from '../../components/domain/eligibilityTypes';
 import type { WizardStep } from '../../components/patterns/wizard/guidedWizardTypes';
@@ -120,7 +121,11 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
             // MNP does not know its connection type until Plan Type: the approvals that depend on it (the ID type's, the line-count and
             // passport BAU ones - a prepaid line needs none of the ID-type approval) are announced there, for the plan type chosen.
             // A stop is still shown here, because it blocks Continue.
-            showRow={values.product === 'mnp' ? (row) => !((row.id === 'active-lines' || row.id === 'id-type-routing') && row.tone === 'approval-routing') : undefined}
+            // The upfront payment is announced once the product is chosen (a Prepaid line has none), not at identification.
+            showRow={(row) =>
+              !(productAgnostic && isUpfrontPaymentRow(row)) &&
+              !(values.product === 'mnp' && (row.id === 'active-lines' || row.id === 'id-type-routing') && row.tone === 'approval-routing')
+            }
             requestKind={requestKind}
             journeyType={journeyType}
             // The customer's full set of checks, as the single-product journeys always showed them at Customer Verification: ID type

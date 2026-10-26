@@ -110,7 +110,7 @@ export function buildEligibilityRows(
 // not derived from `rows`: it describes the four possible outcomes in
 // general, not which ones this particular customer hit.
 /** Whether a row is the HRN advance-payment advisory (the one eligibility row shown as an info toast, not in the list). */
-export const isUpfrontPaymentRow = (row: { id: string; tone: RowTone }): boolean => row.id === 'hrn' && row.tone === 'advisory';
+export const isUpfrontPaymentRow = (row: { id: string; tone: string }): boolean => row.id === 'hrn' && row.tone === 'advisory';
 
 export const OUTCOME_LEGEND: { title: string; example: string; detail: string }[] = [
   {

@@ -40,7 +40,7 @@ export function postpaidExtrasStep(ctx: PostpaidPlanContext): WizardStep {
     summary: planExtrasSummary,
     skip: ctx.skipWhen,
     label: ADDONS_DISCOUNTS_LABEL,
-    subheading: 'Personalise the plan with optional services and spending controls.',
+    subheading: 'Choose optional services and set the spending limit.',
     render: ({ values, setValue }) => renderPlanStep('extras', ctx, values, setValue),
     // Bill limit is the only gate; add-ons and discounts never block.
     isValid: (values) => {
@@ -67,7 +67,8 @@ function renderPlanStep(
           mode={mode}
           customerContext={{
             nationality: eligibility?.nationality,
-            customerType: (values.customerType as CustomerTypeValue | undefined)?.type,
+            // The type the agent validated: a type that was rejected, or never accepted, is Standard here, as it is for the discounts.
+            customerType: ((v) => (v && v.type && !v.rejected ? v.type : undefined))(values.customerType as CustomerTypeValue | undefined),
             idType: (values.contact as GuidedContactValue | undefined)?.idType,
           }}
           customerBenefits={customerBenefits}
