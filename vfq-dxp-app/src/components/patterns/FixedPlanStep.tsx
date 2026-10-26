@@ -6,6 +6,7 @@ import * as mockDataEngine from '../../engines/mockDataEngine';
 import { CARD_IDLE, CARD_SELECTED, ICON_CARD, ICON_SPEED, ICON_TV } from '../primitives/offerCardParts';
 import { Icon } from '../primitives/Icon';
 import { ConnectionTypeTag } from '../primitives/ConnectionTypeTag';
+import { formatQarAny, formatAmount } from '../../lib/format';
 
 type Values = Record<string, unknown>;
 
@@ -57,7 +58,7 @@ export function FixedPlanStep({ values, setValue }: { values: Values; setValue: 
             ...(p.iptvIncluded ? [{ icon: ICON_TV, text: 'IPTV included' }] : []),
             ...(p.lockInMonths ? [{ icon: ICON_CARD, text: `${p.lockInMonths}-month lock-in` }] : []),
             ...(p.disconnectionFeeSchedule || p.disconnectionFeeQAR
-              ? [{ icon: ICON_CARD, text: `Early disconnection fee: ${p.disconnectionFeeSchedule ?? `QAR ${p.disconnectionFeeQAR}`}` }]
+              ? [{ icon: ICON_CARD, text: `Early disconnection fee: ${p.disconnectionFeeSchedule ?? `${formatQarAny(p.disconnectionFeeQAR)}`}` }]
               : []),
           ];
           return (
@@ -82,7 +83,7 @@ export function FixedPlanStep({ values, setValue }: { values: Values; setValue: 
                 <p className="text-fg font-bold text-[length:var(--fs-h5)] leading-snug">{p.name}</p>
                 <p className="text-accent pt-1">
                   <span className="text-[length:var(--fs-body)] font-semibold">QAR </span>
-                  <span className="text-[length:var(--fs-h3)] font-bold">{p.mrcQAR}</span>
+                  <span className="text-[length:var(--fs-h3)] font-bold">{formatAmount(p.mrcQAR)}</span>
                   <span className="text-fg-2 text-[length:var(--fs-caption)]"> /month</span>
                 </p>
                 <ul className="space-y-1.5">

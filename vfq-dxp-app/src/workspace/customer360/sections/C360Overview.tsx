@@ -19,6 +19,7 @@ import type { Tone } from './C360Kit';
 import { RevealValue, useFieldAccess } from '../fieldAccess';
 import { Dv } from '../demoValues';
 import { strOrEmpty as str } from '../../../lib/values';
+import { formatQar, formatQarAny } from '../../../lib/format';
 
 type Rec = Record<string, unknown>;
 const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
@@ -104,7 +105,7 @@ export function C360Overview({ data, services, goToTab, onTicketCreated, queryFo
           {
             icon: IC.card,
             label: '',
-            title: `${str(doi.deviceName)} - QAR ${str(doi.monthlyInstallmentQar)}/month`,
+            title: `${str(doi.deviceName)} - ${formatQarAny(str(doi.monthlyInstallmentQar))}/month`,
             pill: doi.eligibilityListMembership ? { text: str(doi.eligibilityListMembership), tone: toneFor(str(doi.eligibilityListMembership)) } : undefined,
           },
         ]
@@ -118,7 +119,7 @@ export function C360Overview({ data, services, goToTab, onTicketCreated, queryFo
   // ---- Recent activity: every dated event, newest first.
   const feed: FeedRow[] = [
     ...data.activities.map((a) => ({ at: a.transactionDate, title: str(a.topic ?? a.journey ?? 'Activity'), sub: str(a.comments), icon: IC.bars })),
-    ...data.payments.map((p) => ({ at: p.capturedAt, title: 'Payment', sub: `QAR ${str(p.amountQar)}${p.paymentMethod ? ` via ${str(p.paymentMethod)}` : ''}`, icon: IC.card })),
+    ...data.payments.map((p) => ({ at: p.capturedAt, title: 'Payment', sub: `${formatQarAny(str(p.amountQar))}${p.paymentMethod ? ` via ${str(p.paymentMethod)}` : ''}`, icon: IC.card })),
     ...data.orders.map((o) => ({ at: o.createdAt ?? o.orderDate, title: str(o.orderType ?? 'Order'), sub: `${str(o.orderId)} - ${str(o.status)}`, icon: IC.cart })),
     ...data.tickets.map((t) => ({ at: t.createdAt, title: 'Trouble Ticket', sub: `${str(t.ticketId)} - ${str(t.status)}`, icon: IC.headset })),
     ...data.simSwapOrders.map((s) => ({ at: s.createdAt ?? s.requestedAt, title: 'SIM Swap', sub: str(s.simSwapReason ?? s.status), icon: IC.refresh })),
@@ -134,7 +135,7 @@ export function C360Overview({ data, services, goToTab, onTicketCreated, queryFo
   const pendingSwaps = data.simSwapOrders.filter((s) => isSimSwapAwaitingDecision(s.status)).length;
   const alerts: { icon: string; tone: Tone; title: string; sub: string; level: string }[] = [
     ...(outstanding > 0 || dunningActive
-      ? [{ icon: IC.alert, tone: 'red' as Tone, title: dunningActive ? `BP in Collection - ${dunning}` : 'Outstanding Balance', sub: outstanding > 0 ? `QAR ${outstanding} overdue` : 'Account in dunning', level: 'High' }]
+      ? [{ icon: IC.alert, tone: 'red' as Tone, title: dunningActive ? `BP in Collection - ${dunning}` : 'Outstanding Balance', sub: outstanding > 0 ? `${formatQar(outstanding)} overdue` : 'Account in dunning', level: 'High' }]
       : []),
     ...(overdueTickets > 0 ? [{ icon: IC.clock, tone: 'red' as Tone, title: 'Pending Out of SLA Ticket', sub: `${overdueTickets} ticket${overdueTickets === 1 ? '' : 's'}`, level: 'High' }] : []),
     ...(str(extras?.aboutToBar).toLowerCase() === 'yes' ? [{ icon: IC.ban, tone: 'amber' as Tone, title: 'About to OG/IC Bar', sub: 'Barring pending on the account', level: 'Medium' }] : []),

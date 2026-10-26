@@ -107,7 +107,13 @@ export function SimSerialScanner({ value, onChange, autoFocus, suppressValidatio
     if (!value || suppressValidation || shown?.serial === value) return;
     let live = true;
     void checkSimSerial(value, inventory).then((r) => {
-      if (live && r.details) setShown({ serial: value, details: r.details });
+      if (!live) return;
+      if (r.details) {
+        // The read-back is shown only for a serial that is in stock, so the journey is told it is valid too: a serial typed or pasted into the
+        // field (not scanned, not yet blurred) used to show the green read-back while Continue stayed disabled.
+        setShown({ serial: value, details: r.details });
+        onChange(value, true, r.details);
+      }
     });
     return () => {
       live = false;

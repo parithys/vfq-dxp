@@ -5,6 +5,7 @@ import { Drawer } from '../../components/primitives/Drawer';
 import { Icon } from '../../components/primitives/Icon';
 import { useNotificationStore } from '../../stores/notificationStore';
 import type { PolicyLink, PolicyTable } from '../../data/planPolicy';
+import { formatQar } from '../../lib/format';
 
 // The "View details" drawer on a Recommended-offers card (2026-10-04 design: Recommended-offers-02).
 // Every value shown comes from the offer / its linked plans; nothing here is typed in per offer.
@@ -118,8 +119,8 @@ export function OfferDetailsDrawer({
     ? [
         { icon: ICONS.service, label: 'Service', value: serviceLabel },
         { icon: ICONS.tag, label: 'Offer Type', value: o.offerType },
-        { icon: ICONS.card, label: 'Monthly Rental', value: `QAR ${o.monthlyRental}${prepaid ? '' : '/mo'}` },
-        { icon: ICONS.card, label: 'Add-On (Monthly)', value: o.addOnMonthly ? `QAR ${o.addOnMonthly}/mo` : undefined },
+        { icon: ICONS.card, label: 'Monthly Rental', value: `${formatQar(o.monthlyRental)}${prepaid ? '' : '/mo'}` },
+        { icon: ICONS.card, label: 'Add-On (Monthly)', value: o.addOnMonthly ? `${formatQar(o.addOnMonthly)}/mo` : undefined },
         { icon: ICONS.service, label: o.codeLabel ?? 'Campaign code', value: o.campaignCode },
         { icon: ICONS.megaphone, label: 'Promotion', value: o.promotionId },
         { icon: ICONS.sparkles, label: 'Treatment', value: o.treatmentCode },

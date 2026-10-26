@@ -2,6 +2,7 @@ import { isSlaStopped } from '../lib/statusTone';
 import { defaultCreditLimit, hrnAdvanceQar, isHrn } from './hrnConfiguration';
 import { PREPAID_CAPPED_ID_TYPES } from '../data/idTypes';
 import { simCardCharge } from '../data/prepaidSimCharge';
+import { formatQar } from '../lib/format';
 
 
 // Rule Engine per frontend-architecture.md §5. 346 business rules are catalogued
@@ -40,7 +41,7 @@ const ruleImplementations: Record<string, RuleImplementation> = {
       ? { pass: true }
       : {
           pass: false,
-          message: `Entries above the Agent Minimum value (QAR ${agentMinimum}) allow the journey to proceed - QAR ${limitAmount} is below it.`,
+          message: `Entries above the Agent Minimum value (${formatQar(agentMinimum)}) allow the journey to proceed - ${formatQar(limitAmount)} is below it.`,
         };
   },
 
@@ -116,7 +117,7 @@ const ruleImplementations: Record<string, RuleImplementation> = {
     const fee = remainingLockInMonths * 80;
     return {
       pass: false,
-      message: `Disconnecting before 12-month lock-in completes: remainder of the 3-month minimum service period (${remainingOfMinimum} mo) plus QAR 80 x ${remainingLockInMonths} remaining months = QAR ${fee} lock-in charge.`,
+      message: `Disconnecting before 12-month lock-in completes: remainder of the 3-month minimum service period (${remainingOfMinimum} mo) plus QAR 80 x ${remainingLockInMonths} remaining months = ${formatQar(fee)} lock-in charge.`,
     };
   },
 
@@ -277,7 +278,7 @@ const ruleImplementations: Record<string, RuleImplementation> = {
   'BR-187': (ctx) => {
     const { hrnFlag } = ctx as { hrnFlag: boolean };
     return hrnFlag
-      ? { pass: true, message: `HRN customer - QAR ${hrnAdvanceQar()} advance payment required at checkout.` }
+      ? { pass: true, message: `HRN customer - ${formatQar(hrnAdvanceQar())} advance payment required at checkout.` }
       : { pass: true };
   },
 
@@ -292,7 +293,7 @@ const ruleImplementations: Record<string, RuleImplementation> = {
   'BR-076': (ctx) => {
     const { hrnFlag, nationality } = ctx as { hrnFlag: boolean; nationality?: string };
     const amount = defaultCreditLimitQar(hrnFlag, nationality);
-    return { pass: true, message: `Default credit limit: QAR ${amount} on a new account.` };
+    return { pass: true, message: `Default credit limit: ${formatQar(amount)} on a new account.` };
   },
 
   // Unsubmitted ticket never routes to a queue (BR-068) - gates queue

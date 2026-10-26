@@ -67,3 +67,18 @@ test('Empty State: one component draws every empty list; tables, pickers and pan
   assert.match(read('src/capabilities/DocumentUpload/index.ts'), /UPLOAD_RULES/);
   assert.match(read('src/capabilities/EmptyState/index.ts'), /EmptyState/);
 });
+
+test('the SIM step names approval or submission for the eSIM QR code by context, and a serial that is in stock is reported valid at once', async () => {
+  const { expectsApproval } = await load('/src/modules/new-connection/approvalRouting.ts');
+  const contact = { idNumber: '1', moiResult: { name: 'A' } };
+  const clean = { checks: [], hardStop: false, softStop: false };
+  assert.equal(expectsApproval({ contact, eligibility: clean }), false);
+  assert.equal(expectsApproval({ contact, eligibility: { ...clean, requiresHrnAdvance: true } }), true, 'HRN advance routes the order');
+  assert.equal(expectsApproval({ contact, eligibility: clean, numberWaiver: 'partial' }), true, 'a Waive Off routes the order');
+  assert.equal(expectsApproval({ contact: { ...contact, manualEntry: true }, eligibility: clean }), true);
+  assert.equal(expectsApproval({}), false);
+  const sim = read('src/components/domain/SimTypeStep.tsx');
+  assert.match(sim, /will be generated only after successful payment and order \{approvalRequired \? 'approval' : 'submission'\}/);
+  assert.match(read('src/modules/new-connection/postpaidSteps.tsx'), /approvalRequired: expectsApproval/);
+  assert.match(read('src/components/domain/SimSerialScanner.tsx'), /onChange\(value, true, r\.details\)/, 'the read-back tells the journey the serial is valid');
+});

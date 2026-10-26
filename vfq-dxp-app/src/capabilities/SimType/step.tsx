@@ -23,6 +23,8 @@ export function simTypeStep(
     device?: DeviceType;
     /** Says the agent chose a Pre-Paired SIM: the step scans one from the Pre-Paired inventory and takes the MSISDN from it. */
     prePaired?: (values: Record<string, unknown>) => boolean;
+    /** Says the order will be held for approval, so the eSIM message names approval rather than submission. */
+    approvalRequired?: (values: Record<string, unknown>) => boolean;
   } = {}
 ): WizardStep {
   const fromContact = (values: Record<string, unknown>) => {
@@ -39,6 +41,7 @@ export function simTypeStep(
         customerEmail={(opts.customerEmail ?? fromContact)(values)}
         device={opts.device}
         prePaired={opts.prePaired?.(values)}
+        approvalRequired={opts.approvalRequired?.(values)}
         onChange={(v) => {
           setValue('simType', v);
           // A Pre-Paired SIM brings its own number, which is what the rest of the journey reads as the MSISDN.

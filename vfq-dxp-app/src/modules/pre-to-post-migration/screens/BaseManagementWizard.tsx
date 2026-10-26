@@ -13,6 +13,7 @@ import { Select } from '../../../components/primitives/Select';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
 import { useWorkflowStore } from '../../../stores/workflowStore';
+import { formatQarAny, formatQar } from '../../../lib/format';
 
 interface MigrationOffer {
   offerId: string;
@@ -81,7 +82,7 @@ export function BaseManagementWizard() {
                   <p className="text-fg font-medium">{offer.offerName}</p>
                   <p className="text-fg-2 text-[length:var(--fs-body)] mt-1">{offer.offerDescription}</p>
                   <p className="text-fg text-[length:var(--fs-body)] mt-2">
-                    Monthly Rental: QAR {offer.monthlyRental} + Add-on QAR {offer.addOnMonthly ?? 0}
+                    Monthly Rental: {formatQarAny(offer.monthlyRental)} + Add-on {formatQarAny(offer.addOnMonthly ?? 0)}
                   </p>
                 </div>
                 <BillLimitEditor
@@ -106,8 +107,8 @@ export function BaseManagementWizard() {
           ],
           'offer-summary': [
             { key: 'offer', label: 'Offer', type: 'text', value: () => offer?.offerName },
-            { key: 'rental', label: 'Monthly Rental', type: 'text', value: () => (offer ? `QAR ${offer.monthlyRental.toLocaleString('en-GB')}` : undefined) },
-            { key: 'billLimit', label: 'Bill Limit', type: 'text', optional: true, value: (v) => (typeof v.billLimit === 'number' ? `QAR ${v.billLimit.toLocaleString('en-GB')}` : undefined) },
+            { key: 'rental', label: 'Monthly Rental', type: 'text', value: () => (offer ? formatQar(offer.monthlyRental) : undefined) },
+            { key: 'billLimit', label: 'Bill Limit', type: 'text', optional: true, value: (v) => (typeof v.billLimit === 'number' ? formatQar(v.billLimit) : undefined) },
           ],
           activity: [{ key: 'channel', label: 'Channel', type: 'text', value: (v) => v.channel ?? 'Appointment' }],
         })}

@@ -2,6 +2,7 @@ import { Select } from '../primitives/Select';
 import { creditLimitPolicy } from '../../engines/creditLimit';
 import { accountTypeForJourney, creditLimitOptions, creditSegmentOf, customerCategoryOf, defaultCreditLimitFor, payableAtActivationQar, type JourneyAccountType } from '../../engines/creditLimit';
 import { isHrn } from '../../engines/hrnConfiguration';
+import { formatQar, formatQarAny } from '../../lib/format';
 
 const row = 'flex items-baseline justify-between gap-4 py-1.5';
 
@@ -54,19 +55,19 @@ export function CreditLimitCard({
         </div>
         <div className={row}>
           <dt className="text-fg-2">Default Credit Limit</dt>
-          <dd className="text-fg font-medium">QAR {defaultQar}</dd>
+          <dd className="text-fg font-medium">{formatQarAny(defaultQar)}</dd>
         </div>
         <div className={row}>
           <dt className="text-fg-2">Amount Payable</dt>
-          <dd className="text-fg font-medium">{advance > 0 ? `QAR ${advance} advance` : hrn ? 'No advance payable (HRN fee not marked: Credit Risk Exemption Low or No)' : 'No advance payable'}</dd>
+          <dd className="text-fg font-medium">{advance > 0 ? `${formatQar(advance)} advance` : hrn ? 'No advance payable (HRN fee not marked: Credit Risk Exemption Low or No)' : 'No advance payable'}</dd>
         </div>
       </dl>
       <Select
         label="Credit Limit (QAR)"
         value={String(value)}
         disabled={!policy.editable}
-        helperText={!policy.editable ? (hrn && policy.lock === 'hrn' ? 'Credit limit modification is not allowed for an HRN customer.' : policy.message) : `Choose a limit up to the ${segment ?? 'customer'} default of QAR ${defaultQar}.`}
-        options={options.map((o) => ({ value: String(o), label: `QAR ${o}` }))}
+        helperText={!policy.editable ? (hrn && policy.lock === 'hrn' ? 'Credit limit modification is not allowed for an HRN customer.' : policy.message) : `Choose a limit up to the ${segment ?? 'customer'} default of ${formatQar(defaultQar)}.`}
+        options={options.map((o) => ({ value: String(o), label: `${formatQar(o)}` }))}
         onChange={(e) => onChange(Number(e.target.value) === defaultQar ? undefined : Number(e.target.value))}
       />
     </section>

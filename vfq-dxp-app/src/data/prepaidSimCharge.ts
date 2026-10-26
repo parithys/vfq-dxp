@@ -1,3 +1,4 @@
+import { formatQar } from '../lib/format';
 // SIM card charge on a Mobile Prepaid activation (BRSD MPRA_001_PAY_02).
 //
 // The BRSD: the system collects a SIM card charge when the recharge amount in the cart is below a defined limit per ID
@@ -26,6 +27,6 @@ export function simCardCharge(idType: string | undefined, rechargeQar: number): 
     return { applies: false, chargeQar: 0, message: `No SIM card charge is defined for ID type "${idType ?? 'unknown'}" - none applies.` };
   }
   return rechargeQar >= limit
-    ? { applies: false, chargeQar: 0, message: `Recharge of QAR ${rechargeQar} meets the ${idType} minimum of QAR ${limit} - no SIM card charge.` }
-    : { applies: true, chargeQar: charge, message: `Recharge of QAR ${rechargeQar} is below the ${idType} minimum of QAR ${limit} - a SIM card charge of QAR ${charge} applies.` };
+    ? { applies: false, chargeQar: 0, message: `Recharge of ${formatQar(rechargeQar)} meets the ${idType} minimum of ${formatQar(limit)} - no SIM card charge.` }
+    : { applies: true, chargeQar: charge, message: `Recharge of ${formatQar(rechargeQar)} is below the ${idType} minimum of ${formatQar(limit)} - a SIM card charge of ${formatQar(charge)} applies.` };
 }

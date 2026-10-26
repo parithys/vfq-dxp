@@ -6,6 +6,7 @@ import { PrepaidPackDetailsDrawer } from './PrepaidPackDetailsDrawer';
 import type { PrepaidPlan } from './prepaidPlanModel';
 import { Checkbox } from '../primitives/Checkbox';
 import { Icon } from '../primitives/Icon';
+import { formatQar, formatQarAny, formatAmount } from '../../lib/format';
 
 const CHECK = 'M20 6L9 17l-5-5';
 
@@ -131,7 +132,7 @@ export function PrepaidPlanStep({ mode = 'plan', hiddenProductId, packsOnly, sho
               </div>
               <SelectedPlanFigure label="Starter Pack">
                 <span className="text-[length:var(--fs-body)]">QAR </span>
-                <span className="text-[length:var(--fs-h3)] font-bold">{selectedPlan.starterPackChargeQAR}</span>
+                <span className="text-[length:var(--fs-h3)] font-bold">{formatAmount(selectedPlan.starterPackChargeQAR)}</span>
               </SelectedPlanFigure>
             </div>
             {/* Benefits and the optional add-ons share one row. */}
@@ -175,7 +176,7 @@ export function PrepaidPlanStep({ mode = 'plan', hiddenProductId, packsOnly, sho
                         <span className="block text-[length:var(--fs-caption)] text-muted">{a.description}</span>
                       </span>
                     </span>
-                    <span className="text-fg font-medium shrink-0">QAR {a.price}</span>
+                    <span className="text-fg font-medium shrink-0">{formatQarAny(a.price)}</span>
                   </label>
                 );
               })}
@@ -241,11 +242,11 @@ export function PrepaidPlanStep({ mode = 'plan', hiddenProductId, packsOnly, sho
             <caption className="opacity-70 text-[length:var(--fs-tag)] font-semibold uppercase tracking-wide text-left pb-2">Pack summary</caption>
             <tbody className="divide-y divide-[var(--divider-on-dark)]">
               {[
-                [selectedPlan.name, `QAR ${selectedPlan.starterPackChargeQAR}`],
+                [selectedPlan.name, `${formatQar(selectedPlan.starterPackChargeQAR)}`],
                 ...(selectedDiscount
-                  ? [[`${selectedDiscount.name} (${Math.round(Math.abs(selectedDiscount.price) * 100)}%) · Added`, `-QAR ${selectedPlan.starterPackChargeQAR - (netStarterPack ?? 0)}`]]
+                  ? [[`${selectedDiscount.name} (${Math.round(Math.abs(selectedDiscount.price) * 100)}%) · Added`, `-${formatQar(selectedPlan.starterPackChargeQAR - (netStarterPack ?? 0))}`]]
                   : []),
-                ...chosenAddons.map((a) => [`${a.name} · Added`, `QAR ${a.price}`]),
+                ...chosenAddons.map((a) => [`${a.name} · Added`, `${formatQar(a.price)}`]),
               ].map(([label, value]) => (
                 <tr key={label}>
                   <th scope="row" className="opacity-80 font-normal text-left py-1.5 pr-4">
@@ -258,7 +259,7 @@ export function PrepaidPlanStep({ mode = 'plan', hiddenProductId, packsOnly, sho
           </table>
           <div className="text-right pt-3">
             <p className="opacity-80 text-[length:var(--fs-caption)]">Pack Total</p>
-            <p className="font-bold text-[length:var(--fs-h3)] leading-tight">QAR {(netStarterPack ?? 0) + chosenAddons.reduce((t, a) => t + a.price, 0)}</p>
+            <p className="font-bold text-[length:var(--fs-h3)] leading-tight">{formatQarAny((netStarterPack ?? 0) + chosenAddons.reduce((t, a) => t + a.price, 0))}</p>
           </div>
         </div>
       )}

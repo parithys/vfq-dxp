@@ -156,7 +156,7 @@ test('9. the audit trail shows what changed and how, and finds the rows that bel
   assert.match(read('src/workspace/customer360/telesales/TelesalesAuditSection.tsx'), /old: str\(a\.oldValue\)/);
   assert.match(read('src/engines/customer360Engine.ts'), /recordIds\.has\(r\.recordId as string\) \|\| r\.recordId === customerId/);
   const rec = cl.creditLimitAuditRecord({ recordId: 'ACC-9', fromQar: 1000, toQar: 1500, by: 'USR-1', how: 'Selected by agent' });
-  assert.deepEqual([rec.oldValue, rec.newValue, rec.changeBasis], ['QAR 1000', 'QAR 1500', 'Selected by agent']);
+  assert.deepEqual([rec.oldValue, rec.newValue, rec.changeBasis], ['QAR 1,000', 'QAR 1,500', 'Selected by agent']);
   // A change keyed by the customer (no account yet) is found on that customer's page.
   const created = [];
   await change.applyCreditLimitChange({ customerId: 'C-NOACC', creditLimitQar: 800 }, { list: async () => [], updateRecord: async () => {}, createRecord: async (k, r) => void created.push({ k, r }) }, '2026-10-22');

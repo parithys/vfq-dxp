@@ -63,9 +63,9 @@ test('a consumer billing profile carries its own customer\'s contact, not anothe
   assert.deepEqual(bad.map((b) => b.billingProfileId), []);
 });
 
-test('checkout shows the plan\'s own bill limit when the agent set none, as Plan & Add-ons does', () => {
+test('checkout shows the plan\'s own bill limit (never above the credit limit) when the agent set none, as Plan & Add-ons does', () => {
   for (const f of ['src/components/patterns/checkoutDetailedTables.ts', 'src/components/patterns/CheckoutDefaultLayout.tsx']) {
-    assert.match(fs.readFileSync(f, 'utf8'), /billLimit \?\? plan\?\.mrcQAR/, f);
+    assert.match(fs.readFileSync(f, 'utf8'), /billLimit \?\? \(plan \? defaultBillLimitQar\(plan\.mrcQAR, creditLimitQar\)/, f);
   }
 });
 

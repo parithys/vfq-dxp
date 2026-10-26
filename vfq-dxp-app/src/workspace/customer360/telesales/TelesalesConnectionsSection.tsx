@@ -13,6 +13,7 @@ import { TabStrip } from '../../../components/primitives/TabStrip';
 import { ActionList, HeaderButton, ICON, SectionHeader, StatStrip, Table, TableCard, pillFor, yesNo, WideBlock } from './TelesalesKit';
 import { strOrEmpty as str } from '../../../lib/values';
 import { arr, rowDate, activityEntries } from './shared';
+import { formatQarAny } from '../../../lib/format';
 
 // ============================================================================ Connections & Services
 const SERVICE_FILTERS = ['All Services', 'Mobile', 'Fixed Line', 'TV', 'GigaHome'];
@@ -31,7 +32,7 @@ export function ConnectionsSection({ ctx }: { ctx: Ctx }) {
   const addons = data.addonsDiscounts.filter((a) => a.category !== 'Discount');
   const discounts = data.addonsDiscounts.filter((a) => a.category === 'Discount');
   const creditLimit = data.creditLimits[0];
-  const billLimit = res('Bill Limit') ?? (creditLimit ? `QAR ${overallCreditLimitOf(data) ?? str(creditLimit.creditLimitQar ?? creditLimit.creditLimitQAR)}` : '-');
+  const billLimit = res('Bill Limit') ?? (creditLimit ? `${formatQarAny(overallCreditLimitOf(data) ?? str(creditLimit.creditLimitQar ?? creditLimit.creditLimitQAR))}` : '-');
   const bal = data.inPlatformBalances[0];
   const use = data.serviceUsage[0];
   const ex = data.overviewExtras[0];
@@ -178,13 +179,13 @@ export function ConnectionsSection({ ctx }: { ctx: Ctx }) {
                         </button>
                       </div>
                       <KV label="Bill Limit">{billLimit}</KV>
-                      <KV label="Current Balance">{bal ? `QAR ${str(bal.mainBalanceQAR ?? 0)}` : '-'}</KV>
+                      <KV label="Current Balance">{bal ? `${formatQarAny(str(bal.mainBalanceQAR ?? 0))}` : '-'}</KV>
                       <KV label="Pending Discounts">{discounts.length}</KV>
                       <KV label="Active Discount">{discounts[0] ? str(discounts[0].name) : '-'}</KV>
                       {bar('Data', dataLeft, Math.round(dataTotal), 'GB')}
                       {bar('Voice', voiceLeft, voiceTotal, 'Mins')}
                       {bar('SMS', smsLeft, smsTotal, 'SMS')}
-                      <KV label="Primary Balance">{bal ? `QAR ${str(bal.mainBalanceQAR ?? 0)}` : '-'}</KV>
+                      <KV label="Primary Balance">{bal ? `${formatQarAny(str(bal.mainBalanceQAR ?? 0))}` : '-'}</KV>
                     </div>
                   </div>
                   <div className="px-5 py-4 space-y-3 border-t border-[var(--field-card-border)] text-[length:var(--fs-body)]">

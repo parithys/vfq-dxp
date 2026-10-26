@@ -110,6 +110,10 @@ export interface MonthlyCharges {
   totalQar: number;
 }
 
+/** The bill limit a plan starts with: its monthly charge, but never above the credit limit (the bill limit cannot exceed it). */
+export const defaultBillLimitQar = (planMrcQar: number, creditLimitQar: number | undefined): number =>
+  creditLimitQar === undefined ? planMrcQar : Math.min(planMrcQar, creditLimitQar);
+
 /** Two decimal places, the smallest unit these figures are quoted in. */
 function round2(n: number): number {
   return Math.round(n * 100) / 100;

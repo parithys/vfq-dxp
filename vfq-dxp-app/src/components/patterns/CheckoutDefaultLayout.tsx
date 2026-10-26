@@ -1,7 +1,9 @@
+import { defaultBillLimitQar } from '../../engines/postpaidPricing';
 import { numberWaiverLabel } from '../../engines/numberWaiver';
 import { formatQar, VAT_RATE } from '../../engines/postpaidPricing';
 import { Button } from '../primitives/Button';
 import type { CheckoutSummaryDerived } from './useCheckoutSummary';
+import { formatQarAny } from '../../lib/format';
 
 interface CheckoutDefaultLayoutProps extends CheckoutSummaryDerived {
   customerName: string | undefined;
@@ -58,14 +60,14 @@ export function CheckoutDefaultLayout({
   // "none", not silence that could read as an unanswered question.
   const numberDetail = msisdn
     ? [
-        isStarNumber ? `Star value QAR ${numberDelta} one-time` : null,
+        isStarNumber ? `Star value ${formatQar(numberDelta)} one-time` : null,
         // BR-115 entitlement/overage, stated either way rather than only when
         // it bites - "no extra charge" is as much a fact the agent should be
         // able to read back as "QR X extra" is.
         isStarNumber && starEntitlementQar !== undefined
           ? numberChargeQar > 0
-            ? `QAR ${numberChargeQar} extra beyond the QAR ${starEntitlementQar} plan entitlement`
-            : `Within the QAR ${starEntitlementQar} plan entitlement - no extra charge`
+            ? `${formatQar(numberChargeQar)} extra beyond the ${formatQar(starEntitlementQar)} plan entitlement`
+            : `Within the ${formatQar(starEntitlementQar)} plan entitlement - no extra charge`
           : null,
         'Discount: None',
         isStarNumber
@@ -109,7 +111,7 @@ export function CheckoutDefaultLayout({
             leaving lock-in/duration to a separate recap box. */}
         <Row
           label="Plan"
-          value={plan ? `${plan.name} - QAR ${plan.mrcQAR}/mo` : '-'}
+          value={plan ? `${plan.name} - ${formatQar(plan.mrcQAR)}/mo` : '-'}
           detail={plan ? (plan.commitmentMonths ? `${plan.commitmentMonths}-month lock-in` : 'No lock-in') : undefined}
         />
         {/* Shown so the monthly figure below can be arrived at from the rows
@@ -133,7 +135,7 @@ export function CheckoutDefaultLayout({
           value={
             addons.length
               ? addons
-                  .map((a) => `${a.name} (QAR ${a.mrcQAR}/mo${a.dataAllowanceGB ? `, ${a.dataAllowanceGB} GB` : ''})`)
+                  .map((a) => `${a.name} (${formatQar(a.mrcQAR)}/mo${a.dataAllowanceGB ? `, ${a.dataAllowanceGB} GB` : ''})`)
                   .join(', ')
               : 'None'
           }
@@ -142,7 +144,7 @@ export function CheckoutDefaultLayout({
             (Free/Star), its own value, its own discount, and its own
             lock-in - see numberDetail above. */}
         <Row label="Number" value={msisdn ? `${msisdn} - ${isStarNumber ? 'Star' : 'Free'}` : '-'} detail={numberDetail} />
-        {creditLimitQar !== undefined && <Row agentOnly label="Credit Limit" value={`QAR ${creditLimitQar}`} />}
+        {creditLimitQar !== undefined && <Row agentOnly label="Credit Limit" value={`${formatQar(creditLimitQar)}`} />}
         {/* Bill limit (2026-09-28): the agent's own figure from Plan &
             Add-ons' BillLimitEditor once they have set one, falling back to
             the plan's own figure (what Plan & Add-ons shows by default), then the credit-limit cap - never a made-up
@@ -151,8 +153,8 @@ export function CheckoutDefaultLayout({
           <Row
             agentOnly
             label="Bill Limit"
-            value={billLimit !== undefined || plan?.mrcQAR !== undefined ? `QAR ${billLimit ?? plan?.mrcQAR}` : `Up to QAR ${creditLimitQar}`}
-            detail={`Capped at the QAR ${creditLimitQar} credit limit`}
+            value={billLimit !== undefined || plan?.mrcQAR !== undefined ? `${formatQarAny(billLimit ?? (plan ? defaultBillLimitQar(plan.mrcQAR, creditLimitQar) : plan))}` : `Up to ${formatQarAny(creditLimitQar)}`}
+            detail={`Capped at the ${formatQar(creditLimitQar)} credit limit`}
           />
         )}
         {/* Conditional: the postpaid journey dropped its Billing step on
@@ -168,7 +170,7 @@ export function CheckoutDefaultLayout({
             surfaced here (rather than a separate customer-input placeholder)
             because there is nothing for either party to fill in: this is the
             consequence of that classification, not a form field. */}
-        {hrnAdvance > 0 && <Row label="Advance Payment" value={`QAR ${hrnAdvance}`} />}
+        {hrnAdvance > 0 && <Row label="Advance Payment" value={`${formatQar(hrnAdvance)}`} />}
       </dl>
 
       <div className="rounded-[var(--radius-card)] border border-accent-border bg-surface-warm p-4 space-y-1">
@@ -179,7 +181,7 @@ export function CheckoutDefaultLayout({
             question nobody asked. */}
         <div className="flex justify-between text-fg font-semibold">
           <span>Due Today</span>
-          <span>QAR {dueTodayQar}</span>
+          <span>{formatQarAny(dueTodayQar)}</span>
         </div>
         {isStarNumber && (
           <div className="flex justify-between text-fg-2 text-[length:var(--fs-caption)]">
@@ -190,23 +192,23 @@ export function CheckoutDefaultLayout({
                   same reasoning as the rest of this itemisation. */}
               {starEntitlementQar !== undefined && numberChargeQar > 0 && (
                 <span className="block text-muted">
-                  QAR {numberDelta} sticker price, QAR {starEntitlementQar} entitled on this plan
+                  {formatQarAny(numberDelta)} sticker price, {formatQarAny(starEntitlementQar)} entitled on this plan
                 </span>
               )}
             </span>
-            <span>QAR {numberChargeQar}</span>
+            <span>{formatQarAny(numberChargeQar)}</span>
           </div>
         )}
         {numberWaiver && numberWaivedQar > 0 && (
           <div className="flex justify-between text-fg-2 text-[length:var(--fs-caption)]">
             <span>{numberWaiverLabel(numberWaiver)}</span>
-            <span>- QAR {numberWaivedQar}</span>
+            <span>- {formatQarAny(numberWaivedQar)}</span>
           </div>
         )}
         {hrnAdvance > 0 && (
           <div className="flex justify-between text-fg-2 text-[length:var(--fs-caption)]">
             <span>Upfront / HRN fee</span>
-            <span>QAR {hrnAdvance}</span>
+            <span>{formatQarAny(hrnAdvance)}</span>
           </div>
         )}
         {/* First bill and ongoing recurring are two different numbers on a
@@ -224,11 +226,11 @@ export function CheckoutDefaultLayout({
               {firstBill.proratedDays} of {firstBill.cycleDays} days this cycle
             </span>
           </span>
-          <span className="shrink-0">QAR {firstBill.totalQar}</span>
+          <span className="shrink-0">{formatQarAny(firstBill.totalQar)}</span>
         </div>
         <div className="flex justify-between text-fg-2 text-[length:var(--fs-caption)]">
           <span>Recurring monthly bill, from month 2</span>
-          <span>QAR {monthlyRecurringQar}/mo</span>
+          <span>{formatQarAny(monthlyRecurringQar)}/mo</span>
         </div>
         {/* Reserved space (2026-09-28 request) for a full second-bill
             breakdown - deliberately NOT designed yet. This is a placeholder

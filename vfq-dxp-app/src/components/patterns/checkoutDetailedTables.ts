@@ -1,8 +1,9 @@
-import { formatQar, VAT_RATE } from '../../engines/postpaidPricing';
+import { defaultBillLimitQar, formatQar, VAT_RATE } from '../../engines/postpaidPricing';
 import { numberWaiverLabel } from '../../engines/numberWaiver';
 import type { SimTypeValue } from '../domain/SimTypeStep';
 import type { SummaryTable } from './CheckoutSummaryTables';
 import type { CheckoutSummaryDerived } from './useCheckoutSummary';
+import { formatQarAny } from '../../lib/format';
 
 interface DetailedTablesArgs extends CheckoutSummaryDerived {
   customerName: string | undefined;
@@ -81,12 +82,12 @@ export function buildDetailedTables({
           : []),
         { label: 'Plan', value: plan?.name ?? '-' },
         { label: 'Lock-In Period', value: plan?.commitmentMonths ? `${plan.commitmentMonths} months` : 'No lock-in' },
-        { label: 'Add-Ons', value: addons.length ? addons.map((a) => `${a.name} (QAR ${a.mrcQAR}/mo)`).join(', ') : 'None' },
+        { label: 'Add-Ons', value: addons.length ? addons.map((a) => `${a.name} (${formatQar(a.mrcQAR)}/mo)`).join(', ') : 'None' },
         { label: 'SIM Type', value: simType?.simType ?? '-' },
         ...(creditLimitQar !== undefined
           ? [
-              { label: 'Credit Limit', value: `QAR ${creditLimitQar}`, boldLabel: true, agentOnly: true },
-              { label: 'Bill Limit', value: billLimit !== undefined || plan?.mrcQAR !== undefined ? `QAR ${billLimit ?? plan?.mrcQAR}` : `Up to QAR ${creditLimitQar}`, boldLabel: true, agentOnly: true },
+              { label: 'Credit Limit', value: `${formatQar(creditLimitQar)}`, boldLabel: true, agentOnly: true },
+              { label: 'Bill Limit', value: billLimit !== undefined || plan?.mrcQAR !== undefined ? `${formatQarAny(billLimit ?? (plan ? defaultBillLimitQar(plan.mrcQAR, creditLimitQar) : plan))}` : `Up to ${formatQarAny(creditLimitQar)}`, boldLabel: true, agentOnly: true },
             ]
           : []),
       ],

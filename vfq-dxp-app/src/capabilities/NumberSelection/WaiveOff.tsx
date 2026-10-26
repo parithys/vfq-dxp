@@ -71,9 +71,12 @@ export function WaiveOff({ chargeQar, waiver, onChange }: { chargeQar: number; w
               <span className="min-w-0 flex-1">
                 <span className="block text-fg font-semibold text-[length:var(--fs-body)]">{o.label}</span>
                 <span className="block text-fg-2 text-[length:var(--fs-caption)]">{o.description}</span>
-                <span className="mt-1 block text-fg text-[length:var(--fs-caption)]">
-                  Waived {formatQar(waivedQar(chargeQar, o.key))} · Payable {formatQar(chargeAfterWaiverQar(chargeQar, o.key))}
-                </span>
+                <dl className="mt-2 grid max-w-xs grid-cols-2 text-[length:var(--fs-caption)] [&>*]:border-t [&>*]:border-border-soft [&>*]:py-1">
+                  <dt className="text-fg-2">Waived</dt>
+                  <dd className="text-right font-semibold text-fg">{formatQar(waivedQar(chargeQar, o.key))}</dd>
+                  <dt className="text-fg-2">Payable</dt>
+                  <dd className="text-right font-semibold text-fg">{formatQar(chargeAfterWaiverQar(chargeQar, o.key))}</dd>
+                </dl>
               </span>
             </label>
           ))}

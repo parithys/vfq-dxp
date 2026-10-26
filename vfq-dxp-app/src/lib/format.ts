@@ -7,12 +7,30 @@ const LOCALE = 'en-GB';
 
 const isEmpty = (v: unknown) => v === undefined || v === null || v === '';
 
-/** "QAR 1,500" - whole amounts have no decimals, fractional amounts always have two ("QAR 112.50"). */
-export function formatQar(amount: number, opts: { nbsp?: boolean } = {}): string {
-  const n = Number.isInteger(amount)
+/** "1,500" / "112.50" - an amount without its currency, for where "QAR" is drawn beside it: whole amounts have no decimals, fractional amounts always have two. */
+export function formatAmount(amount: number): string {
+  return Number.isInteger(amount)
     ? amount.toLocaleString(LOCALE)
     : amount.toLocaleString(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  return `QAR${opts.nbsp ? ' ' : ' '}${n}`;
+}
+
+/** formatAmount for any value: a number, or text that holds one, is formatted; other text passes through. */
+export function formatAmountAny(v: unknown): string {
+  if (typeof v === 'number') return formatAmount(v);
+  if (typeof v === 'string' && v.trim() !== '' && Number.isFinite(Number(v))) return formatAmount(Number(v));
+  return String(v ?? '');
+}
+
+/** "QAR 1,500" - whole amounts have no decimals, fractional amounts always have two ("QAR 112.50"). */
+export function formatQar(amount: number, opts: { nbsp?: boolean } = {}): string {
+  return `QAR${opts.nbsp ? ' ' : ' '}${formatAmount(amount)}`;
+}
+
+/** formatQar for any value: a number, or text that holds one ("12.5"), is formatted (two decimals when it has any); other text passes through after "QAR ". */
+export function formatQarAny(v: unknown): string {
+  if (typeof v === 'number') return formatQar(v);
+  if (typeof v === 'string' && v.trim() !== '' && Number.isFinite(Number(v))) return formatQar(Number(v));
+  return `QAR ${String(v ?? '')}`;
 }
 
 /** formatQar for a value that may be missing or not a number: numbers format, other text passes through, empty is undefined. */

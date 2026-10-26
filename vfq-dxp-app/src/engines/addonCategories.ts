@@ -1,3 +1,4 @@
+import { formatQar } from '../lib/format';
 // The Add-ons page's two levels of navigation: the add-on CATEGORY (Local Data, Local Calls, International Calls, Roaming, Combo, Others) and the
 // Free / Paid FILTER, which applies to the category selected. Both are read from the add-on's own record: `addonCategory` (stated on every add-on in
 // products.json) and its `pricing`: Free is an add-on stated as included with a plan, Paid every other (a QAR price, or a price the catalogue
@@ -45,6 +46,23 @@ export function addonCategoryOf(a: CategorisedAddon): AddonCategory {
 export const isFreeAddon = (a: CategorisedAddon): boolean =>
   a.pricingModel ? a.pricingModel.startsWith('free') : a.pricing ? a.pricing === 'free' : a.mrcQAR === 0;
 
+/**
+ * What an add-on costs per month in Months 1-INTRO_MONTHS - what the first bills carry: nothing for a free model and for 'free-first-3', the
+ * introductory price for 'intro-discount', the standard price otherwise. (From Month INTRO_MONTHS + 1 it is `mrcQAR`.)
+ */
+export function addonChargeNowQar(a: CategorisedAddon): number {
+  switch (a.pricingModel) {
+    case 'free-all':
+    case 'free-with-plan':
+    case 'free-first-3':
+      return 0;
+    case 'intro-discount':
+      return a.introPriceQAR ?? a.mrcQAR;
+    default:
+      return a.mrcQAR;
+  }
+}
+
 /** What the card says about the price: the figure, and the line that qualifies it (when it is not simply the monthly price). */
 export interface AddonPriceDisplay {
   primary: string;
@@ -53,7 +71,7 @@ export interface AddonPriceDisplay {
 
 /** The price wording of an add-on with a pricing model; undefined for a record that states none (the card then keeps its own wording). */
 export function addonPriceDisplay(a: CategorisedAddon): AddonPriceDisplay | undefined {
-  const then = `then QAR ${a.mrcQAR}/month from Month ${INTRO_MONTHS + 1}`;
+  const then = `then ${formatQar(a.mrcQAR)}/month from Month ${INTRO_MONTHS + 1}`;
   switch (a.pricingModel) {
     case 'free-all':
       return { primary: 'Free' };
@@ -62,10 +80,10 @@ export function addonPriceDisplay(a: CategorisedAddon): AddonPriceDisplay | unde
     case 'free-first-3':
       return { primary: 'Free', secondary: `for Months 1\u2013${INTRO_MONTHS}, ${then}` };
     case 'intro-discount':
-      return { primary: `QAR ${a.introPriceQAR ?? a.mrcQAR}/mo`, secondary: `for Months 1\u2013${INTRO_MONTHS}, ${then}` };
+      return { primary: `${formatQar(a.introPriceQAR ?? a.mrcQAR)}/mo`, secondary: `for Months 1\u2013${INTRO_MONTHS}, ${then}` };
     case 'standard':
       // A plain price has nothing to qualify: supplementary text is for conditional, promotional or time-based pricing only.
-      return { primary: `QAR ${a.mrcQAR}/mo` };
+      return { primary: `${formatQar(a.mrcQAR)}/mo` };
     default:
       return undefined;
   }

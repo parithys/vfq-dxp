@@ -4,6 +4,7 @@ import { Button } from '../primitives/Button';
 import { Badge } from '../primitives/Badge';
 import { cartTotals, priceLine } from './prepaidCartModel';
 import type { PriceOptions, PrepaidCheckoutTotals, PrepaidLine, PricingExtra, PricingProduct } from './prepaidCartModel';
+import { formatQar } from '../../lib/format';
 
 interface SimRecord {
   simSerial: string;
@@ -34,7 +35,7 @@ interface PrepaidCheckoutStepProps {
   existingLine?: PriceOptions;
 }
 
-const qar = (n: number) => `QAR ${n.toLocaleString('en-GB')}`;
+const qar = (n: number) => formatQar(n);
 
 // MPRA_001_CVC_01-03 (cart validation, starter pack and recharge charge collection, payment summary): the read-back of
 // the whole cart before the customer signs and pays - each subscription's pack, add-ons, number and SIM, the starter

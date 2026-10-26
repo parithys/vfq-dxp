@@ -7,6 +7,7 @@ import { useEntityStore } from '../../../stores/entityStore';
 import { useWorkflowStore } from '../../../stores/workflowStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
 import { PageHeader } from '../../../components/patterns/PageHeader';
+import { formatQarAny } from '../../../lib/format';
 
 interface CrossSalesOffer {
   offerId: string;
@@ -71,8 +72,8 @@ export function MigrationOfferTab() {
                 <div>Campaign: {o.campaignCode}</div>
                 <div>Promotion: {o.promotionId}</div>
                 <div>MSISDN: {o.serviceIdentifier}</div>
-                <div>Monthly Rental: QAR {o.monthlyRental}</div>
-                <div>Add-on Monthly: QAR {o.addOnMonthly ?? 0}</div>
+                <div>Monthly Rental: {formatQarAny(o.monthlyRental)}</div>
+                <div>Add-on Monthly: {formatQarAny(o.addOnMonthly ?? 0)}</div>
               </dl>
               {status === 'Offered' && (
                 <div className="flex gap-2">

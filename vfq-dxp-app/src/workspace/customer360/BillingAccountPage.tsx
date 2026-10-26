@@ -20,6 +20,7 @@ import { Tooltip } from '../../components/primitives/Tooltip';
 import { PageHeader } from '../../components/patterns/PageHeader';
 import { useSubmitGuard } from '../../hooks/useSubmit';
 import { EntityMissing } from '../../components/patterns/EntityMissing';
+import { formatAmountAny } from '../../lib/format';
 
 const BACK_ICON = 'M15 18l-6-6 6-6';
 
@@ -201,11 +202,11 @@ export function BillingAccountPage() {
             <Field label="Billing Cycle" value={profile.billingCycle} />
             <Field label="Billing Type" value={profile.billingType} />
             <Field label="Bill Medium" value={profile.billMedium} />
-            <Field label="Credit Limit" value={`${limits?.overall ?? profile.creditLimitQAR} QAR`} />
-            <Field label="Overall" value={limits?.overall !== undefined ? `${limits.overall} QAR` : undefined} />
-            <Field label="Default" value={limits ? `${limits.default} QAR` : undefined} />
-            <Field label="Credit Control Team" value={limits ? (limits.creditControl === null ? '-' : `${limits.creditControl} QAR`) : undefined} />
-            <Field label="Credit Limit Increased Due to Deposit" value={limits ? (limits.depositIncrease ? `${limits.depositIncrease} QAR` : '-') : undefined} />
+            <Field label="Credit Limit" value={`${formatAmountAny(limits?.overall ?? profile.creditLimitQAR)} QAR`} />
+            <Field label="Overall" value={limits?.overall !== undefined ? `${formatAmountAny(limits.overall)} QAR` : undefined} />
+            <Field label="Default" value={limits ? `${formatAmountAny(limits.default)} QAR` : undefined} />
+            <Field label="Credit Control Team" value={limits ? (limits.creditControl === null ? '-' : `${formatAmountAny(limits.creditControl)} QAR`) : undefined} />
+            <Field label="Credit Limit Increased Due to Deposit" value={limits ? (limits.depositIncrease ? `${formatAmountAny(limits.depositIncrease)} QAR` : '-') : undefined} />
           </div>
         </section>
 

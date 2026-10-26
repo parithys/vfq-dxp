@@ -10,6 +10,7 @@ import { Textarea } from '../../../components/primitives/Textarea';
 import { useNotificationStore } from '../../../stores/notificationStore';
 import { useEntityStore } from '../../../stores/entityStore';
 import type { Customer360Data } from '../../../engines/customer360Engine';
+import { formatAmountAny } from '../../../lib/format';
 
 // Seven of Customer 360's thirteen sections are single-purpose read-only
 // views over data customer360Engine already joined - no unique interaction
@@ -195,7 +196,7 @@ export function RecentActivitiesSection({ data }: { data: Customer360Data }) {
   type TimelineEntry = { at: string; label: string };
   const entries: TimelineEntry[] = [
     ...data.activities.map((a) => ({ at: String(a.transactionDate ?? ''), label: `${a.topic ?? a.journey ?? 'Activity'} - ${a.comments ?? ''}` })),
-    ...data.payments.map((p) => ({ at: String(p.capturedAt ?? ''), label: `Payment captured - ${p.chargeType ?? ''} (${p.amountQar ?? ''} QAR)` })),
+    ...data.payments.map((p) => ({ at: String(p.capturedAt ?? ''), label: `Payment captured - ${p.chargeType ?? ''} (${formatAmountAny(p.amountQar ?? '')} QAR)` })),
     ...data.identityDocuments.map((d) => ({ at: String(d.scannedAt ?? ''), label: `Identity document scanned - ${d.documentType ?? ''}` })),
   ]
     .filter((e) => e.at)

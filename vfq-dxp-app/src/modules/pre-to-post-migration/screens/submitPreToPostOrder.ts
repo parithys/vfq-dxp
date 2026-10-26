@@ -1,4 +1,5 @@
 import { currentAgentId } from '../../../stores/authStore';
+import { addonChargeNowQar } from '../../../engines/addonCategories';
 import { accountTypeForJourney } from '../../../engines/creditLimit';
 import { saveLinkedIdDocument } from '../../new-connection/saveLinkedIdDocument';
 import { contactIdentityOrderFields } from '../../new-connection/contactIdentityOrderFields';
@@ -20,6 +21,7 @@ import type { CheckoutTotals } from '../../../components/patterns/checkoutSummar
 import { assertEligibilityChecked } from '../../../engines/eligibilityGuard';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
 import type { useEntityStore } from '../../../stores/entityStore';
+import { formatQar } from '../../../lib/format';
 
 type EntityStore = ReturnType<typeof useEntityStore.getState>;
 
@@ -55,7 +57,7 @@ export async function submitPreToPostOrder(
   const monthlyRecurringQar = monthlyCharges({
     planQar: plan?.mrcQAR ?? 0,
     discountRate: discount?.price,
-    addonsQar: products.filter((p) => addonIds.includes(p.productId)).reduce((sum, a) => sum + a.mrcQAR, 0),
+    addonsQar: products.filter((p) => addonIds.includes(p.productId)).reduce((sum, a) => sum + addonChargeNowQar(a), 0),
   }).totalQar;
 
   const pendingApproval = routesToApproval({ contact, eligibility, customerType, discountType: discount?.addonType });
@@ -126,7 +128,7 @@ export async function submitPreToPostOrder(
     activityNumber: activityId,
     trigger: 'completed',
     reason: pendingApproval
-      ? `Order ${orderId} submitted for manager approval - converting ${msisdn} to ${plan?.name ?? 'a postpaid plan'}${eligibility?.requiresHrnAdvance ? ` (QAR ${hrnAdvanceQar({ nationality: eligibility?.nationality, personaId: usePersonaStore.getState().activePersonaId })} advance payment applies)` : ''}.`
+      ? `Order ${orderId} submitted for manager approval - converting ${msisdn} to ${plan?.name ?? 'a postpaid plan'}${eligibility?.requiresHrnAdvance ? ` (${formatQar(hrnAdvanceQar({ nationality: eligibility?.nationality, personaId: usePersonaStore.getState().activePersonaId }))} advance payment applies)` : ''}.`
       : `Order ${orderId} complete - ${msisdn} converted to ${plan?.name ?? 'a postpaid plan'}.`,
   };
 

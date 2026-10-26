@@ -1,3 +1,6 @@
+import { EmptyState } from '../primitives/EmptyState';
+import { defaultBillLimitQar } from '../../engines/postpaidPricing';
+import { addonChargeNowQar } from '../../engines/addonCategories';
 import { type CustomerBenefit } from '../../engines/customerBenefitEngine';
 import { BillLimitEditor } from '../domain/BillLimitEditor';
 import { PlanSearchBox } from './PlanSearchBox';
@@ -91,6 +94,7 @@ export function PostpaidPlanAddonsStep({
     searchOpen,
     setSearchOpen,
     searchRef,
+    plansLoaded,
     activeTab,
     setActiveTab,
     planGroupTabs,
@@ -138,7 +142,7 @@ export function PostpaidPlanAddonsStep({
           is actually selected; it only changes which panel is showing. */}
       <div className="space-y-4">
         {mode !== 'extras' && plans.length === 0 ? (
-          <p className="text-muted">No Postpaid Plan products are available right now.</p>
+          plansLoaded ? <EmptyState compact message="No postpaid plans are available right now." /> : <p className="text-muted" role="status">Loading plans…</p>
         ) : (
           <>
             {/* Tab strip - same active-tab treatment (red text + underline)
@@ -235,7 +239,7 @@ export function PostpaidPlanAddonsStep({
                     whole plan, not one of the add-ons. */}
                 {selectionSource === 'PLAN' && !preBundled && (
                   <div className="border-t border-[var(--field-card-border)] pt-6">
-                    <BillLimitEditor product="Mobile" layout="row" bare value={billLimit ?? selectedPlan.mrcQAR} onChange={onBillLimitChange} maxLimit={billLimitMax} />
+                    <BillLimitEditor product="Mobile" layout="row" bare value={billLimit ?? defaultBillLimitQar(selectedPlan.mrcQAR, billLimitMax)} onChange={onBillLimitChange} maxLimit={billLimitMax} />
                   </div>
                 )}
               </section>
@@ -277,7 +281,7 @@ export function PostpaidPlanAddonsStep({
           charges={charges}
           selectedDiscount={selectedDiscount}
           bundledItems={bundledItems}
-          addedAddons={selectionSource === 'PLAN' ? selectedAddons.map((a) => ({ name: a.name, mrcQAR: a.mrcQAR })) : []}
+          addedAddons={selectionSource === 'PLAN' ? selectedAddons.map((a) => ({ name: addonChargeNowQar(a) !== a.mrcQAR ? `${a.name} (Months 1\u20133)` : a.name, mrcQAR: addonChargeNowQar(a) })) : []}
         />}
 
       {/* Plan details, on demand. A drawer rather than a modal: it is reference

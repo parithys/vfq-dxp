@@ -1,6 +1,7 @@
 import { Button } from '../primitives/Button';
 import { Drawer } from '../primitives/Drawer';
 import type { PrepaidPlan } from './prepaidPlanModel';
+import { formatQar } from '../../lib/format';
 
 interface PrepaidPackDetailsDrawerProps {
   pack: PrepaidPlan | null;
@@ -14,7 +15,7 @@ export function PrepaidPackDetailsDrawer({ pack, onClose, selectedProductId, onS
   const selected = Boolean(pack && selectedProductId === pack.productId);
   const rows: [string, string][] = pack
     ? [
-        ['Starter pack charge', `QAR ${pack.starterPackChargeQAR}`],
+        ['Starter pack charge', `${formatQar(pack.starterPackChargeQAR)}`],
         ['Data', pack.dataAllowanceGB ? `${pack.dataAllowanceGB} GB` : '-'],
         ['Voice', pack.minutesAllowance],
         ['Validity', pack.packValidityDays ? `${pack.packValidityDays} days` : '-'],

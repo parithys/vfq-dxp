@@ -3,6 +3,7 @@ import type { RefObject } from 'react';
 import { useSearchListNav } from '../../hooks/useSearchListNav';
 import type { PostpaidPlan } from './postpaidPlanModel';
 import { SearchField } from '../primitives/SearchField';
+import { formatQarAny } from '../../lib/format';
 
 interface PlanSearchBoxProps {
   searchRef: RefObject<HTMLDivElement | null>;
@@ -89,7 +90,7 @@ export function PlanSearchBox({
               <span className="flex min-w-0 items-center gap-2">
                 <span className="text-fg text-[length:var(--fs-body)] truncate">{p.name}</span>
               </span>
-              <span className="text-muted text-[length:var(--fs-caption)] shrink-0">QAR {p.mrcQAR}/mo</span>
+              <span className="text-muted text-[length:var(--fs-caption)] shrink-0">{formatQarAny(p.mrcQAR)}/mo</span>
             </li>
           ))}
           {suggestions.length === 0 && (

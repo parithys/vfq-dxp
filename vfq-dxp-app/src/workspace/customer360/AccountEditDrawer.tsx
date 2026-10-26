@@ -15,6 +15,7 @@ import { Input } from '../../components/primitives/Input';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import type { CustomerRecord } from '../../engines/customer360Engine';
 import { EDITABLE_ACCOUNT_STATUSES, diffAccountEdits } from './accountEditModel';
+import { formatQar } from '../../lib/format';
 
 // Icon tiles of the choice cards (24px grid paths).
 const STATUS_ICON: Record<string, string> = {
@@ -104,7 +105,7 @@ export function AccountEditDrawer({
         return;
       }
       savedLimit = edits.creditLimitQar;
-      pushToast('success', `Credit limit changed to QAR ${savedLimit}.`);
+      pushToast('success', `Credit limit changed to ${formatQar(savedLimit)}.`);
     }
     // A Credit Control request: an order Credit Control approves; approving it sets THEIR limit (applyCreditLimitChange), which an agent cannot then change.
     if (requestedQar !== undefined) {
@@ -124,7 +125,7 @@ export function AccountEditDrawer({
           accountId: account?.accountId,
           currentCreditLimitQar: effectiveCurrent,
           requestedCreditLimitQar: n,
-          approvalReason: `Credit limit change requested: QAR ${effectiveCurrent} to QAR ${n}. Needs Credit Control approval.`,
+          approvalReason: `Credit limit change requested: ${formatQar(effectiveCurrent)} to ${formatQar(n)}. Needs Credit Control approval.`,
         });
         pushToast('success', `Credit limit request sent (${requestId}) - it takes effect once ${COLLECTION_TEAM_ROLE} approves it.`);
       }
@@ -170,8 +171,8 @@ export function AccountEditDrawer({
           value={limit}
           disabled={!policy.editable}
           error={error}
-          helperText={policy.editable ? `Choose from the limits that apply to this customer (up to QAR ${policy.defaultQar}). The change is recorded in the audit trail.` : policy.message}
-          options={optionValues.map((v) => ({ value: String(v), label: `QAR ${v}` }))}
+          helperText={policy.editable ? `Choose from the limits that apply to this customer (up to ${formatQar(policy.defaultQar)}). The change is recorded in the audit trail.` : policy.message}
+          options={optionValues.map((v) => ({ value: String(v), label: `${formatQar(v)}` }))}
           onChange={(e) => {
             setLimit(e.target.value);
             setError(undefined);

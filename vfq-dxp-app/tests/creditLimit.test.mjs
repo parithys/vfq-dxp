@@ -137,7 +137,7 @@ test('an agent\'s change is applied only when the policy allows it, is audited, 
   assert.deepEqual(ok, { ok: true });
   assert.deepEqual(calls[0], ['update', 'credit-limits', 'id', 'CRL-9', { creditLimitQar: 2000, selectedCreditLimitQar: 2000, setByAgentId: 'USR-1', lastUpdated: '2026-10-22' }]);
   assert.equal(calls[1][1], 'audit-trail');
-  assert.deepEqual([calls[1][2].fromQar, calls[1][2].oldValue, calls[1][2].newValue, calls[1][2].recordType, calls[1][2].recordId, calls[1][2].changeBasis], [undefined, 'QAR 1000', 'QAR 2000', 'Credit Limit', 'ACC-9', 'Selected by agent']);
+  assert.deepEqual([calls[1][2].fromQar, calls[1][2].oldValue, calls[1][2].newValue, calls[1][2].recordType, calls[1][2].recordId, calls[1][2].changeBasis], [undefined, 'QAR 1,000', 'QAR 2,000', 'Credit Limit', 'ACC-9', 'Selected by agent']);
   const refused = async (customer, record, toQar) => {
     calls.length = 0;
     const r = await change.applyAgentCreditLimitChange({ customer: { customerId: 'C1', ...customer }, record, toQar, agentId: 'USR-1' }, deps);
@@ -219,7 +219,7 @@ test('11. Big Data updates the customer\'s Credit Risk', () => {
 test('12. every credit-limit change is audited: new account, agent change, Credit Control approval', () => {
   const rec = cl.creditLimitAuditRecord({ recordId: 'ACC-1', fromQar: 1000, toQar: 1500, by: 'USR-1', how: 'Selected by agent', now: new Date('2026-10-22T09:00:00Z') });
   for (const k of ['auditId', 'recordType', 'recordId', 'employeeUser', 'fieldModified', 'newValue', 'timestamp']) assert.ok(k in rec, k);
-  assert.deepEqual([rec.recordType, rec.fieldModified, rec.oldValue, rec.newValue, rec.employeeUser], ['Credit Limit', 'Credit Limit', 'QAR 1000', 'QAR 1500', 'USR-1']);
+  assert.deepEqual([rec.recordType, rec.fieldModified, rec.oldValue, rec.newValue, rec.employeeUser], ['Credit Limit', 'Credit Limit', 'QAR 1,000', 'QAR 1,500', 'USR-1']);
   assert.equal(cl.creditLimitAuditRecord({ recordId: 'A', toQar: 50, by: 'x', how: 'Default on a new account' }).oldValue, undefined);
   // The audit rows are shown by Customer 360's Audit Trail, which joins on the account id.
   assert.match(read('src/engines/customer360Engine.ts'), /auditTrail\.filter\(\(r\) => recordIds\.has/);

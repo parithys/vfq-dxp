@@ -17,6 +17,7 @@ import {
 import type { SpecialDiscountsValue } from '../../capabilities';
 import { starEntitlementQar } from '../../engines/postpaidPricing';
 import type { Product } from './newConnectionModel';
+import { expectsApproval } from './approvalRouting';
 import { isOffersTabPlan } from '../../components/patterns/postpaidPlanModel';
 import type { DeviceType } from '../../lib/deviceType';
 
@@ -67,7 +68,7 @@ export function postpaidSteps({ products, customerBenefits, device }: PostpaidSt
         return plan ? { mrcQar: plan.mrcQAR, starEntitlementQar: starEntitlementQar(plan) } : undefined;
       },
     }),
-    simTypeStep({ device }),
+    simTypeStep({ device, approvalRequired: expectsApproval }),
     // After the SIM, before the summary and the CAF: who will use the line (when it is not the owner) is named on the Supplementary Form.
     actualUserStep(),
     checkoutSummaryStep({

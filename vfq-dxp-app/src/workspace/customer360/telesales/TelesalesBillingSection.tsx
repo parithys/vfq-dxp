@@ -8,6 +8,7 @@ import { ActionList, BarChart, HeaderButton, ICON, SectionHeader, Table, pillFor
 import { rowDate, demoOf, arr, type Rec } from './shared';
 import { strOrEmpty as str } from '../../../lib/values';
 import { qar, monthLabel } from './billingShared';
+import { formatQarAny } from '../../../lib/format';
 
 // ============================================================================ Billing & Payments
 export function BillingSection({ ctx }: { ctx: Ctx }) {
@@ -52,7 +53,7 @@ export function BillingSection({ ctx }: { ctx: Ctx }) {
             {tile('Due Date', latestBill?.dueDate ? dateTime(latestBill.dueDate).d : '-')}
             {tile('Amount Required to Pay', qar(required))}
           </div>
-          <KV label="Postpaid - MRC">{str(r('Postpaid - Monthly Recurring Charge')) || (latestBill?.mrc !== undefined ? `QAR ${str(latestBill.mrc)}` : '-')}</KV>
+          <KV label="Postpaid - MRC">{str(r('Postpaid - Monthly Recurring Charge')) || (latestBill?.mrc !== undefined ? `${formatQarAny(str(latestBill.mrc))}` : '-')}</KV>
           <KV label="Postpaid - Average Bill">{bills.length ? qar(bills.reduce((a, b) => a + Number(b.totalAmount ?? 0), 0) / bills.length) : '-'}</KV>
           <KV label="Prepaid - Avg. Recharge">{arr<Rec>(demo.recharges).length ? qar(arr<Rec>(demo.recharges).reduce((a, b) => a + Number(b.amountQar ?? 0), 0) / arr<Rec>(demo.recharges).length) : '-'}</KV>
           <KV label="Prepaid - Top Recharge Type">{str(arr<Rec>(demo.recharges)[0]?.type) || '-'}</KV>

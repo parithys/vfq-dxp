@@ -66,6 +66,7 @@ import { AddressSection } from './sections/AddressSection';
 import { ContactSection } from './sections/ContactSection';
 import { DevicePenaltyPolicy, StarNumberPenaltyPolicy } from './sections/penaltyViewResolvers';
 import { EntityMissing } from '../../components/patterns/EntityMissing';
+import { formatQarAny, formatAmountAny } from '../../lib/format';
 
 // Deep links from elsewhere in the app (queue notification, toasts, the
 // Linked Services panel) only ever name one of these three ServiceTab
@@ -608,7 +609,7 @@ export function Customer360Layout() {
           phone={data.customer.phone}
           email={data.customer.email}
           totalConnections={services.length > 0 ? services.length : undefined}
-          creditLimit={data.creditLimits[0] ? `QAR ${String(overallCreditLimitOf(data) ?? data.creditLimits[0].creditLimitQar ?? data.creditLimits[0].creditLimitQAR ?? '-')}` : undefined}
+          creditLimit={data.creditLimits[0] ? `${formatQarAny(String(overallCreditLimitOf(data) ?? data.creditLimits[0].creditLimitQar ?? data.creditLimits[0].creditLimitQAR ?? '-'))}` : undefined}
           alerts={headerAlerts}
           onViewAlerts={tabs.some((t) => t.key === 'alerts-risks') ? () => setActiveTab('alerts-risks') : undefined}
           // Header-only layouts edit the profile from the Contact Information tab, so the header carries no button.
@@ -645,12 +646,12 @@ export function Customer360Layout() {
         <MetricCard label="Account Status" value={accountStatus} subtext={`${data.accounts.length} account${data.accounts.length === 1 ? '' : 's'}`} />
         <MetricCard
           label="Current Bill"
-          value={latestBill ? `${String(latestBill.totalAmount ?? '-')} QAR` : '-'}
+          value={latestBill ? `${formatAmountAny(String(latestBill.totalAmount ?? '-'))} QAR` : '-'}
           subtext={latestBill ? capitalizeStatus(latestBill.status) : 'No bills on file'}
         />
         <MetricCard
           label="Outstanding"
-          value={`${outstanding} QAR`}
+          value={`${formatAmountAny(outstanding)} QAR`}
           subtext={outstanding > 0 ? 'Overdue balance' : 'No overdue balance'}
         />
         <MetricCard

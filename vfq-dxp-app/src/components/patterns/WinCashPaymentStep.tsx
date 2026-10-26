@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '../primitives/Button';
 import { Badge } from '../primitives/Badge';
 import { SYNTHETIC_CLASS } from '../../data/synthetic/syntheticMarker';
+import { formatQarAny } from '../../lib/format';
 
 export interface WinCashPaymentValue {
   paid?: boolean;
@@ -148,7 +149,7 @@ export function WinCashPaymentStep({ amountDueQAR, value, onChange, onProceedWit
       <div className="card p-4 card-surface">
         <div className="flex justify-between text-fg">
           <span>Amount Due (WinCash)</span>
-          <span className="font-medium">QAR {amountDueQAR}</span>
+          <span className="font-medium">{formatQarAny(amountDueQAR)}</span>
         </div>
       </div>
 
