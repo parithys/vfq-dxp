@@ -10,7 +10,7 @@ export const ACTUAL_USER_LABEL = 'Actual User';
 /** Choose a number (free or star), reserve it. */
 export const NUMBER_SELECTION_LABEL = 'Number Selection';
 /** Pick, create or configure the billing profile the order bills to. */
-export const BILLING_PROFILE_LABEL = 'Billing Profile';
+export const BILLING_PROFILE_LABEL = 'Billing';
 /** The address a service is activated at. */
 export const SERVICE_ADDRESS_LABEL = 'Address';
 /** The page after the plan: the plan's add-ons (by category, Free or Paid), the bill limit and the eligible discounts. */

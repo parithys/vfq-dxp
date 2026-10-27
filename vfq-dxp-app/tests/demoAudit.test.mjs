@@ -105,3 +105,9 @@ test('every selectable card in the app marks its selected state with the shared 
   for (const f of files) assert.doesNotMatch(read(f), /absolute top-2 right-2 w-4 h-4/, f);
   for (const f of ['PostpaidPlanCard']) assert.doesNotMatch(read(`src/components/patterns/${f}.tsx`), /Select plan|'Selected'/);
 });
+
+test('the tooltip reads its pixel tokens with a numeric fallback, so an expression-valued token never leaves it without a position', () => {
+  const t = read('src/components/primitives/Tooltip.tsx');
+  assert.match(t, /function pxToken/);
+  assert.doesNotMatch(t, /parseInt\(getComputedStyle\(document\.documentElement\)\.getPropertyValue\('--tooltip-(offset|max-width)'\)/);
+});

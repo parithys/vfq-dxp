@@ -8,6 +8,7 @@ import type {
   ModuleHierarchyEntry,
   ApprovalMatrixEntry,
   FeatureCatalogueEntry,
+  DocumentTypeConfig,
   PermissionLevel,
   PersonaFeatureGrant,
   Customer360Field,
@@ -49,6 +50,8 @@ interface ConfigData {
   customer360DepartmentMapping: Record<string, string | null>;
   /** Pick-list values (public/config/lookup-lists.json), by list name. */
   lookupLists: Record<string, string[]>;
+  /** Document types and their applicability (public/config/document-types.json). */
+  documentTypes: DocumentTypeConfig[];
 }
 
 /** Crosswalk between CRM_Journeys_Final_Updated_with_Type.xlsx (Page Type
@@ -164,11 +167,14 @@ export async function loadConfig(): Promise<ConfigData> {
     const lookupLists = await fetchJson<Record<string, unknown>>('/config/lookup-lists.json')
       .then((d) => Object.fromEntries(Object.entries(d).filter(([k, v]) => !k.startsWith('_') && Array.isArray(v)).map(([k, v]) => [k, (v as unknown[]).filter((x): x is string => typeof x === 'string' && x.trim() !== '')])))
       .catch(optional<Record<string, string[]>>('lookup-lists.json', {}));
+    const documentTypes = await fetchJson<{ types: DocumentTypeConfig[] }>('/config/document-types.json')
+      .then((d) => (Array.isArray(d.types) ? d.types.filter((x) => x && typeof x.id === 'string' && typeof x.label === 'string') : []))
+      .catch(optional<DocumentTypeConfig[]>('document-types.json', []));
     const { personaFeatureLevel, personaScreenLevel } = indexGrants(personas, featureCatalogue);
     cache = {
       routes, personas, featureCatalogue, personaFeatureLevel, personaScreenLevel, rbac,
       businessRules, validationRules, domainSchema, moduleHierarchy,
-      reqToScreens, journeyCatalogueMap, approvalMatrix, customer360Fields, customer360DepartmentMapping, lookupLists, degraded,
+      reqToScreens, journeyCatalogueMap, approvalMatrix, customer360Fields, customer360DepartmentMapping, lookupLists, documentTypes, degraded,
     };
     return cache;
   })();
@@ -185,6 +191,11 @@ function requireConfig(): ConfigData {
 /** A configured pick-list (public/config/lookup-lists.json), in its configured order; empty when the config is not loaded or has no such list. */
 export function getLookupList(name: string): string[] {
   return cache?.lookupLists[name] ?? [];
+}
+
+/** The configured document types, in configured order; empty when the config is not loaded. */
+export function getDocumentTypes(): DocumentTypeConfig[] {
+  return cache?.documentTypes ?? [];
 }
 
 export function getAllRoutes(): Route[] {

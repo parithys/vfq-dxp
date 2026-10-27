@@ -39,10 +39,10 @@ test('Document Upload: one set of rules for every upload, one capability for the
   assert.equal(uploadFileProblem({ name: 'id.pdf', size: 1000 }, UPLOAD_RULES.identity), null);
   assert.match(uploadFileProblem({ name: 'id.png', size: 1000 }, UPLOAD_RULES.identity), /only PDF or JPG/);
   assert.match(uploadFileProblem({ name: 'id.jpg', size: 3 * 1024 * 1024 }, UPLOAD_RULES.identity), /limit is 2 MB/);
-  assert.equal(uploadFileProblem({ name: 'bill.PNG', size: 3 * 1024 * 1024 }, UPLOAD_RULES.supporting), null);
-  assert.match(uploadFileProblem({ name: 'bill.pdf', size: 6 * 1024 * 1024 }, UPLOAD_RULES.supporting), /limit is 5 MB/);
+  assert.match(uploadFileProblem({ name: 'bill.PNG', size: 1000 }, UPLOAD_RULES.supporting), /only PDF or JPG/);
+  assert.match(uploadFileProblem({ name: 'bill.pdf', size: 3 * 1024 * 1024 }, UPLOAD_RULES.supporting), /limit is 2 MB/);
   assert.match(uploadFileProblem({ name: 'bill.pdf', size: 0 }, UPLOAD_RULES.supporting), /empty/);
-  assert.match(uploadFileProblem({ name: 'noext', size: 5 }, UPLOAD_RULES.supporting), /only PDF, JPG or PNG/);
+  assert.match(uploadFileProblem({ name: 'noext', size: 5 }, UPLOAD_RULES.supporting), /only PDF or JPG/);
   // no upload component keeps a limit or accept list of its own
   for (const f of ['src/components/domain/AdditionalDocumentsUpload.tsx', 'src/components/domain/CafDocumentUpload.tsx', 'src/components/domain/idUploadModel.ts', 'src/capabilities/SpecialDiscountsIdentification/idUploadModel.ts']) {
     const src = read(f);

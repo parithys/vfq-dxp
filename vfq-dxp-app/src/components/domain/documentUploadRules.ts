@@ -29,8 +29,8 @@ function rules(extensions: readonly string[], maxMb: number, formatsLabel: strin
 export const UPLOAD_RULES = {
   /** An identity document (scan alternative): PDF or JPG, 2 MB. */
   identity: rules(['pdf', 'jpg', 'jpeg'], 2, 'PDF or JPG'),
-  /** Supporting paperwork (signed CAF, additional documents): PDF or image, 5 MB. */
-  supporting: rules(['pdf', 'jpg', 'jpeg', 'png'], 5, 'PDF, JPG or PNG'),
+  /** Supporting paperwork (signed CAF, additional documents): PDF or JPG, 2 MB. */
+  supporting: rules(['pdf', 'jpg', 'jpeg'], 2, 'PDF or JPG'),
 } as const satisfies Record<string, UploadRules>;
 
 /** What is wrong with a file under the rules, or null when it can be uploaded. */

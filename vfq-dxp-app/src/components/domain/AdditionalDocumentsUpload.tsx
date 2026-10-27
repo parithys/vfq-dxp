@@ -130,6 +130,7 @@ const GROUP_ICON: Record<string, string> = {
 };
 const DOC = 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6';
 const EYE = 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z';
+const UPLOAD = 'M12 16V4 M7 9l5-5 5 5 M4 20h16';
 const DOWNLOAD = 'M12 4v11 M7 10l5 5 5-5 M4 20h16';
 
 /** A data URL as an object URL: browsers will not open a data: URL as a page, but they open a blob. */
@@ -172,17 +173,25 @@ export function AdditionalDocumentsUpload({
   journeyDocuments = [],
 }: AdditionalDocumentsUploadProps) {
   const [label, setLabel] = useState('');
+  // The file chosen or dropped but not uploaded yet.
+  const [staged, setStaged] = useState<File | null>(null);
+  const [dragging, setDragging] = useState(false);
+  // Sections the agent has collapsed: only the header and the document count stay.
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
+  const toggleSection = (key: string) => setCollapsed((c) => { const n = new Set(c); if (n.has(key)) n.delete(key); else n.add(key); return n; });
   // A type picked with no file yet is an unfinished upload: the caller blocks Continue until it is uploaded.
   useEffect(() => {
-    onPendingChange?.(Boolean(label.trim()));
+    onPendingChange?.(Boolean(label.trim() || staged));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [label]);
+  }, [label, staged]);
   useEffect(() => () => onPendingChange?.(false), []);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const requiredFileRef = useRef<HTMLInputElement>(null);
   const [uploadingFor, setUploadingFor] = useState<string | undefined>();
   const atLimit = documents.length >= maxDocuments;
+  // A configured list with nothing left to offer for this role, journey and customer: there is nothing to upload as, so the panel is not shown.
+  const noTypesToOffer = labelOptions !== undefined && labelOptions.every((o) => documents.some((d) => d.label === o));
 
   const uploadedFor = (requirementId: string) => documents.find((d) => d.requirementId === requirementId);
   const missing = requirements.filter((r) => !uploadedFor(r.id));
@@ -210,15 +219,32 @@ export function AdditionalDocumentsUpload({
     return true;
   };
 
-  const handleFile = async (file: File | undefined) => {
+  // Choosing or dropping a file only stages it; "Upload documents" attaches it under the chosen type.
+  const stageFile = (file: File | undefined) => {
     if (!file) return;
+    const problem = uploadFileProblem(file, RULES);
+    if (problem) {
+      setStaged(null);
+      setError(problem);
+      return;
+    }
+    setError(null);
+    setStaged(file);
+  };
+
+  const uploadStaged = async () => {
     const trimmed = label.trim();
     if (!trimmed) {
       setError(labelOptions ? 'Select a document type before uploading.' : 'Enter a label for this document before uploading.');
       return;
     }
-    if (await add(file, { label: trimmed })) {
+    if (!staged) {
+      setError('Choose a file to upload.');
+      return;
+    }
+    if (await add(staged, { label: trimmed })) {
       setLabel('');
+      setStaged(null);
       if (fileRef.current) fileRef.current.value = '';
     }
   };
@@ -269,48 +295,6 @@ export function AdditionalDocumentsUpload({
         </p>
       </div>
 
-      {sections.map((g) => (
-        <section key={g.key} aria-label={`${g.title} documents`} className="card overflow-hidden">
-          <header className="flex items-center gap-3 border-b border-border-soft px-4 py-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-button)] border border-[var(--danger-border)] bg-tone-accent text-accent">
-              <Icon path={GROUP_ICON[g.name] ?? DOC} className="w-4 h-4" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-fg font-semibold text-[length:var(--fs-body)]">{g.title}</span>
-              <span className="block text-muted text-[length:var(--fs-caption)]">{groupNote(g.name, g.how)}</span>
-            </span>
-            <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-[var(--radius-button)] bg-surface px-2 text-fg font-medium text-[length:var(--fs-caption)]">{g.items.length}</span>
-          </header>
-          <div className="px-4 py-4">
-                <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {g.items.map((d) => {
-                    const held = d.dataUrl ?? (d.fileId ? documentFileOf(d.fileId)?.dataUrl : undefined);
-                    // A capture the reader kept no image of (the demo scanner) opens as a labelled specimen, never as someone's document.
-                    const dataUrl = held ?? (d.source.endsWith('Scanned') ? scanSpecimen(d.label) : undefined);
-                    const name = d.fileName ?? fileNameOf(d);
-                    return (
-                      <li key={d.id} className="flex items-center gap-3 rounded-[var(--radius-card)] border border-border-soft bg-surface px-3 py-3">
-                        <FileTypeIcon type={fileTypeOf(d.fileName, dataUrl)} />
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-fg font-semibold text-[length:var(--fs-body)] truncate">{g.items.length > 1 || g.kind !== d.label ? sideOf(d.label) : d.label}</span>
-                          <span className="block text-muted text-[length:var(--fs-caption)] truncate">{name}</span>
-                          <span className="block text-muted text-[length:var(--fs-caption)] truncate">{factsOf(d.sizeBytes ?? byteSizeOf(dataUrl), pageCountOf(fileTypeOf(d.fileName, dataUrl), dataUrl))}</span>
-                        </span>
-                        <Tooltip content={dataUrl ? 'View' : 'No copy of this document is held'} placement="bottom">
-                          <IconButton bordered icon={EYE} label={`View ${d.label}`} className="rounded-[var(--radius-pill)] border-border-soft! text-fg-2! enabled:hover:bg-surface" disabled={!dataUrl} onClick={() => dataUrl && openDocument(dataUrl)} />
-                        </Tooltip>
-                        <Tooltip content={dataUrl ? 'Download' : 'No copy of this document is held'} placement="bottom">
-                          <IconButton bordered icon={DOWNLOAD} label={`Download ${d.label}`} className="rounded-[var(--radius-pill)] border-border-soft! text-fg-2! enabled:hover:bg-surface" disabled={!dataUrl} onClick={() => dataUrl && downloadDocument(dataUrl, name)} />
-                        </Tooltip>
-                        {d.removable && d.fileId && <IconButton tone="danger" icon={TRASH} label={`Remove ${d.fileName ?? d.label}`} onClick={() => remove(d.fileId!)} />}
-                      </li>
-                    );
-                  })}
-                </ul>
-          </div>
-        </section>
-      ))}
-
       {missing.length > 0 && (
         <section aria-label="Required documents" className="space-y-3">
           <input ref={requiredFileRef} type="file" accept={RULES.accept} className="sr-only" aria-hidden tabIndex={-1} onChange={(e) => void handleRequiredFile(e.target.files?.[0])} />
@@ -339,51 +323,151 @@ export function AdditionalDocumentsUpload({
         </section>
       )}
 
-      {atLimit ? (
-        <p className="text-muted text-[length:var(--fs-caption)]">
-          Maximum of {maxDocuments} documents reached. Remove one to upload another.
-        </p>
-      ) : (
-        <div className="flex items-end gap-3">
-          <div className="flex-1 min-w-0">
-            {labelOptions ? (
-              <Select
-                label="Document Type"
-                // "Choose document type" is the default first option (no type chosen).
-                // A type already uploaded is not offered again.
-                options={[
-                  { value: '', label: 'Choose Document Type' },
-                  ...labelOptions.filter((o) => !documents.some((d) => d.label === o)).map((o) => ({ value: o, label: o })),
-                ]}
-                value={label}
-                onChange={(e) => {
-                  setLabel(e.target.value);
-                  setError(null);
+      <div className="@container">
+        <div className="grid grid-cols-1 items-start gap-4 @2xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+        {rows.length > 0 && (
+          <section aria-label="Journey documents" className="@container card overflow-hidden">
+            <header className="flex items-center gap-3 border-b border-border-soft px-4 py-3">
+              <span aria-hidden className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-circle)] bg-accent text-accent-on font-bold text-[length:var(--fs-caption)]">01</span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-fg font-semibold text-[length:var(--fs-body)]">Journey Documents</span>
+                <span className="block text-muted text-[length:var(--fs-caption)]">Scanned and uploaded earlier in the journey</span>
+              </span>
+              <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-[var(--radius-button)] bg-surface px-2 text-fg font-medium text-[length:var(--fs-caption)]" aria-label={`${rows.length} ${rows.length === 1 ? 'document' : 'documents'}`}>{rows.length}</span>
+            </header>
+            <div className="space-y-3 p-4">
+          {sections.map((g) => (
+            <section key={g.key} aria-label={`${g.title} documents`} className="card overflow-hidden">
+              <header className={`flex items-center gap-3 px-4 py-3 ${collapsed.has(g.key) ? '' : 'border-b border-border-soft'}`}>
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-button)] border border-[var(--danger-border)] bg-tone-accent text-accent">
+                  <Icon path={GROUP_ICON[g.name] ?? DOC} className="w-4 h-4" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-fg font-semibold text-[length:var(--fs-body)]">{g.title}</span>
+                  <span className="block text-muted text-[length:var(--fs-caption)]">{groupNote(g.name, g.how)}</span>
+                </span>
+                <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-[var(--radius-button)] bg-surface px-2 text-fg font-medium text-[length:var(--fs-caption)]" aria-label={`${g.items.length} ${g.items.length === 1 ? 'document' : 'documents'}`}>{g.items.length}</span>
+                <Tooltip content={collapsed.has(g.key) ? 'Expand' : 'Collapse'} placement="bottom">
+                  <IconButton
+                    bordered
+                    icon={collapsed.has(g.key) ? 'M6 9l6 6 6-6' : 'M18 15l-6-6-6 6'}
+                    label={`${collapsed.has(g.key) ? 'Expand' : 'Collapse'} ${g.title}`}
+                    aria-expanded={!collapsed.has(g.key)}
+                    className="rounded-[var(--radius-pill)] border-border-soft! text-fg-2! enabled:hover:bg-surface"
+                    onClick={() => toggleSection(g.key)}
+                  />
+                </Tooltip>
+              </header>
+              <div className="px-4 py-4" hidden={collapsed.has(g.key)}>
+                    <ul className="grid grid-cols-1 gap-3 @md:grid-cols-2">
+                      {g.items.map((d) => {
+                        const held = d.dataUrl ?? (d.fileId ? documentFileOf(d.fileId)?.dataUrl : undefined);
+                        // A capture the reader kept no image of (the demo scanner) opens as a labelled specimen, never as someone's document.
+                        const dataUrl = held ?? (d.source.endsWith('Scanned') ? scanSpecimen(d.label) : undefined);
+                        const name = d.fileName ?? fileNameOf(d);
+                        return (
+                          <li key={d.id} className="flex items-center gap-3 rounded-[var(--radius-card)] border border-border-soft bg-surface px-3 py-3">
+                            <FileTypeIcon type={fileTypeOf(d.fileName, dataUrl)} />
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-fg font-semibold text-[length:var(--fs-body)] truncate">{g.items.length > 1 || g.kind !== d.label ? sideOf(d.label) : d.label}</span>
+                              <span className="block text-muted text-[length:var(--fs-caption)] truncate">{name}</span>
+                              <span className="block text-muted text-[length:var(--fs-caption)] truncate">{factsOf(d.sizeBytes ?? byteSizeOf(dataUrl), pageCountOf(fileTypeOf(d.fileName, dataUrl), dataUrl))}</span>
+                            </span>
+                            <Tooltip content={dataUrl ? `View ${d.label}` : 'No copy of this document is held'} placement="bottom">
+                              <IconButton bordered icon={EYE} label={`View ${d.label}`} className="rounded-[var(--radius-pill)] border-border-soft! text-fg-2! enabled:hover:bg-surface" disabled={!dataUrl} onClick={() => dataUrl && openDocument(dataUrl)} />
+                            </Tooltip>
+                            <Tooltip content={dataUrl ? `Download ${d.label}` : 'No copy of this document is held'} placement="bottom">
+                              <IconButton bordered icon={DOWNLOAD} label={`Download ${d.label}`} className="rounded-[var(--radius-pill)] border-border-soft! text-fg-2! enabled:hover:bg-surface" disabled={!dataUrl} onClick={() => dataUrl && downloadDocument(dataUrl, name)} />
+                            </Tooltip>
+                            {d.removable && d.fileId && <IconButton tone="danger" icon={TRASH} label={`Remove ${d.fileName ?? d.label}`} onClick={() => remove(d.fileId!)} />}
+                          </li>
+                        );
+                      })}
+                    </ul>
+              </div>
+            </section>
+          ))}
+            </div>
+          </section>
+        )}
+        {noTypesToOffer ? null : !atLimit ? (
+          <section aria-label="Upload new documents" className="card overflow-hidden">
+            <header className="flex items-center gap-3 border-b border-border-soft px-4 py-3">
+              <span aria-hidden className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-circle)] bg-accent text-accent-on font-bold text-[length:var(--fs-caption)]">02</span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-fg font-semibold text-[length:var(--fs-body)]">Upload New Documents</span>
+                <span className="block text-muted text-[length:var(--fs-caption)]">Add Optional Supporting Files</span>
+              </span>
+            </header>
+            <div className="space-y-4 p-4">
+              {labelOptions ? (
+                <Select
+                  label="Document Type"
+                  // A type already uploaded is not offered again.
+                  options={[
+                    { value: '', label: 'Choose Document Type' },
+                    ...labelOptions.filter((o) => !documents.some((d) => d.label === o)).map((o) => ({ value: o, label: o })),
+                  ]}
+                  value={label}
+                  onChange={(e) => {
+                    setLabel(e.target.value);
+                    setError(null);
+                  }}
+                />
+              ) : (
+                <Input
+                  label="Document Label"
+                  placeholder="e.g. Employer Letter"
+                  value={label}
+                  onChange={(e) => {
+                    setLabel(e.target.value);
+                    setError(null);
+                  }}
+                />
+              )}
+              <input ref={fileRef} type="file" accept={RULES.accept} className="sr-only" aria-label="Choose a document to upload" onChange={(e) => stageFile(e.target.files?.[0])} />
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragging(true);
                 }}
-              />
-            ) : (
-              <Input
-                label="Document Label"
-                placeholder="e.g. Employer Letter"
-                value={label}
-                onChange={(e) => {
-                  setLabel(e.target.value);
-                  setError(null);
+                onDragLeave={() => setDragging(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragging(false);
+                  stageFile(e.dataTransfer.files?.[0]);
                 }}
-              />
-            )}
-          </div>
-          <input ref={fileRef} type="file" accept={RULES.accept} className="sr-only" onChange={(e) => void handleFile(e.target.files?.[0])} />
-          <Button
-            variant="secondary"
-            onClick={() => fileRef.current?.click()}
-            disabled={!label.trim()}
-            title={!label.trim() ? (labelOptions ? 'Select a document type first' : 'Enter a label first') : undefined}
-          >
-            Browse…
-          </Button>
+                className={`flex flex-col items-center gap-2 rounded-[var(--radius-card)] border border-dashed px-4 py-6 text-center transition-colors ${dragging ? 'border-[var(--field-card-selected)] bg-tone-accent' : 'border-[var(--field-card-border)] bg-bg'}`}
+              >
+                <span aria-hidden className="flex h-12 w-12 items-center justify-center rounded-[var(--radius-circle)] border border-[var(--danger-border)] bg-tone-accent text-accent">
+                  <Icon path={UPLOAD} className="w-5 h-5" />
+                </span>
+                {staged ? (
+                  <>
+                    <p className="text-fg font-semibold text-[length:var(--fs-body)] break-all">{staged.name}</p>
+                    <p className="text-muted text-[length:var(--fs-caption)]">{formatSize(staged.size)}</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-fg font-semibold text-[length:var(--fs-body)]">Drop Documents Here</p>
+                    <p className="text-fg-2 text-[length:var(--fs-caption)]">or choose files from your device</p>
+                  </>
+                )}
+                <Button variant="secondary" onClick={() => fileRef.current?.click()}>
+                  {staged ? 'Choose another file' : 'Browse files'}
+                </Button>
+                <p className="text-muted text-[length:var(--fs-caption)]">{RULES.formatsLabel}, up to {RULES.maxLabel} per file</p>
+              </div>
+              <Button variant="primary" className="w-full" onClick={() => void uploadStaged()} disabled={!label.trim() || !staged}>
+                Upload Documents
+              </Button>
+            </div>
+          </section>
+        ) : (
+          <p className="text-muted text-[length:var(--fs-caption)]">Maximum of {maxDocuments} documents reached. Remove one to upload another.</p>
+        )}
         </div>
-      )}
+      </div>
 
       {error && (
         <p role="alert" className="text-danger text-[length:var(--fs-caption)]">

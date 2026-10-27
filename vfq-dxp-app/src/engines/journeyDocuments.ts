@@ -25,16 +25,8 @@ export interface JourneyDocument {
   fileId?: string;
 }
 
-interface RequirementRule {
-  id: string;
-  label: string;
-  reason: string;
-  /** The journeys it applies to (the draft's wizard family); omitted = every journey. */
-  journeys?: readonly string[];
-  /** Roles it applies to; omitted = every role. */
-  personas?: readonly string[];
-  applies: (values: Record<string, unknown>) => boolean;
-}
+import { getDocumentTypes } from './configEngine';
+import type { DocumentTypeConfig } from '../types/config';
 
 export const MINIMUM_APPLICANT_AGE = 18;
 
@@ -48,31 +40,67 @@ export function ageFromDob(dob: string | undefined, now: Date = new Date()): num
   return age;
 }
 
-const RULES: readonly RequirementRule[] = [
-  {
-    id: 'waive-off-support',
-    label: 'Waive Off Supporting Document',
-    reason: 'Supports the Waive Off of the Star number charge; the order is approved against it.',
-    journeys: ['new-connection'],
-    applies: (v) => v.numberWaiver === 'partial' || v.numberWaiver === 'full',
-  },
-  {
-    id: 'court-type-order',
-    label: 'Court Type Order',
-    reason: 'The applicant is under 18: the order is accepted only with the court order that allows it.',
-    applies: (v) => {
-      const moi = (v.contact as { moiResult?: { dob?: string } } | undefined)?.moiResult;
-      const age = ageFromDob(moi?.dob);
-      return age !== undefined && age < MINIMUM_APPLICANT_AGE;
-    },
-  },
-];
+type Values = Record<string, unknown>;
 
-/** The documents this order requires, for the journey it is in and the role working it. */
-export function requiredDocumentsFor(ctx: { values: Record<string, unknown>; personaId?: string; journey?: string }): DocumentRequirement[] {
-  return RULES.filter((r) => (!r.journeys || !ctx.journey || r.journeys.includes(ctx.journey)) && (!r.personas || (ctx.personaId !== undefined && r.personas.includes(ctx.personaId))) && r.applies(ctx.values)).map(
-    ({ id, label, reason }) => ({ id, label, reason })
-  );
+/**
+ * The named conditions a document type's rules can use, each computed from the journey draft. The vocabulary is code (it says what a draft can
+ * answer); which document uses which condition is configuration (public/config/document-types.json).
+ */
+const CONDITIONS: Record<string, (v: Values) => boolean> = {
+  'number-waiver': (v) => v.numberWaiver === 'partial' || v.numberWaiver === 'full',
+  'minor-applicant': (v) => {
+    const age = ageFromDob((v.contact as { moiResult?: { dob?: string } } | undefined)?.moiResult?.dob);
+    return age !== undefined && age < MINIMUM_APPLICANT_AGE;
+  },
+  'actual-user-other': (v) => (v.actualUser as { choice?: string } | undefined)?.choice === 'other',
+  'manual-caf': (v) => (v.caf as { cafType?: string } | undefined)?.cafType === 'Manual',
+  'upfront-payment': (v) => ((v.checkoutTotals as { dueTodayQar?: number } | undefined)?.dueTodayQar ?? 0) > 0,
+};
+const specialDiscount = (v: Values, kind: string) => {
+  const c = v.customerType as { type?: string; rejected?: boolean } | undefined;
+  return c?.type === kind && !c.rejected;
+};
+/** Whether a named condition holds; an unknown name never holds (unknown stays unknown). */
+function holds(name: string, v: Values): boolean {
+  if (name.startsWith('special-discount:')) return specialDiscount(v, name.slice('special-discount:'.length));
+  return CONDITIONS[name]?.(v) ?? false;
+}
+
+export interface DocumentContext {
+  values: Values;
+  personaId?: string;
+  /** The journey family (e.g. 'new-connection'). */
+  journey?: string;
+}
+
+/** Whether a document type applies in this context: every dimension it names must match; an empty list matches nothing, an omitted one anything. */
+export function documentTypeApplies(t: DocumentTypeConfig, ctx: DocumentContext): boolean {
+  const a = t.appliesTo;
+  if (!a) return true;
+  const v = ctx.values;
+  const contact = v.contact as { idType?: string } | undefined;
+  const segment = (v.eligibility as { segment?: string } | undefined)?.segment;
+  const product = v.product as string | undefined;
+  if (a.journeys && !(ctx.journey !== undefined && a.journeys.includes(ctx.journey))) return false;
+  if (a.personas && !(ctx.personaId !== undefined && a.personas.includes(ctx.personaId))) return false;
+  if (a.products && !(product !== undefined && a.products.includes(product))) return false;
+  if (a.idTypes && !(contact?.idType !== undefined && a.idTypes.includes(contact.idType))) return false;
+  if (a.segments && !(segment !== undefined && a.segments.some((p) => segment.startsWith(p)))) return false;
+  if (a.conditions && !a.conditions.every((c) => holds(c, v))) return false;
+  return true;
+}
+
+/** The documents this order requires, for the journey it is in, the role working it and the customer: the configured types whose requiredWhen all hold. */
+export function requiredDocumentsFor(ctx: DocumentContext): DocumentRequirement[] {
+  return getDocumentTypes()
+    .filter((t) => t.requiredWhen?.length && documentTypeApplies(t, ctx) && t.requiredWhen.every((c) => holds(c, ctx.values)))
+    .map((t) => ({ id: t.id, label: t.label, reason: t.reason ?? 'Required for this order.' }));
+}
+
+/** The labels offered in the Document Type list: every configured type that applies here, except those already asked for as a required card. */
+export function documentTypeOptionsFor(ctx: DocumentContext): string[] {
+  const required = new Set(requiredDocumentsFor(ctx).map((r) => r.id));
+  return getDocumentTypes().filter((t) => !required.has(t.id) && documentTypeApplies(t, ctx)).map((t) => t.label);
 }
 
 interface Scan {

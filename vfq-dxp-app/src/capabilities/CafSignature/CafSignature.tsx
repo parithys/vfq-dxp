@@ -56,15 +56,15 @@ export type CafSignatureProps =
       supplementaryForm?: Capture['supplementaryForm'];
       /** Additional Documents: what this order requires, and what the journey already holds (viewable, downloadable). */
       documentRequirements?: Capture['documentRequirements'];
+      documentLabelOptions?: Capture['documentLabelOptions'];
       journeyDocuments?: Capture['journeyDocuments'];
     });
 
 /**
  * Additional documents, as Mobile Postpaid Activation has them: the one definition every journey that mounts this capability uses
- * (label chosen from this list, up to five files, on the white card). Change it here, not in a journey.
+ * (up to five files, on the white card; the document types come from public/config/document-types.json). Change it here, not in a journey.
  */
-const ADDITIONAL_DOCUMENTS: Pick<Capture, 'documentLabelOptions' | 'maxAdditionalDocuments' | 'documentsOnWhite'> = {
-  documentLabelOptions: ['Employer Letter', 'Utility Bill', 'Proof of Address', 'Office ID Card', 'Other'],
+const ADDITIONAL_DOCUMENTS: Pick<Capture, 'maxAdditionalDocuments' | 'documentsOnWhite'> = {
   maxAdditionalDocuments: 5,
   documentsOnWhite: true,
 };
@@ -99,6 +99,7 @@ export function CafSignature(props: CafSignatureProps) {
         journey={props.journey}
         formDetails={props.formDetails}
         supplementaryForm={props.supplementaryForm}
+        documentLabelOptions={props.documentLabelOptions ?? []}
         documentRequirements={props.documentRequirements}
         journeyDocuments={props.journeyDocuments}
         inlineSignaturePad

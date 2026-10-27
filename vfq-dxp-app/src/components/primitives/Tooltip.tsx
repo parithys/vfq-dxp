@@ -37,6 +37,12 @@ export interface TooltipProps {
 
 const VIEWPORT_MARGIN = 8;
 
+/** A pixel token read from the root. A token written as an expression (calc(var(--space-unit) * 2)) does not parse as a number, so a fallback is used rather than NaN: a NaN offset left the tooltip with no top and it drew off the bottom of the screen. */
+function pxToken(name: string, fallback: number): number {
+  const n = parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name));
+  return Number.isFinite(n) ? n : fallback;
+}
+
 // Portal-rendered hover/focus tooltip - see .claude/skills/hover-tooltip.
 // Never nested inline (would get clipped by ancestor overflow:hidden), never
 // a native title="" (inconsistent OS-level delay, no touch support).
@@ -68,7 +74,7 @@ export function Tooltip({ content, children, placement = 'right', disabled = fal
     const tooltipRect = tooltipRef.current?.getBoundingClientRect();
     const tw = tooltipRect?.width ?? 0;
     const th = tooltipRect?.height ?? 0;
-    const offset = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--tooltip-offset') || '8', 10);
+    const offset = pxToken('--tooltip-offset', 8);
 
     const positions: Record<Placement, { top: number; left: number }> = {
       right: { top: triggerRect.top + triggerRect.height / 2 - th / 2, left: offsetRect.right + offset },
@@ -111,7 +117,7 @@ export function Tooltip({ content, children, placement = 'right', disabled = fal
     setResolvedPlacement(finalPlacement);
     setCoords(pos);
 
-    const maxWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--tooltip-max-width') || '240', 10);
+    const maxWidth = pxToken('--tooltip-max-width', 240);
     setWraps(tw >= maxWidth - 1);
   }, [visible, placement, computePosition]);
 

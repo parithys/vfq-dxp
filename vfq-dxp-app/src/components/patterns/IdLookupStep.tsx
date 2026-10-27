@@ -7,10 +7,8 @@ import { Input } from '../primitives/Input';
 import { useIdLookup } from './useIdLookup';
 import { IdLookupStatus } from './IdLookupStatus';
 import { MoiResultPanel } from './MoiResultPanel';
-import { NewCustomerForm } from './NewCustomerForm';
 import { RestrictedCustomerNotice } from './RestrictedCustomerNotice';
 import { mismatchMessage } from './idReconciliation';
-import { idTypeLabel } from '../../data/idTypes';
 import type { IdLookupValue } from './idLookupModel';
 import { formatDmyOnBlur } from './idLookupModel';
 
@@ -130,8 +128,6 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
     scanBudgetSpent,
     manualEntryUnlocked,
     captureMode,
-    canCreateCustomer,
-    createNewCustomer,
     handleScanAttempt,
     handleDemoScan,
     handleKeyDown,
@@ -363,10 +359,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
           Before any of those, for a QID, it is not rendered at all. */}
       {(autoDetectIdType || !manualEntry) && numberBlock}
 
-      {/* No registry knows this ID Type + number: the agent can create the customer from what the document shows. */}
-      {canCreateCustomer && (
-        <NewCustomerForm idTypeLabel={idTypeLabel(idType)} idNumber={value.idNumber ?? ''} expiry={value.scannedExpiry} onCreate={createNewCustomer} />
-      )}
+      {/* No registry knows this ID: the status below says so ("No MOI record found for this ID - try again."). No create-customer form is offered. */}
 
       {/* A protected-segment customer this role may not see: the access restriction is all that is shown (it blocks Continue: nothing is identified). */}
       {accessRestricted && <RestrictedCustomerNotice compact />}

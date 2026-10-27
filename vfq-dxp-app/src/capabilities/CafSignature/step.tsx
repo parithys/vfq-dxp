@@ -8,7 +8,7 @@ import type { GuidedContactValue } from '../../components/patterns/guidedContact
 import type { CafType } from '../../components/patterns/cafTypes';
 import type { ActualUserValue } from '../ActualUser/actualUserModel';
 import { actualUserIdentity, supplementaryRows } from '../ActualUser/actualUserModel';
-import { consolidatedDocuments, requiredDocumentsFor } from '../../engines/journeyDocuments';
+import { consolidatedDocuments, documentTypeOptionsFor, requiredDocumentsFor } from '../../engines/journeyDocuments';
 import { usePersonaStore } from '../../stores/personaStore';
 
 /** The captured CAF: its type and, once signed on this device, the signature. */
@@ -88,6 +88,8 @@ export function cafSignatureStep(
           // Scenario-specific supporting documents (a Waive Off, a minor's court order ...) are asked for in Additional Documents, after signing, and
           // nowhere earlier; everything the journey already holds is listed there too, to view and download.
           documentRequirements={requiredDocumentsFor({ values, personaId: usePersonaStore.getState().activePersonaId, journey: 'new-connection' })}
+          // The document types offered come from public/config/document-types.json, narrowed to this role, journey, scenario and customer.
+          documentLabelOptions={documentTypeOptionsFor({ values, personaId: usePersonaStore.getState().activePersonaId, journey: 'new-connection' })}
           journeyDocuments={consolidatedDocuments(values)}
           supplementaryForm={actualUserIdentity(values.actualUser as ActualUserValue | undefined) ? { rows: supplementaryRows(values.actualUser as ActualUserValue), actualUserName: actualUserIdentity(values.actualUser as ActualUserValue)?.moiResult?.name } : undefined}
           // Built from the totals CHECKOUT computed plus the plan/number facts already on `values`, so the figures

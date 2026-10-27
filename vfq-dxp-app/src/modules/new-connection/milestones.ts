@@ -47,7 +47,7 @@ export const POSTPAID_MILESTONES: readonly MilestoneDef[] = [
   {
     id: 'billing',
     stepKey: 'billingAccount',
-    label: 'Billing Profile',
+    label: 'Billing',
     title: 'Billing Profile Ready',
     message: 'Billing profile created for this customer.',
     // Resolved quietly after Customer Verification; the toast belongs to Recommended Offers, the page it leads to, and shows nowhere else.

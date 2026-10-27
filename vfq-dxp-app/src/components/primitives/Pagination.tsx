@@ -58,13 +58,13 @@ export function Pagination({
   total: number;
   pageSize: number;
   onPage: (page: number) => void;
-  /** Spacing only (margin or padding) - the bar has no frame to restyle. */
+  /** Spacing only (margin or padding) - the bar has no frame to restyle. It always carries its own top padding (pt-6), so every list has the same gap above it. */
   className?: string;
 }) {
   const w = pageWindow(total, pageSize, page);
   if (w.pages <= 1) return null;
   return (
-    <div className={`flex flex-wrap items-center justify-between gap-3 ${className}`}>
+    <div className={`flex flex-wrap items-center justify-between gap-3 pt-6 ${className}`}>
       <span className="text-fg text-[length:var(--fs-body)]">{pageLabel(w.page, w.pages)}</span>
       <Pager page={w.page} pages={w.pages} onPage={onPage} />
     </div>

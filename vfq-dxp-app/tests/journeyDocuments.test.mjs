@@ -10,14 +10,15 @@ globalThis.window.addEventListener ??= () => {};
 globalThis.window.removeEventListener ??= () => {};
 const read = (p) => fs.readFileSync(p, 'utf8');
 let jd;
-before(async () => { await boot(); jd = await load('/src/engines/journeyDocuments.ts'); });
+let cfg;
+before(async () => { await boot(); cfg = await load('/src/engines/configEngine.ts'); await cfg.loadConfig(); jd = await load('/src/engines/journeyDocuments.ts'); });
 after(close);
 
 test('a Waive Off requires its supporting document; no waiver, no requirement', () => {
   assert.deepEqual(jd.requiredDocumentsFor({ values: {}, journey: 'new-connection' }), []);
   for (const mode of ['partial', 'full']) {
     const r = jd.requiredDocumentsFor({ values: { numberWaiver: mode }, journey: 'new-connection' });
-    assert.deepEqual(r.map((x) => x.id), ['waive-off-support']);
+    assert.deepEqual(r.map((x) => x.id), ['star-number-discount-approval']);
   }
   assert.deepEqual(jd.requiredDocumentsFor({ values: { numberWaiver: 'full' }, journey: 'prepaid' }), [], 'a journey that has no Waive Off is never asked');
 });
@@ -61,4 +62,43 @@ test('the requirements are asked for in Additional Documents after signing - not
   assert.match(read('src/capabilities/CafSignature/step.tsx'), /requiredDocumentsFor\(\{ values, personaId/);
   assert.doesNotMatch(read('src/capabilities/NumberSelection/WaiveOff.tsx'), /type="file"|Upload/, 'no document is requested on the Waive Off dialog');
   assert.match(read('src/capabilities/NumberSelection/WaiveOff.tsx'), /asked for at the end of the journey, after the CAF is signed/);
+});
+
+// ---- configurable document types: public/config/document-types.json ----------------------------------------------------
+const base = { journey: 'new-connection', personaId: 'ROLE-01' };
+const labels = (values, extra = {}) => jd.documentTypeOptionsFor({ ...base, values, ...extra });
+
+test('every document type the business named is configured, with a unique id and label', () => {
+  const types = cfg.getDocumentTypes();
+  const named = ['QID', 'Passport', 'GCC ID', 'Employee ID', 'Special Needs Card', 'CAF', 'Supplementary Form', 'MNP Form', 'TON Form', 'Blue Plate', 'House Contract', 'Star Number Discount Approval', 'Upfront Payment Receipt', "Authorized Person's QID", 'Chooser Email Confirmation', "Chooser's QID", 'Commercial Registration', 'Company Letter Head', 'Computer Card', 'Contract Document', 'Customer Acceptance Document', 'Customer PO', 'Master Services Agreement', 'Plan Builder Form', 'Plan Discount Approval', 'Service Handover Document', 'Start-Billing Confirmation', 'Tender Document', 'Trade License', 'Volumetric Addendum Form', 'eKYC'];
+  assert.deepEqual(named.filter((n) => !types.some((t) => t.label === n)), []);
+  assert.equal(new Set(types.map((t) => t.id)).size, types.length);
+  assert.ok(types.every((t) => t.basis), 'each rule says where it comes from');
+});
+
+test('the list offered is narrowed by the customer, the scenario, the journey and the role - nothing is hardcoded', () => {
+  const plain = { product: 'postpaid', contact: { idType: 'QID' }, eligibility: { segment: 'Consumer' } };
+  assert.deepEqual(labels(plain), ['QID']);
+  assert.deepEqual(labels({ ...plain, contact: { idType: 'Passport' } }), ['Passport']);
+  assert.ok(labels({ ...plain, customerType: { type: 'mada' } }).includes('Special Needs Card'));
+  assert.ok(labels({ ...plain, customerType: { type: 'mada', rejected: true } }).every((l) => l !== 'Special Needs Card'), 'a rejected benefit has no evidence');
+  assert.ok(labels({ ...plain, customerType: { type: 'b2b2c' } }).includes('Employee ID'));
+  assert.ok(labels({ ...plain, actualUser: { choice: 'other' } }).includes('Supplementary Form'));
+  assert.ok(labels({ ...plain, actualUser: { choice: 'primary' } }).every((l) => l !== 'Supplementary Form'));
+  assert.ok(labels({ ...plain, checkoutTotals: { dueTodayQar: 50 } }).includes('Upfront Payment Receipt'));
+  assert.ok(labels({ ...plain, checkoutTotals: { dueTodayQar: 0 } }).every((l) => l !== 'Upfront Payment Receipt'));
+  assert.ok(labels({ ...plain, product: 'mnp' }).includes('MNP Form') && !labels(plain).includes('MNP Form'));
+  assert.ok(!labels({ ...plain, eligibility: { segment: 'Consumer' } }).includes('Trade License'));
+  assert.ok(labels({ ...plain, eligibility: { segment: 'Enterprise (EBU)' } }).includes('Trade License'), 'segment matched by prefix');
+  assert.ok(!labels(plain).includes('eKYC'), 'an empty applicability list means never');
+  assert.deepEqual(labels(plain, { journey: undefined }).includes('TON Form'), false);
+});
+
+test('a required type is asked for as its own card, not repeated in the list; unknown conditions never hold', () => {
+  const waived = { product: 'postpaid', contact: { idType: 'QID' }, numberWaiver: 'full' };
+  assert.deepEqual(jd.requiredDocumentsFor({ ...base, values: waived }).map((r) => r.label), ['Star Number Discount Approval']);
+  assert.ok(!labels(waived).includes('Star Number Discount Approval'));
+  assert.equal(jd.documentTypeApplies({ id: 'x', label: 'X', appliesTo: { conditions: ['no-such-condition'] } }, { values: {} }), false);
+  assert.equal(jd.documentTypeApplies({ id: 'x', label: 'X', appliesTo: { personas: ['ROLE-99'] } }, { values: {}, personaId: 'ROLE-01' }), false);
+  assert.equal(jd.documentTypeApplies({ id: 'x', label: 'X', appliesTo: { personas: ['ROLE-01'] } }, { values: {}, personaId: 'ROLE-01' }), true);
 });

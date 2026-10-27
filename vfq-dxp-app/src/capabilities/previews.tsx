@@ -420,7 +420,7 @@ function Complete() {
 
 function DocumentUploadDemo() {
   const [docs, setDocs] = useState<AdditionalDocument[]>([]);
-  return <AdditionalDocumentsUpload documents={docs} onChange={setDocs} labelOptions={['Employer Letter', 'Utility Bill', 'Proof of Address', 'Other']} whiteBackground />;
+  return <AdditionalDocumentsUpload documents={docs} onChange={setDocs} labelOptions={['QID', 'Passport', 'Supplementary Form', 'Other']} whiteBackground />;
 }
 
 function PaginationDemo() {

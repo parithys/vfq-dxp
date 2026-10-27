@@ -187,3 +187,25 @@ export interface Customer360Field {
   details: string;
   departments: Record<string, 'real-time' | 'drill-down' | 'n-a'>;
 }
+
+/** One document type Additional Documents can take (public/config/document-types.json), and when it applies. */
+export interface DocumentTypeConfig {
+  id: string;
+  label: string;
+  /** Each given list must match the journey; an omitted one is no restriction, an empty one means never. */
+  appliesTo?: {
+    journeys?: string[];
+    personas?: string[];
+    products?: string[];
+    idTypes?: string[];
+    /** Matched by prefix against the customer's segment. */
+    segments?: string[];
+    /** Named conditions that must all hold (see engines/journeyDocuments.ts). */
+    conditions?: string[];
+  };
+  /** Conditions that make the document required (asked for as its own card). */
+  requiredWhen?: string[];
+  reason?: string;
+  /** Where the rule comes from; "assumed" ones await business confirmation. */
+  basis?: string;
+}
