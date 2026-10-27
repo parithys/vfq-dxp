@@ -1,0 +1,10 @@
+{
+  "installOn": [
+    "vfq-dxp-app/package.json",
+    "vfq-dxp-app/package-lock.json"
+  ],
+  "restartOn": [
+    "vfq-dxp-app/vite.config.ts",
+    "vfq-dxp-app/index.html"
+  ]
+}

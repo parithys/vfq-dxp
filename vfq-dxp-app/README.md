@@ -10,7 +10,7 @@ Needs Node.js 22 or later.
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
+npm run dev        # http://localhost:5173/vfq-dxp-app/
 ```
 
 The web, tablet and mobile views run as one app; the ports below only give each view its own address so all three can be open at once.
@@ -18,9 +18,9 @@ The app adapts to the real window size and device, not to the port, so open the 
 
 | Command | View | URL |
 |---|---|---|
-| `npm run dev` | Web | http://localhost:5173 |
-| `npm run dev:tablet` | Tablet | http://localhost:5174 |
-| `npm run dev:mobile` | Mobile | http://localhost:5175 |
+| `npm run dev` | Web | http://localhost:5173/vfq-dxp-app/ |
+| `npm run dev:tablet` | Tablet | http://localhost:5174/vfq-dxp-app/ |
+| `npm run dev:mobile` | Mobile | http://localhost:5175/vfq-dxp-app/ |
 | `npm run dev:all` | All three at once | the three URLs above |
 
 Set `PORT` to move a view (`PORT=6000 npm run dev:tablet`).

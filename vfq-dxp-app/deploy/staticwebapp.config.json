@@ -1,8 +1,11 @@
 {
   "navigationFallback": {
-    "rewrite": "/index.html",
-    "exclude": ["/assets/*", "/config/*", "/mock-data/*", "/brand/*", "*.{svg,png,jpg,ico,json}"]
+    "rewrite": "/vfq-dxp-app/index.html",
+    "exclude": ["/vfq-dxp-app/assets/*", "/vfq-dxp-app/config/*", "/vfq-dxp-app/mock-data/*", "/vfq-dxp-app/brand/*", "/vfq-dxp-app/news/*", "*.{svg,png,jpg,webp,ico,json}"]
   },
-  "routes": [{ "route": "/*", "allowedRoles": ["authenticated"] }],
-  "responseOverrides": { "401": { "redirect": "/.auth/login/aad", "statusCode": 302 } }
+  "routes": [
+    { "route": "/vfq-dxp-app", "rewrite": "/vfq-dxp-app/index.html", "allowedRoles": ["authenticated"] },
+    { "route": "/vfq-dxp-app/*", "allowedRoles": ["authenticated"] }
+  ],
+  "responseOverrides": { "401": { "redirect": "/.auth/login/aad?post_login_redirect_uri=/vfq-dxp-app/", "statusCode": 302 } }
 }

@@ -1,10 +1,10 @@
 # Hosting the VFQ DXP review build
 
 1. Build: `npm run build` (output: `dist/`).
-2. Copy the CONTENTS of `dist/` to the root of a web host. The app uses absolute paths (`/config/...`, `/mock-data/...`),
-   so it must be served from the root of a hostname, not from a sub-path such as `/vfq/`.
+2. Mount the contents of `dist/` at `/vfq-dxp-app/`. Vite assets, public data, browser redirects and React Router all use
+   that base path.
 3. Make the host fall back to `index.html` for unknown paths (the app uses client-side routing; a refresh on
-   `/customer/CUST-1001` must not 404):
+   `/vfq-dxp-app/customer/CUST-1001` must not 404):
    - nginx: `deploy/nginx.conf`
    - IIS: copy `deploy/web.config` next to `index.html`
    - Azure Static Web Apps: copy `deploy/staticwebapp.config.json` next to `index.html` (it requires Microsoft sign-in)
