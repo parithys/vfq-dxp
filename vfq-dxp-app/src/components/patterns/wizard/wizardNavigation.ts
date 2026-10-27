@@ -37,3 +37,17 @@ export function forwardJumpAllowed(activeSteps: WizardStep[], from: number, to: 
   if (to <= from) return true;
   return activeSteps.slice(from, to).every((s) => (s.isValid ? s.isValid(values) : true));
 }
+
+/** Where Continue from `from` lands: the next step that is not passed over (never past the last step, which submits). */
+export function nextStepIndex(activeSteps: WizardStep[], from: number, values: Record<string, unknown>): number {
+  let next = from + 1;
+  while (next < activeSteps.length - 1 && activeSteps[next].autoPass?.(values)) next++;
+  return next;
+}
+
+/** Where Back from `from` lands: the mirror of Continue - the steps Continue passes over are passed over on the way back too. */
+export function previousStepIndex(activeSteps: WizardStep[], from: number, values: Record<string, unknown>): number {
+  let prev = from - 1;
+  while (prev > 0 && activeSteps[prev].autoPass?.(values)) prev--;
+  return Math.max(prev, 0);
+}

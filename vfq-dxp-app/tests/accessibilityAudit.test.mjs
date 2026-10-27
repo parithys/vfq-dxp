@@ -47,7 +47,7 @@ test('the page title band (PageHeader, wizard title, Customer 360 header) reads 
   const css = read('src/tokens.css');
   assert.match(css, /--title-band-bg: var\(--charcoal-panel\);/);
   assert.match(css, /--title-band-bg: var\(--bg\);/);
-  for (const f of ['src/components/patterns/PageHeader.tsx', 'src/components/patterns/wizard/WizardTitleBand.tsx', 'src/workspace/customer360/CustomerProfileHeader.tsx']) assert.match(read(f), /bg-\[var\(--title-band-bg\)\]/, f);
+  for (const f of ['src/components/patterns/PageHeader.tsx', 'src/components/patterns/wizard/WizardTitleBand.tsx', 'src/workspace/customer360/CustomerProfileHeader.tsx', 'src/components/patterns/wizard/StepSummaryPanel.tsx']) assert.match(read(f), /bg-\[var\(--title-band-bg\)\]/, f);
   assert.match(read('src/navigation/PersonaSwitcher.tsx'), /border-b border-border-soft last:border-b-0 hover:bg-surface/, 'a separator after each workflow notification');
   assert.match(read('src/lib/serviceTypeTag.ts'), /label: 'Voice Plan'/);
   assert.match(read('src/lib/serviceTypeTag.ts'), /label: 'Broadband Plan'/);

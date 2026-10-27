@@ -2,6 +2,7 @@ import { ID_TYPES } from '../../../data/idTypes';
 import type { SummaryField } from './stepSummary';
 // The nested-value reader and QAR formatter every step summary shares (one definition, in the capability summary kit).
 import { at, qar, type Values } from '../../../capabilities/summaryKit';
+import { toLocalMsisdn } from '../../domain/msisdnPickerModel';
 
 // Summary field sets shared by the journeys. Each builder takes the draft-values key the journey stores the step's
 // value under, so the same set serves journeys that name it differently.
@@ -28,7 +29,7 @@ export const contactFormSummary = (key = 'contact'): SummaryField[] => [
   { key: 'nationality', label: 'Nationality', type: 'text', value: (v) => at(v, key, 'nationality') },
   { key: 'gender', label: 'Gender', type: 'text', value: (v) => at(v, key, 'gender') },
   { key: 'email', label: 'Email', type: 'text', optional: true, value: (v) => at(v, key, 'email') },
-  { key: 'altPhone', label: 'Work Number', type: 'text', optional: true, value: (v) => at(v, key, 'altPhone') },
+  { key: 'altPhone', label: 'Work Number', type: 'text', optional: true, value: (v) => { const n = at(v, key, 'altPhone'); return typeof n === 'string' ? toLocalMsisdn(n) : n; } },
   // The form shows English when none was chosen (it is not stored until changed), so the summary does too.
   { key: 'language', label: 'Preferred Language', type: 'text', value: (v) => at(v, key, 'language') ?? 'English' },
 ];

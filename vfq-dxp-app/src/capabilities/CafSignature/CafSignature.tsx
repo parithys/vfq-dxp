@@ -54,6 +54,9 @@ export type CafSignatureProps =
       formDetails?: Capture['formDetails'];
       /** The Supplementary Form of an actual user: one signature signs it together with the CAF. */
       supplementaryForm?: Capture['supplementaryForm'];
+      /** Additional Documents: what this order requires, and what the journey already holds (viewable, downloadable). */
+      documentRequirements?: Capture['documentRequirements'];
+      journeyDocuments?: Capture['journeyDocuments'];
     });
 
 /**
@@ -96,6 +99,8 @@ export function CafSignature(props: CafSignatureProps) {
         journey={props.journey}
         formDetails={props.formDetails}
         supplementaryForm={props.supplementaryForm}
+        documentRequirements={props.documentRequirements}
+        journeyDocuments={props.journeyDocuments}
         inlineSignaturePad
         {...ADDITIONAL_DOCUMENTS}
         termsUrl="https://www.vodafone.qa/en/terms-and-conditions"

@@ -8,6 +8,8 @@ import type { GuidedContactValue } from '../../components/patterns/guidedContact
 import type { CafType } from '../../components/patterns/cafTypes';
 import type { ActualUserValue } from '../ActualUser/actualUserModel';
 import { actualUserIdentity, supplementaryRows } from '../ActualUser/actualUserModel';
+import { consolidatedDocuments, requiredDocumentsFor } from '../../engines/journeyDocuments';
+import { usePersonaStore } from '../../stores/personaStore';
 
 /** The captured CAF: its type and, once signed on this device, the signature. */
 export type CafValue = { cafType?: CafType; signatureDataUrl?: string; supplementaryAgreed?: boolean; secondaryAgreed?: boolean; secondarySignatureDataUrl?: string };
@@ -83,6 +85,10 @@ export function cafSignatureStep(
           idValue={opts.idDocument?.(values)?.value}
           journey={opts.journey}
           formDetails={opts.formDetails?.(values)}
+          // Scenario-specific supporting documents (a Waive Off, a minor's court order ...) are asked for in Additional Documents, after signing, and
+          // nowhere earlier; everything the journey already holds is listed there too, to view and download.
+          documentRequirements={requiredDocumentsFor({ values, personaId: usePersonaStore.getState().activePersonaId, journey: 'new-connection' })}
+          journeyDocuments={consolidatedDocuments(values)}
           supplementaryForm={actualUserIdentity(values.actualUser as ActualUserValue | undefined) ? { rows: supplementaryRows(values.actualUser as ActualUserValue), actualUserName: actualUserIdentity(values.actualUser as ActualUserValue)?.moiResult?.name } : undefined}
           // Built from the totals CHECKOUT computed plus the plan/number facts already on `values`, so the figures
           // the customer signs against are the same objects the previous step displayed - not a second calculation.
@@ -95,7 +101,11 @@ export function cafSignatureStep(
           termsScrollMode={opts.termsScrollMode}
         />
       ),
-      isValid: (values) => cafSigned(values),
+      // Signed, and every document this order requires is attached (they are asked for in Additional Documents, after signing).
+      isValid: (values) => {
+        const attached = ((values.caf as { additionalDocuments?: { requirementId?: string }[] } | undefined)?.additionalDocuments ?? []).map((d) => d.requirementId);
+        return cafSigned(values) && requiredDocumentsFor({ values, personaId: usePersonaStore.getState().activePersonaId, journey: 'new-connection' }).every((r) => attached.includes(r.id));
+      },
       // "The first and only step where the customer-facing view is presented": the rail/footer stay up WHILE
       // awaiting signature and disappear only once signed - the same predicate isValid and locksAfter use, so the
       // three cannot disagree about what "signed" means.

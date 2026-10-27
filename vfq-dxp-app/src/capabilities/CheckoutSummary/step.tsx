@@ -49,7 +49,7 @@ export function checkoutSummaryStep(
         <CheckoutSummary
           layout="detailed"
           customerName={
-            [contact?.firstName, contact?.middleName, contact?.lastName].filter(Boolean).join(', ') || contact?.moiResult?.name
+            [contact?.firstName, contact?.middleName, contact?.lastName].filter(Boolean).join(' ') || contact?.moiResult?.name
  }
           altPhone={contact?.altPhone}
           billingMethod={billingMethod}

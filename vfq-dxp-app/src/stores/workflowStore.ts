@@ -57,6 +57,8 @@ interface WorkflowState {
    * means a Continue gate failing on a field the order does in fact carry.
    */
   hydrateDraft: (wizardId: string, draft: WizardDraft) => void;
+  /** Links the working copy to the Draft Order saved for it (page-level saving writes there on every Continue). */
+  setDraftOrderId: (wizardId: string, draftOrderId: string) => void;
 }
 
 const emptyDraft: WizardDraft = { currentStep: 0, maxStepReached: 0, values: {} };
@@ -83,6 +85,11 @@ export const useWorkflowStore = create<WorkflowState>()(
         set((state) => {
           const draft = state.drafts[wizardId] ?? emptyDraft;
           return { drafts: { ...state.drafts, [wizardId]: { ...draft, values: { ...draft.values, [field]: value } } } };
+        }),
+      setDraftOrderId: (wizardId, draftOrderId) =>
+        set((state) => {
+          const draft = state.drafts[wizardId] ?? emptyDraft;
+          return { drafts: { ...state.drafts, [wizardId]: { ...draft, draftOrderId } } };
         }),
       patchDraft: (wizardId, { set: toSet = {}, unset = [], progressTo }) =>
         set((state) => {

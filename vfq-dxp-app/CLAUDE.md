@@ -202,7 +202,7 @@ CI (`.github/workflows/ci.yml`, which must sit at the repository root to run) ru
 Async actions use `src/hooks/useSubmit.ts` (`useSubmit` / `useSubmitGuard`: one at a time, failure becomes a toast, never stuck on
 "Saving..."). Detail screens use `EntityMissing` + `useKindPending` so "loading", "failed" and "not found" are never confused. Filled
 status colours that carry a white label use `--success-solid` / `--danger-solid`, not `--success` / `--danger`. Control heights come
-from `--control-h-sm/md/lg`. The New Connection wizard lives at `/mobile/start-connection` (`/mobile/new-connections` is the category page).
+from `--control-h-sm/md/lg`. The New Connection wizard lives at `/mobile/start-connection` (`/new-connections` is the New Connections hub).
 
 Add a test here when you change a rule the journeys depend on. Browser end-to-end tests are not set up (they need Playwright,
 which the sandbox cannot install).

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useWorkflowStore } from '../../../stores/workflowStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
 import type { WizardStep } from './guidedWizardTypes';
-import { forwardJumpAllowed } from './wizardNavigation';
+import { forwardJumpAllowed, nextStepIndex, previousStepIndex } from './wizardNavigation';
 
 export function useWizardStepNavigation({
   wizardId,
@@ -12,6 +12,9 @@ export function useWizardStepNavigation({
   currentIndex,
   maxReached,
   values,
+  savePage,
+  discardSavedDraft,
+  draftOrderId,
 }: {
   wizardId: string;
   onSubmit: (values: Record<string, unknown>) => void | Promise<void>;
@@ -20,6 +23,11 @@ export function useWizardStepNavigation({
   currentIndex: number;
   maxReached: number;
   values: Record<string, unknown>;
+  /** Page-level saving: called on Continue, before the journey moves on, to save everything entered on the page being left. */
+  savePage?: () => Promise<void>;
+  /** Removes the saved Draft Order (and its task) once the journey has been submitted. */
+  discardSavedDraft?: (orderId: string) => Promise<void>;
+  draftOrderId?: string;
 }) {
   const setStep = useWorkflowStore((s) => s.setStep);
   const clearDraft = useWorkflowStore((s) => s.clearDraft);
@@ -69,19 +77,19 @@ export function useWizardStepNavigation({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex, maxReached, values, activeSteps]);
 
-  const goNext = async () => {
-    if (currentIndex < activeSteps.length - 1) {
-      // Pass over autoPass steps (never past the last step, which submits).
-      let next = currentIndex + 1;
-      while (next < activeSteps.length - 1 && activeSteps[next].autoPass?.(values)) next++;
-      setStep(wizardId, next);
-      return;
-    }
+  // Page saves run one after another in the background: Continue does not wait for the (slow) write, and a later save or the submit waits for the earlier one.
+  const pendingSaveRef = useRef<Promise<void>>(Promise.resolve());
+
+  const submit = async () => {
     if (submittingRef.current) return;
     submittingRef.current = true;
     setSubmitting(true);
     try {
+      await pendingSaveRef.current;
       await onSubmit(values);
+      // The order is submitted: the draft saved along the way has done its job.
+      const savedDraftId = useWorkflowStore.getState().getDraft(wizardId).draftOrderId ?? draftOrderId;
+      if (savedDraftId) await discardSavedDraft?.(savedDraftId).catch((e) => console.error('Could not remove the saved draft', e));
       clearDraft(wizardId);
     } catch (e) {
       // A failed submit (a validation gate, a SIM taken since it was scanned) is told to the agent; the draft is kept so they can fix it and try again.
@@ -93,8 +101,21 @@ export function useWizardStepNavigation({
     }
   };
 
+  const goNext = async () => {
+    if (currentIndex >= activeSteps.length - 1) {
+      await submit();
+      return;
+    }
+    // The page being left is saved (see useWizardDraftActions.savePage) while the journey moves on at once; a failed save never blocks it.
+    pendingSaveRef.current = pendingSaveRef.current
+      .then(() => savePage?.())
+      .catch((e) => console.error('Page save failed', e));
+    setStep(wizardId, nextStepIndex(activeSteps, currentIndex, values));
+  };
+
+  // Back skips the pages Continue passes over (Address and Billing Profile in New Connection), so the way back mirrors the way forward; they stay in the rail to edit.
   const goBack = () => {
-    if (currentIndex > 0) setStep(wizardId, currentIndex - 1);
+    if (currentIndex > 0) setStep(wizardId, previousStepIndex(activeSteps, currentIndex, values));
   };
 
   // Any step already reached this session (in either direction) stays

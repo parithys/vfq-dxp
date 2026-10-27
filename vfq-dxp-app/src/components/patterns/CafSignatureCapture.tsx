@@ -8,6 +8,7 @@ import { CafDocumentUpload } from '../domain/CafDocumentUpload';
 import type { CafDocument } from '../domain/CafDocumentUpload';
 import { AdditionalDocumentsUpload } from '../domain/AdditionalDocumentsUpload';
 import type { AdditionalDocument } from '../domain/AdditionalDocumentsUpload';
+import type { DocumentRequirement, JourneyDocument } from '../../engines/journeyDocuments';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import type { TncLegalFacts } from './checkoutSummaryModel';
 import { buildTncBullets } from './cafTermsModel';
@@ -74,6 +75,10 @@ interface CafSignatureCaptureProps {
   documentsOnWhite?: boolean;
   /** Cap on post-signature documents (default 10). */
   maxAdditionalDocuments?: number;
+  /** Documents this order requires (its scenario, the role): asked for in Additional Documents, after signing, and nowhere earlier. */
+  documentRequirements?: DocumentRequirement[];
+  /** Everything the journey already holds, listed in Additional Documents to view and download. */
+  journeyDocuments?: JourneyDocument[];
   /** Link target for "the complete terms", shown beneath the summary. */
   termsUrl?: string;
   /**
@@ -138,6 +143,8 @@ export function CafSignatureCapture({
   inlineSignaturePad = false,
   documentLabelOptions,
   maxAdditionalDocuments,
+  documentRequirements,
+  journeyDocuments,
   documentsOnWhite = false,
   journey = 'postpaid',
   formDetails,
@@ -151,7 +158,11 @@ export function CafSignatureCapture({
   termsScrollMode,
 }: CafSignatureCaptureProps) {
   // A document type is chosen but its file is not uploaded yet: Continue waits.
-  const [documentPending, setDocumentPending] = useState(false);
+  const [documentPending, setDocumentPendingState] = useState(false);
+  // A required document is not uploaded yet: Continue waits for it too.
+  const [missingRequired, setMissingRequired] = useState(0);
+  const setDocumentPending = setDocumentPendingState;
+  const documentsBlock = documentPending || missingRequired > 0;
   const [bulletTemplates, setBulletTemplates] = useState<TncBulletTemplate[]>([]);
 
   useEffect(() => {
@@ -402,6 +413,9 @@ export function CafSignatureCapture({
               whiteBackground={documentsOnWhite}
               maxDocuments={maxAdditionalDocuments}
               onPendingChange={setDocumentPending}
+              requirements={documentRequirements}
+              onMissingRequiredChange={setMissingRequired}
+              journeyDocuments={journeyDocuments}
             />
           </div>
         )}
@@ -426,8 +440,8 @@ export function CafSignatureCapture({
                 <Button
                   variant="primary"
                   onClick={onContinue}
-                  disabled={documentPending}
-                  title={documentPending ? 'Upload the selected document first' : undefined}
+                  disabled={documentsBlock}
+                  title={documentPending ? 'Upload the selected document first' : missingRequired > 0 ? 'Upload the required documents first' : undefined}
                 >
                   Continue
                 </Button>
@@ -441,8 +455,8 @@ export function CafSignatureCapture({
                 variant="primary"
                 className={inlineSignaturePad ? undefined : 'w-full'}
                 onClick={onContinue}
-                disabled={documentPending}
-                title={documentPending ? 'Upload the selected document first' : undefined}
+                disabled={documentsBlock}
+                title={documentPending ? 'Upload the selected document first' : missingRequired > 0 ? 'Upload the required documents first' : undefined}
               >
                 Continue
               </Button>

@@ -4,6 +4,7 @@ import { formatQar, VAT_RATE } from '../../engines/postpaidPricing';
 import { Button } from '../primitives/Button';
 import type { CheckoutSummaryDerived } from './useCheckoutSummary';
 import { formatQarAny } from '../../lib/format';
+import { toLocalMsisdn } from '../domain/msisdnPickerModel';
 
 interface CheckoutDefaultLayoutProps extends CheckoutSummaryDerived {
   customerName: string | undefined;
@@ -105,7 +106,7 @@ export function CheckoutDefaultLayout({
             the Alternate phone # (the service-notification contact, labelled
             to match the Contact step exactly) identify the customer here. */}
         <Row label="Customer Name" value={customerName ?? '-'} />
-        <Row label="Work Number" value={altPhone ?? '-'} />
+        <Row label="Work Number" value={altPhone ? toLocalMsisdn(altPhone) : '-'} />
         {/* Plan and Discount are separate line items (2026-09-28), each
             carrying its own validity period as a detail line rather than
             leaving lock-in/duration to a separate recap box. */}

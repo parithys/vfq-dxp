@@ -60,7 +60,8 @@ export function GuidedActivationWizard({
 
   const setValue = (field: string, value: unknown) => setFieldValue(wizardId, field, value);
 
-  const { state: milestoneState, held: milestoneHeld } = useJourneyMilestones({
+  // Milestones are still reached and recorded with the draft; the Summary no longer flags a step for one (see summaryProps).
+  useJourneyMilestones({
     journeyId: draftOrderId ? `${wizardId}/${draftOrderId}` : wizardId,
     config: milestones,
     values: draft.values,
@@ -70,15 +71,6 @@ export function GuidedActivationWizard({
     disabled: isMirror,
   });
 
-  const { submitting, goNext, goBack, goToStep, goToStepKey } = useWizardStepNavigation({
-    wizardId,
-    onSubmit,
-    isMirror,
-    activeSteps,
-    currentIndex,
-    maxReached,
-    values: draft.values,
-  });
 
   const {
     setAbandonOpen,
@@ -94,6 +86,8 @@ export function GuidedActivationWizard({
     saveDraft,
     requestAbandon,
     abandonOnLeave,
+    savePage,
+    discardSavedDraft,
   } = useWizardDraftActions({
     wizardId,
     title,
@@ -105,6 +99,19 @@ export function GuidedActivationWizard({
     currentIndex,
     onAbandon,
     onSaveExit,
+  });
+
+  const { submitting, goNext, goBack, goToStep, goToStepKey } = useWizardStepNavigation({
+    wizardId,
+    onSubmit,
+    isMirror,
+    activeSteps,
+    currentIndex,
+    maxReached,
+    values: draft.values,
+    savePage,
+    discardSavedDraft,
+    draftOrderId,
   });
 
   // Leaving a journey that has progress asks first (Save as Draft / Abandon Journey) instead of navigating at once. Any
@@ -192,13 +199,8 @@ export function GuidedActivationWizard({
   const completedSummarySteps = activeSteps
     .map((step, index) => ({ step, index }))
     .filter(({ step, index }) => index < maxReached && index !== currentIndex && Boolean(step.summary?.length));
-  // The steps whose milestone is reached (and not held back): the summary flags their rows.
-  const milestoneSteps: ReadonlySet<string> | undefined =
-    milestones && !isMirror && milestones.applies(draft.values)
-      ? new Set(milestones.defs.filter((d) => d.stepKey && milestoneState[d.id] && !milestoneHeld.has(d.id)).map((d) => d.stepKey as string))
-      : undefined;
   const summaryProps = {
-    milestoneSteps,
+    // Page-level saving replaces milestone saving: a finished, saved page is the green tick, so no step row is flagged.
     completed: completedSummarySteps,
     totalSteps: activeSteps.length,
     values: draft.values,

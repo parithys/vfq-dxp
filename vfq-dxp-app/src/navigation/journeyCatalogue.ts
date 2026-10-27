@@ -155,7 +155,7 @@ export const PRODUCT_LINES: readonly ProductLine[] = [
         icon: CAT_ICONS.support,
         journeys: [
           { id: 'mob-create-ticket', title: 'Create Ticket', description: 'Raise a new support or fault ticket', status: 'available', featureKey: 'tickets.dashboard', screenId: 'SCR-211' },
-          { id: 'mob-track-ticket', title: 'Track Ticket', description: 'Find and review an existing ticket', status: 'available', featureKey: 'tickets.detail-view', screenId: 'SCR-029' },
+          { id: 'mob-track-ticket', title: 'Track Ticket', description: 'Find and review an existing ticket', status: 'available', featureKey: 'tickets.dashboard', screenId: 'SCR-211' },
           { id: 'mob-connectivity-issue', title: 'Report Connectivity Issue', description: 'Log a mobile network or voice connectivity fault', status: 'available', featureKey: 'tickets.dashboard', screenId: 'SCR-211' },
           { id: 'mob-complaint', title: 'Complaint', description: 'Log a formal customer complaint', status: 'available', featureKey: 'tickets.dashboard', screenId: 'SCR-211' },
           { id: 'mob-escalation', title: 'Escalation', description: 'Escalate an unresolved ticket to a senior team', status: 'planned' },
@@ -224,7 +224,7 @@ export const PRODUCT_LINES: readonly ProductLine[] = [
         icon: CAT_ICONS.support,
         journeys: [
           { id: 'fib-create-ticket', title: 'Create Ticket', description: 'Raise a new support or fault ticket', status: 'available', featureKey: 'tickets.dashboard', screenId: 'SCR-211' },
-          { id: 'fib-track-ticket', title: 'Track Ticket', description: 'Find and review an existing ticket', status: 'available', featureKey: 'tickets.detail-view', screenId: 'SCR-029' },
+          { id: 'fib-track-ticket', title: 'Track Ticket', description: 'Find and review an existing ticket', status: 'available', featureKey: 'tickets.dashboard', screenId: 'SCR-211' },
           { id: 'fib-connectivity-issue', title: 'Report Connectivity Issue', description: 'Log a broadband or voice connectivity fault', status: 'available', featureKey: 'tickets.dashboard', screenId: 'SCR-211' },
           { id: 'fib-install-issue', title: 'Report Installation Issue', description: 'Escalate a problem with a field installation', status: 'planned' },
           { id: 'fib-complaint', title: 'Complaint', description: 'Log a formal customer complaint', status: 'available', featureKey: 'tickets.dashboard', screenId: 'SCR-211' },

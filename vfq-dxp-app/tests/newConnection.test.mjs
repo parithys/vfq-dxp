@@ -25,6 +25,41 @@ after(close);
 const ctx = { device: 'web', wizardId: 'new-connection', flow: 'new', existingCustomerId: undefined, guardedContactChange: () => {}, applyCrossSales: () => {}, navigate: () => {}, createRecord: async () => {}, products: [], customerBenefits: undefined };
 const activeKeys = (values) => conn.buildConnectionSteps(ctx).filter((s) => !s.skip?.(values)).map((s) => s.key);
 
+// ---- Continue and Back ---------------------------------------------------------------------------------------------------
+// Customer Verification always goes on to Recommended Offers: Address and Billing Profile are passed over (their data is resolved for the
+// agent), and Back mirrors it - it never lands the agent on a page Continue skipped. Every product, with and without a billing profile.
+const PRODUCT_CASES = [{}, { product: 'postpaid' }, { product: 'prepaid' }, { product: 'fixed-line' }, { product: 'mnp', mnpType: 'postpaid' }, { product: 'mnp', mnpType: 'prepaid' }];
+test('Continue from Customer Verification lands on Recommended Offers for every product, whatever the customer', async () => {
+  const nav = await load('/src/components/patterns/wizard/wizardNavigation.ts');
+  for (const customer of [{}, { contact: { moiResult: { isNewCustomer: true, createdByAgent: true } } }, { contact: { moiResult: { isNewCustomer: false } } }]) {
+    for (const p of PRODUCT_CASES) {
+      const values = { ...customer, ...p };
+      const steps = conn.buildConnectionSteps(ctx).filter((s) => !s.skip?.(values));
+      assert.equal(steps[nav.nextStepIndex(steps, 0, values)].key, 'product', JSON.stringify(values));
+      // ...and Back from it returns to Customer Verification, not to a page Continue skipped.
+      const at = steps.findIndex((s) => s.key === 'product');
+      assert.equal(steps[nav.previousStepIndex(steps, at, values)].key, 'contact', JSON.stringify(values));
+    }
+  }
+});
+
+test('Continue never lands on a step that is passed over, and Back never lands on one except to reach the first step', async () => {
+  const nav = await load('/src/components/patterns/wizard/wizardNavigation.ts');
+  for (const values of PRODUCT_CASES) {
+    const steps = conn.buildConnectionSteps(ctx).filter((s) => !s.skip?.(values));
+    for (let i = 0; i < steps.length - 1; i++) {
+      const to = nav.nextStepIndex(steps, i, values);
+      assert.ok(to > i && to <= steps.length - 1);
+      if (to < steps.length - 1) assert.ok(!steps[to].autoPass?.(values), `${steps[i].key} -> ${steps[to].key}`);
+    }
+    for (let i = 1; i < steps.length; i++) {
+      const to = nav.previousStepIndex(steps, i, values);
+      assert.ok(to < i && to >= 0);
+      if (to > 0) assert.ok(!steps[to].autoPass?.(values), `${steps[i].key} <- ${steps[to].key}`);
+    }
+  }
+});
+
 // ---- one wizard, four products ----------------------------------------------------------------------------------------
 test('before a product is chosen the journey is Customer Verification, Address, Billing Profile and Product Selection', () => {
   assert.deepEqual(activeKeys({}), ['contact', 'address', 'billingAccount', 'product']);
