@@ -1,4 +1,4 @@
-import { CARD_SELECTED, CARD_IDLE } from '../../components/primitives/offerCardParts';
+import { CARD_SELECTED, SelectedTick, CARD_IDLE } from '../../components/primitives/offerCardParts';
 import { useEffect } from 'react';
 import { Input } from '../../components/primitives/Input';
 import { Icon } from '../../components/primitives/Icon';
@@ -129,6 +129,7 @@ function OPTION_CARDS(value: CustomerTypeValue, onChange: (v: CustomerTypeValue)
         }}
         className={`${CARD_SELECTABLE} cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${checked ? CARD_SELECTED : CARD_IDLE}`}
       >
+        {checked && <SelectedTick />}
         <div className="flex items-center gap-3">
           {/* Icon tile: tinted at rest, solid accent when selected. */}
           <span
@@ -137,13 +138,6 @@ function OPTION_CARDS(value: CustomerTypeValue, onChange: (v: CustomerTypeValue)
             <Icon path={TYPE_ICONS[o.key] ?? CHECK_ICON} className="w-5 h-5" />
           </span>
           <span className="min-w-0 flex-1 text-fg font-medium text-[length:var(--fs-body)]">{o.label}</span>
-          {/* Selection mark: a ring at rest, a filled tick once selected. */}
-          <span
-            aria-hidden="true"
-            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-[var(--radius-circle)] border ${checked ? 'border-transparent bg-accent text-accent-on' : 'border-[var(--field-card-border)] bg-bg'}`}
-          >
-            {checked && <Icon path={CHECK_ICON} className="w-3 h-3" strokeWidth={3} />}
-          </span>
         </div>
       </div>
     );

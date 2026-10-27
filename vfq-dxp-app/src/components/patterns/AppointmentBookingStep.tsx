@@ -4,7 +4,7 @@ import { Checkbox } from '../primitives/Checkbox';
 import { Icon } from '../primitives/Icon';
 import { Input } from '../primitives/Input';
 import { Textarea } from '../primitives/Textarea';
-import { CARD_IDLE, CARD_SELECTED } from '../primitives/offerCardParts';
+import { CARD_IDLE, CARD_SELECTED, SelectedTick } from '../primitives/offerCardParts';
 import { usePersonaStore } from '../../stores/personaStore';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import {
@@ -121,8 +121,9 @@ export function AppointmentBookingStep({ value, onChange }: AppointmentBookingSt
                 type="button"
                 aria-pressed={selected}
                 onClick={() => choose({ date: d })}
-                className={`rounded-[var(--radius-card)] border px-2 py-3 text-center ${selected ? CARD_SELECTED : CARD_IDLE}`}
+                className={`relative rounded-[var(--radius-card)] border px-2 py-3 text-center ${selected ? CARD_SELECTED : CARD_IDLE}`}
               >
+                {selected && <SelectedTick />}
                 <span className="block text-fg-2 text-[length:var(--fs-body)]">{weekdayShort(d)}</span>
                 <span className="block text-fg font-bold text-[length:var(--fs-h4)]">{dayOfMonth(d)}</span>
                 {cluster && <span className="block text-muted text-[length:var(--fs-caption)]">{bookableSlots(existing, cluster, d)} slots</span>}
@@ -153,10 +154,11 @@ export function AppointmentBookingStep({ value, onChange }: AppointmentBookingSt
                   aria-pressed={selected}
                   disabled={full}
                   onClick={() => choose({ timeSlot: slot })}
-                  className={`rounded-[var(--radius-card)] border px-2 py-3 text-center disabled:cursor-not-allowed ${
+                  className={`relative rounded-[var(--radius-card)] border px-2 py-3 text-center disabled:cursor-not-allowed ${
                     full ? 'border-border-soft bg-surface text-muted' : selected ? CARD_SELECTED : CARD_IDLE
                   }`}
                 >
+                  {selected && !full && <SelectedTick />}
                   <span className={`block font-bold text-[length:var(--fs-body-lg)] ${full ? 'text-muted' : 'text-fg'}`}>{slotLabel(slot)}</span>
                   <span className={`block text-[length:var(--fs-body)] ${full ? 'text-muted' : 'text-fg-2'}`}>{full ? 'Full' : selected ? 'Selected' : 'Available'}</span>
                 </button>

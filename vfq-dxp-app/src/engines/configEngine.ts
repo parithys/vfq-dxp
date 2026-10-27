@@ -48,6 +48,8 @@ interface ConfigData {
    * matching column in "Customer 360 List - FINAL" - see
    * customer360-department-mapping.json's own _gaps note. */
   customer360DepartmentMapping: Record<string, string | null>;
+  /** Pick-list values (public/config/lookup-lists.json), by list name. */
+  lookupLists: Record<string, string[]>;
 }
 
 /** Crosswalk between CRM_Journeys_Final_Updated_with_Type.xlsx (Page Type
@@ -160,11 +162,14 @@ export async function loadConfig(): Promise<ConfigData> {
     )
       .then((d) => d.staffIdToDepartment)
       .catch(optional<Record<string, string | null>>('customer360-department-mapping.json', {}));
+    const lookupLists = await fetchJson<Record<string, unknown>>('/config/lookup-lists.json')
+      .then((d) => Object.fromEntries(Object.entries(d).filter(([k, v]) => !k.startsWith('_') && Array.isArray(v)).map(([k, v]) => [k, (v as unknown[]).filter((x): x is string => typeof x === 'string' && x.trim() !== '')])))
+      .catch(optional<Record<string, string[]>>('lookup-lists.json', {}));
     const { personaFeatureLevel, personaScreenLevel } = indexGrants(personas, featureCatalogue);
     cache = {
       routes, personas, featureCatalogue, personaFeatureLevel, personaScreenLevel, rbac,
       businessRules, validationRules, domainSchema, moduleHierarchy,
-      reqToScreens, journeyCatalogueMap, approvalMatrix, customer360Fields, customer360DepartmentMapping, degraded,
+      reqToScreens, journeyCatalogueMap, approvalMatrix, customer360Fields, customer360DepartmentMapping, lookupLists, degraded,
     };
     return cache;
   })();
@@ -176,6 +181,11 @@ function requireConfig(): ConfigData {
     throw new Error('Config not loaded yet - call loadConfig() during app boot before using accessors.');
   }
   return cache;
+}
+
+/** A configured pick-list (public/config/lookup-lists.json), in its configured order; empty when the config is not loaded or has no such list. */
+export function getLookupList(name: string): string[] {
+  return cache?.lookupLists[name] ?? [];
 }
 
 export function getAllRoutes(): Route[] {

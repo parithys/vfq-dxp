@@ -1,4 +1,4 @@
-import { CARD_SELECTED, CARD_IDLE, SelectedCardTexture, SelectedPlanFigure } from '../primitives/offerCardParts';
+import { CARD_SELECTED, SelectedTick, CARD_IDLE, SelectedCardTexture, SelectedPlanFigure } from '../primitives/offerCardParts';
 import { useEffect, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { PrepaidPlanCard } from './PrepaidPlanCard';
@@ -206,20 +206,12 @@ export function PrepaidPlanStep({ mode = 'plan', hiddenProductId, packsOnly, sho
                     role="radio"
                     aria-checked={on}
                     onClick={() => onSelectDiscount(o.id)}
-                    className={`relative isolate overflow-hidden flex flex-col gap-1 rounded-[var(--radius-card)] border px-5 py-4 pr-14 text-left cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
+                    className={`relative isolate flex flex-col gap-1 rounded-[var(--radius-card)] border px-5 py-4 pr-14 text-left cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
                       on ? CARD_SELECTED : CARD_IDLE
                     }`}
                   >
                     {on && <SelectedCardTexture />}
-                    {/* The state mark: a ring when free to pick, a red tick when chosen. */}
-                    <span
-                      aria-hidden="true"
-                      className={`absolute right-4 top-4 inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-pill)] border ${
-                        on ? 'border-accent bg-accent text-on-dark' : 'border-[var(--field-border)] bg-bg'
-                      }`}
-                    >
-                      {on && <Icon path={CHECK} className="w-4 h-4" strokeWidth={3} />}
-                    </span>
+                    {on && <SelectedTick />}
                     <span className="flex items-baseline gap-2">
                       <span className="text-fg font-semibold text-[length:var(--fs-body)]">{o.title}</span>
                       {o.value}

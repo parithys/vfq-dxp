@@ -116,7 +116,7 @@ export function PrepaidCheckoutStep({ customerName, idType, lines, onTotalsCompu
                     label="SIM Type"
                     value={line.prePaired ? 'Pre-Paired SIM' : line.simType.simType === 'eSIM' ? 'eSIM' : (line.simType.simKind ?? line.simType.simType ?? '-')}
                   />
-                  <Row label="ICCID" value={line.simType.simType === 'eSIM' ? 'Not applicable (eSIM)' : (iccid ?? line.simType.simIccid ?? '-')} />
+                  <Row label="ICCID" value={iccid ?? line.simType.simIccid ?? '-'} />
                 </>
               )}
               {!fees && !existingLine && <Row label="SIM Card Charge" value={charges.simCardChargeQar > 0 ? qar(charges.simCardChargeQar) : 'Waived'} />}

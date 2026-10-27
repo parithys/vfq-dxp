@@ -6,7 +6,7 @@ import { AddonsPicker } from './AddonsSelection';
 import { CrossSalesStep } from './CrossSellOffers';
 import { CustomerTypeStep } from './CustomerType';
 import { EligibilityGateStep, OutcomeActions } from './EligibilityGate';
-import { CARD_HIGHLIGHT, CARD_IDLE, CARD_SELECTED } from './SelectableCard';
+import { CARD_HIGHLIGHT, CARD_IDLE, CARD_SELECTED, SelectedTick } from './SelectableCard';
 import { Drawer } from './SideDrawer';
 import { AdditionalDocumentsUpload } from './DocumentUpload';
 import { EmptyState } from './EmptyState';
@@ -256,7 +256,8 @@ function Eligibility() {
 function Cards() {
   const [on, setOn] = useState<'a' | 'b' | 'c'>('a');
   const card = (k: 'a' | 'b' | 'c', title: string, style: string, note: string) => (
-    <button type="button" aria-pressed={on === k} onClick={() => setOn(k)} className={`rounded-[var(--radius-card)] border p-4 text-left ${on === k ? CARD_SELECTED : style}`}>
+    <button type="button" aria-pressed={on === k} onClick={() => setOn(k)} className={`relative rounded-[var(--radius-card)] border p-4 text-left ${on === k ? CARD_SELECTED : style}`}>
+      {on === k && <SelectedTick />}
       <span className="block text-fg font-semibold">{title}</span>
       <span className="block text-fg-2 text-[length:var(--fs-caption)]">{note}</span>
     </button>
@@ -340,8 +341,9 @@ function Wizard() {
               type="button"
               aria-pressed={values.plan === p.id}
               onClick={() => setValue('plan', p.id)}
-              className={`rounded-[var(--radius-card)] border p-4 text-left ${values.plan === p.id ? CARD_SELECTED : CARD_IDLE}`}
+              className={`relative rounded-[var(--radius-card)] border p-4 text-left ${values.plan === p.id ? CARD_SELECTED : CARD_IDLE}`}
             >
+              {values.plan === p.id && <SelectedTick />}
               <span className="block text-fg font-semibold">{p.name}</span>
               <span className="block text-fg-2 text-[length:var(--fs-caption)]">{p.note}</span>
             </button>

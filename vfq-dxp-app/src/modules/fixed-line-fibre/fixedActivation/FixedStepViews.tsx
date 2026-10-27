@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { GuidedContactValue } from '../../../components/patterns/guidedContactModel';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
-import { CARD_SELECTED } from '../../../capabilities';
+import { CARD_SELECTED, SelectedTick } from '../../../capabilities';
 import { Icon } from '../../../components/primitives/Icon';
 import { ServiceAddress } from '../../../capabilities';
 import type { ZsbAddressValue } from '../../../components/patterns/ZsbAddressStep';
@@ -75,11 +75,7 @@ export function InstallationAddressStep({ values, setValue }: { values: Values; 
                     : 'border-[var(--field-card-border)] bg-bg text-fg hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]'
                 }`}
               >
-                {selected && (
-                  <span className="absolute top-2 right-2 w-4 h-4 rounded-[var(--radius-pill)] bg-[var(--field-card-selected)] text-on-dark flex items-center justify-center">
-                    <Icon path={CHECK} className="w-2.5 h-2.5" />
-                  </span>
-                )}
+                {selected && <SelectedTick />}
                 <span className={`inline-flex p-2 rounded-[var(--radius-card)] ${selected ? 'bg-[var(--field-card-selected)] text-on-dark' : 'bg-[var(--icon-tile-bg)] text-[var(--icon-tile-fg)]'}`}>
                   <Icon path={SERVICE_ICON[t.value]} className="w-6 h-6" />
                 </span>

@@ -1,6 +1,6 @@
 import { isBusinessSegment } from '../../engines/businessSegment';
 import { EmptyState } from '../primitives/EmptyState';
-import { CARD_SELECTED, CARD_IDLE } from '../primitives/offerCardParts';
+import { CARD_SELECTED, SelectedTick, CARD_IDLE } from '../primitives/offerCardParts';
 import { useEffect, useRef, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { Badge } from '../primitives/Badge';
@@ -171,7 +171,8 @@ export function BillingAccountStep({
           {profiles.map((p, i) => {
             const selected = value.selectedProfileId === p.billingProfileId;
             return (
-              <div key={p.billingProfileId} className={`rounded-[var(--radius-card)] border p-4 ${selected ? CARD_SELECTED : CARD_IDLE}`}>
+              <div key={p.billingProfileId} className={`relative rounded-[var(--radius-card)] border p-4 ${selected ? CARD_SELECTED : CARD_IDLE}`}>
+                {selected && <SelectedTick />}
                 <button
                   type="button"
                   aria-pressed={selected}

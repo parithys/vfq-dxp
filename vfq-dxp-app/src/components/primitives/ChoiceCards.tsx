@@ -1,7 +1,6 @@
 import { Icon } from './Icon';
-import { CARD_IDLE, CARD_SELECTED } from './offerCardParts';
+import { CARD_IDLE, CARD_SELECTED, SelectedTick } from './offerCardParts';
 
-const CHECK = 'M20 6L9 17l-5-5';
 
 export interface ChoiceCard<K extends string = string> {
   key: K;
@@ -55,11 +54,7 @@ export function ChoiceCards<K extends string>({
                 selected ? (t.tone ? TONE[t.tone].card : `${CARD_SELECTED} text-[var(--field-card-selected)]`) : `${CARD_IDLE} text-fg`
               }`}
             >
-              {selected && (
-                <span className={`absolute top-2 right-2 w-4 h-4 rounded-[var(--radius-pill)] ${t.tone ? TONE[t.tone].fill : 'bg-[var(--field-card-selected)] text-on-dark'} flex items-center justify-center`}>
-                  <Icon path={CHECK} className="w-2.5 h-2.5" />
-                </span>
-              )}
+              {selected && <SelectedTick />}
               <span className={`inline-flex p-2 rounded-[var(--radius-card)] ${selected ? (t.tone ? TONE[t.tone].fill : 'bg-[var(--field-card-selected)] text-on-dark') : 'bg-[var(--icon-tile-bg)] text-[var(--icon-tile-fg)]'}`}>
                 <Icon path={t.icon} className="w-6 h-6" />
               </span>

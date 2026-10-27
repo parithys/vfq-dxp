@@ -1,4 +1,4 @@
-import { SALUTATIONS } from '../../data/salutations';
+import { getLookupList } from '../../engines/configEngine';
 import { formatDateTime } from '../../lib/format';
 import { IdLookupStep } from './IdLookupStep';
 import { idTypeLabel } from '../domain/QidInput';
@@ -105,6 +105,9 @@ function VerifiedBadge({ label }: { label: string }) {
 // silently trusting cached active-customer state. The number field shows
 // a format-example placeholder instead (see QidInput.tsx).
 export function GuidedContactStep({ value, onChange, showIptvToggle = true, allowedIdTypes, unavailableIdTypes, unavailableIdTypesHint, autoDetectIdType, manualEntry, verifyThenFetch, asNewCustomer, asCustomerId, unbound, scanAsCustomerId, allowNewCustomer }: GuidedContactStepProps) {
+  // The configured salutations (public/config/lookup-lists.json); one already on the record stays selectable even if it has since been taken off the list.
+  const configured = getLookupList('salutations');
+  const salutationOptions = (value.salutation && !configured.includes(value.salutation) ? [...configured, value.salutation] : configured).map((x) => ({ value: x, label: x }));
   return (
     <div className="space-y-4">
       <IdLookupStep
@@ -185,7 +188,7 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
                 placeholder="Select salutation"
                 value={value.salutation ?? ''}
                 onChange={(e) => onChange({ ...value, salutation: e.target.value || undefined })}
-                options={SALUTATIONS.map((s) => ({ value: s, label: s }))}
+                options={salutationOptions}
               />
               {/* Evidenced agent-entered field - `language` has held a slot on
                   GuidedContactValue since this step's interface was written,

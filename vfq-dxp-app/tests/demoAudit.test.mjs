@@ -49,3 +49,59 @@ test('no available journey opens a detail screen that needs a record id (it woul
   }
   assert.deepEqual(bare, []);
 });
+
+test('the Salutation options come from public/config/lookup-lists.json, in its order, not from code', async () => {
+  const cfg = JSON.parse(read('public/config/lookup-lists.json'));
+  assert.deepEqual(cfg.salutations, ['Mr', 'Mrs', 'Ms', 'Sheikh', 'Sheikha']);
+  assert.ok(!fs.existsSync('src/data/salutations.ts'), 'no hardcoded list');
+  const step = read('src/components/patterns/GuidedContactStep.tsx');
+  assert.match(step, /getLookupList\('salutations'\)/);
+  assert.doesNotMatch(step, /'Sheikha'|'Miss'/);
+  const engine = await load('/src/engines/configEngine.ts');
+  await engine.loadConfig();
+  assert.deepEqual(engine.getLookupList('salutations'), cfg.salutations);
+  assert.deepEqual(engine.getLookupList('nope'), []);
+});
+
+test('SIM Type and ICCID are shown on SIM Selection for a Physical SIM and an eSIM, and carried to Checkout', () => {
+  const sim = read('src/components/domain/SimTypeStep.tsx');
+  assert.match(sim, /<dt className="text-fg">SIM Type<\/dt>\s*<dd className="text-fg font-medium">eSIM<\/dd>/);
+  assert.match(sim, /<dt className="text-fg">ICCID<\/dt>\s*<dd className="text-fg font-medium">\{value\.simIccid/);
+  assert.match(read('src/components/domain/SimSerialScanner.tsx'), /<dt className="text-fg">ICCID<\/dt>/, 'a Physical SIM');
+  assert.doesNotMatch(read('src/capabilities/SimType/step.tsx'), /autoAdvanceWhen: \(values\) => \{\s*const s = values\.simType/, 'the page stays so the details can be read');
+  for (const f of ['checkoutSummaryRows', 'checkoutDetailedTables']) {
+    const src = read(`src/components/patterns/${f}.ts`);
+    assert.match(src, /label: 'SIM Type'/, f);
+    assert.match(src, /label: 'ICCID'/, f);
+  }
+  assert.match(read('src/capabilities/SimType/summary.ts'), /label: 'ICCID'/);
+});
+
+test('the plan-type filter: All Plans, Voice Plan, Broadband Plan - conservation over the whole catalogue, reset on each tab', async () => {
+  const m = await load('/src/components/patterns/postpaidPlanModel.ts');
+  assert.deepEqual(m.PLAN_TYPE_FILTERS.map((f) => f.label), ['All Plans', 'Voice Plan', 'Broadband Plan']);
+  const products = JSON.parse(read('public/mock-data/products.json'));
+  const plans = products.filter((p) => p.type === 'Postpaid Plan' && p.listed !== false);
+  const voice = plans.filter((p) => m.matchesPlanType(p, 'Postpaid Voice Plans'));
+  const broadband = plans.filter((p) => m.matchesPlanType(p, 'Postpaid Broadband Plans'));
+  assert.equal(plans.filter((p) => m.matchesPlanType(p, 'all')).length, plans.length);
+  assert.equal(voice.length + broadband.length, plans.filter((p) => p.planClass).length, 'a class-less plan is under All Plans only; no plan is in both');
+  assert.ok(voice.length > 0 && broadband.length > 0);
+  assert.equal(m.matchesPlanType({}, 'Postpaid Voice Plans'), false, 'unknown stays unknown');
+  const hook = read('src/components/patterns/usePostpaidPlanAddons.ts');
+  assert.match(hook, /setActiveTabState\(tab\);\s*setPlanTypeFilter\('all'\)/, 'each tab starts at All Plans');
+  assert.match(hook, /matchesPlanType\(p, planTypeFilter\)/);
+  assert.match(read('src/components/patterns/PostpaidPlanAddonsStep.tsx'), /<Select\s+aria-label="Plan Type"\s+options=\{PLAN_TYPE_FILTERS/);
+});
+
+test('every selectable card in the app marks its selected state with the shared corner tick, and has no Select button of its own', () => {
+  const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(`${d}/${e.name}`) : [`${d}/${e.name}`]));
+  const files = walk('src').filter((f) => /\.tsx$/.test(f));
+  // Files that use the selected-card surface for something that is not a choice: the restated plan summary (offerCardParts) and the capability previews.
+  const exempt = new Set(['src/components/primitives/offerCardParts.tsx']);
+  const missing = files.filter((f) => !exempt.has(f)).filter((f) => /CARD_SELECTED/.test(read(f)) && !/<SelectedTick \/>/.test(read(f)));
+  assert.deepEqual(missing, []);
+  // The old per-card marks are gone: no small top-right check, no ring-at-rest mark.
+  for (const f of files) assert.doesNotMatch(read(f), /absolute top-2 right-2 w-4 h-4/, f);
+  for (const f of ['PostpaidPlanCard']) assert.doesNotMatch(read(`src/components/patterns/${f}.tsx`), /Select plan|'Selected'/);
+});

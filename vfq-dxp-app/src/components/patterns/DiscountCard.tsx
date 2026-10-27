@@ -1,5 +1,4 @@
-import { Icon } from '../primitives/Icon';
-import { CARD_IDLE, CARD_SELECTED, SelectedCardTexture } from '../primitives/offerCardParts';
+import { CARD_IDLE, CARD_SELECTED, SelectedTick, SelectedCardTexture } from '../primitives/offerCardParts';
 
 /** One choice in the Eligible Discounts tab, on the shared selectable-card standard. */
 export function DiscountCard({ title, description, value, selected, onToggle }: { title: string; description?: string; value: string; selected: boolean; onToggle: () => void }) {
@@ -20,11 +19,7 @@ export function DiscountCard({ title, description, value, selected, onToggle }: 
       }`}
     >
       {selected && <SelectedCardTexture />}
-      {selected && (
-        <span aria-hidden="true" className="absolute -right-2 -top-2 inline-flex h-6 w-6 items-center justify-center rounded-[var(--radius-pill)] bg-accent text-on-dark ring-2 ring-bg">
-          <Icon path="M20 6L9 17l-5-5" className="w-3.5 h-3.5" strokeWidth={3} />
-        </span>
-      )}
+      {selected && <SelectedTick />}
       {/* Name on the left, the discount on the right, on one row. */}
       <div className="flex items-start justify-between gap-3">
         <p className="text-fg font-bold text-[length:var(--fs-h5)] leading-snug">{title}</p>

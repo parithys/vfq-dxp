@@ -140,6 +140,15 @@ export const PLAN_CLASS_TAG = {
 export type PlanClass = keyof typeof PLAN_CLASS_TAG;
 export const isPlanClass = (v: unknown): v is PlanClass => typeof v === 'string' && v in PLAN_CLASS_TAG;
 
+/** The plan-type filter under the Offers / Plans tabs: All Plans, or one class (the plan's `planClass`). A plan with no class shows under All Plans only. */
+export type PlanTypeFilter = 'all' | PlanClass;
+export const PLAN_TYPE_FILTERS: { key: PlanTypeFilter; label: string }[] = [
+  { key: 'all', label: 'All Plans' },
+  { key: 'Postpaid Voice Plans', label: 'Voice Plan' },
+  { key: 'Postpaid Broadband Plans', label: 'Broadband Plan' },
+];
+export const matchesPlanType = (p: { planClass?: string }, filter: PlanTypeFilter): boolean => filter === 'all' || p.planClass === filter;
+
 export const SPECIAL_OFFERS_TAB_LABEL = 'Special Offers';
 
 export const SPECIAL_DISCOUNT_TYPE: Record<'mada' | 'b2b2c' | 'retired', { addonType: string }> = {

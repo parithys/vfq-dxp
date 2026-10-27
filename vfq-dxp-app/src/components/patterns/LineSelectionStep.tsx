@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ServiceTypeTag } from '../primitives/ServiceTypeTag';
-import { CARD_IDLE, CARD_SELECTED } from '../primitives/offerCardParts';
+import { CARD_IDLE, CARD_SELECTED, SelectedTick } from '../primitives/offerCardParts';
 import { loadCustomerLines, lineIneligibility } from './lineSelectionModel';
 import type { CustomerLine, LineType } from './lineSelectionModel';
 import { formatQar } from '../../lib/format';
@@ -59,8 +59,9 @@ export function LineSelectionStep({ customerId, lineType, value, onChange, requi
             aria-pressed={selected}
             disabled={Boolean(reason)}
             onClick={() => onChange(selected ? undefined : line)}
-            className={`text-left rounded-[var(--radius-card)] border p-4 disabled:cursor-not-allowed ${reason ? 'border-border-soft bg-surface' : selected ? CARD_SELECTED : CARD_IDLE}`}
+            className={`relative text-left rounded-[var(--radius-card)] border p-4 disabled:cursor-not-allowed ${reason ? 'border-border-soft bg-surface' : selected ? CARD_SELECTED : CARD_IDLE}`}
           >
+            {selected && !reason && <SelectedTick />}
             <div className="flex items-center gap-2 mb-1">
               <span className="text-fg font-semibold">{line.identifier}</span>
               <ServiceTypeTag type={line.lineType} />

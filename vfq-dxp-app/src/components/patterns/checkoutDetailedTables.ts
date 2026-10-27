@@ -85,6 +85,8 @@ export function buildDetailedTables({
         { label: 'Lock-In Period', value: plan?.commitmentMonths ? `${plan.commitmentMonths} months` : 'No lock-in' },
         { label: 'Add-Ons', value: addons.length ? addons.map((a) => `${a.name} (${formatQar(a.mrcQAR)}/mo)`).join(', ') : 'None' },
         { label: 'SIM Type', value: simType?.simType ?? '-' },
+        ...(simType?.simType === 'Physical' ? [{ label: 'SIM Serial Number', value: simType.simSerial ?? '-' }] : []),
+        { label: 'ICCID', value: simType?.simIccid ?? '-' },
         ...(creditLimitQar !== undefined
           ? [
               { label: 'Credit Limit', value: `${formatQar(creditLimitQar)}`, boldLabel: true, agentOnly: true },

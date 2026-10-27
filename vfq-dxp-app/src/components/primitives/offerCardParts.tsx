@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Icon } from './Icon';
 
 // Pieces shared by the two card grids that present a plan: the Recommended-offers cards (new-connection
 // steps) and the Plan & Add-ons plan cards (PostpaidPlanAddonsStep). One definition, so the two stay alike.
@@ -77,3 +78,15 @@ export function planFeatureRows(plan: OfferProduct | undefined): { icon: string;
   return rows.slice(0, 4);
 }
 
+
+/**
+ * The selected mark: a red circle with a tick on the card's top-right corner. Put it inside a `relative` card, only while it is selected.
+ * The one selected mark for every selectable card in the app (with CARD_SELECTED's red border and warm fill); the whole card is the control, so no card has its own Select button.
+ */
+export function SelectedTick() {
+  return (
+    <span aria-hidden className="absolute -right-2.5 -top-2.5 flex h-7 w-7 items-center justify-center rounded-[var(--radius-circle)] bg-accent text-accent-on shadow-[var(--shadow-selected-ring)]">
+      <Icon path="M20 6L9 17l-5-5" className="w-4 h-4" strokeWidth={3} />
+    </span>
+  );
+}

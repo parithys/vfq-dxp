@@ -3,8 +3,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { discountsForCustomer, type CustomerBenefit } from '../../engines/customerBenefitEngine';
 import { monthlyCharges } from '../../engines/postpaidPricing';
-import { closestPlans, PLAN_GROUPS, SPECIAL_DISCOUNT_TYPE, discountsForSpecialType, specialDiscountToPreselect, isPlanOfferedTo, SPECIAL_OFFERS_TAB_LABEL, planGroupOf } from './postpaidPlanModel';
-import type { PostpaidPlan, Discount, AddonProduct, PlanGroupKey, TabKey } from './postpaidPlanModel';
+import { closestPlans, PLAN_GROUPS, SPECIAL_DISCOUNT_TYPE, discountsForSpecialType, specialDiscountToPreselect, isPlanOfferedTo, SPECIAL_OFFERS_TAB_LABEL, planGroupOf, matchesPlanType } from './postpaidPlanModel';
+import type { PostpaidPlan, Discount, AddonProduct, PlanGroupKey, TabKey, PlanTypeFilter } from './postpaidPlanModel';
 
 interface UsePostpaidPlanAddonsArgs {
   selectedProductId: string | undefined;
@@ -57,7 +57,13 @@ export function usePostpaidPlanAddons({
   // (click-outside close, listbox/option roles).
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<TabKey>('specials');
+  const [activeTab, setActiveTabState] = useState<TabKey>('specials');
+  // The plan-type filter belongs to the tab being shown: switching tab starts again at All Plans.
+  const [planTypeFilter, setPlanTypeFilter] = useState<PlanTypeFilter>('all');
+  const setActiveTab = (tab: TabKey) => {
+    setActiveTabState(tab);
+    setPlanTypeFilter('all');
+  };
   // Set once, the moment the catalogue first has something in it - not on
   // every load, which would snap the agent back to the first tab if the
   // catalogue ever refetched while they were on "Add-ons". Guards against
@@ -69,6 +75,7 @@ export function usePostpaidPlanAddons({
   // figure, so "35" finds 350 - narrowing as the agent types rather than
   // requiring the exact charge.
   const visiblePlans = plans.filter((p) => {
+    if (!matchesPlanType(p, planTypeFilter)) return false;
     const q = planSearch.trim().toLowerCase();
     if (!q) return true;
     return p.name.toLowerCase().includes(q) || String(p.mrcQAR).includes(q);
@@ -119,7 +126,7 @@ export function usePostpaidPlanAddons({
   }, [plans]);
 
   // The search belongs to the tab being shown: its suggestions come from that tab's plans only, never the other tabs'.
-  const tabPlans = plans.filter((p) => (activeTab === 'special' ? specialPlanIds.has(p.productId) : planGroupOf(p) === activeTab));
+  const tabPlans = plans.filter((p) => matchesPlanType(p, planTypeFilter)).filter((p) => (activeTab === 'special' ? specialPlanIds.has(p.productId) : planGroupOf(p) === activeTab));
   const suggestions = closestPlans(planSearch, tabPlans);
 
   useEffect(() => {
@@ -218,21 +225,12 @@ export function usePostpaidPlanAddons({
   // discount exist", so it fires only on an actual plan change, not on
   // mount.
   const prevProductId = useRef(selectedProductId);
-  const [resetNotice, setResetNotice] = useState(false);
-  // The notice is brief: it clears itself.
-  useEffect(() => {
-    if (!resetNotice) return;
-    const t = window.setTimeout(() => setResetNotice(false), 6000);
-    return () => window.clearTimeout(t);
-  }, [resetNotice]);
   useEffect(() => {
     if (prevProductId.current !== selectedProductId) {
       prevProductId.current = selectedProductId;
-      // Selections belong to the plan they were made on: a new plan starts clean.
-      const hadSelections = Boolean(discountId) || addonIds.length > 0;
+      // Selections belong to the plan they were made on: a new plan starts clean (silently - no message is shown).
       if (discountId) onSelectDiscount(undefined);
       if (addonIds.length > 0) onAddonsChange([]);
-      if (hadSelections) setResetNotice(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProductId]);
@@ -265,6 +263,8 @@ export function usePostpaidPlanAddons({
     searchRef,
     activeTab,
     setActiveTab,
+    planTypeFilter,
+    setPlanTypeFilter,
     planGroupTabs,
     groupPlans,
     suggestions,
@@ -273,7 +273,6 @@ export function usePostpaidPlanAddons({
     selectionSource,
     bundledItems,
     selectedAddons,
-    resetNotice,
     discountsState,
     retryDiscounts,
     selectedDiscount,

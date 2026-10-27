@@ -1,4 +1,4 @@
-import { CARD_IDLE, CARD_SELECTED, CrossSalesStep, journeyLabel } from '../../../capabilities';
+import { CARD_IDLE, CARD_SELECTED, SelectedTick, CrossSalesStep, journeyLabel } from '../../../capabilities';
 import type { CrossSalesValue, GuidedContactValue, Offer } from '../../../capabilities';
 import { useEffect } from 'react';
 import type { NavigateFunction } from 'react-router-dom';
@@ -29,7 +29,6 @@ export interface ProductStepContext {
 }
 
 // The icon tile of each home product card (the same card as the Installation Address service types).
-const CHECK = 'M20 6L9 17l-5-5';
 export const HOME_PRODUCT_ICON: Record<HomeProduct, string> = {
   // Optical fibre: a cut cable inside a ring, its strands fanning out to nodes (drawn thin: see strokeWidth below).
   fibre:
@@ -146,11 +145,7 @@ export function ProductSelection({
                         : 'border-[var(--field-card-border)] bg-bg text-fg hover:border-[var(--field-card-hover-border)] hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]'
                     }`}
                   >
-                    {selected && (
-                      <span className="absolute top-2 right-2 w-4 h-4 rounded-[var(--radius-pill)] bg-[var(--field-card-selected)] text-on-dark flex items-center justify-center">
-                        <Icon path={CHECK} className="w-2.5 h-2.5" />
-                      </span>
-                    )}
+                    {selected && <SelectedTick />}
                     <span className={`inline-flex p-2 rounded-[var(--radius-card)] ${selected ? 'bg-[var(--field-card-selected)] text-on-dark' : 'bg-[var(--icon-tile-bg)] text-[var(--icon-tile-fg)]'}`}>
                       <Icon path={HOME_PRODUCT_ICON[p.key]} className="w-6 h-6" strokeWidth={p.key === 'fibre' ? 1.4 : undefined} />
                     </span>

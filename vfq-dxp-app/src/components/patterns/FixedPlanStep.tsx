@@ -3,7 +3,7 @@ import { Button } from '../primitives/Button';
 import { CreditCheckPanel } from '../domain/CreditCheckPanel';
 import { evaluateRule } from '../../engines/ruleEngine';
 import * as mockDataEngine from '../../engines/mockDataEngine';
-import { CARD_IDLE, CARD_SELECTED, ICON_CARD, ICON_SPEED, ICON_TV } from '../primitives/offerCardParts';
+import { CARD_IDLE, CARD_SELECTED, SelectedTick, ICON_CARD, ICON_SPEED, ICON_TV } from '../primitives/offerCardParts';
 import { Icon } from '../primitives/Icon';
 import { ConnectionTypeTag } from '../primitives/ConnectionTypeTag';
 import { formatQarAny, formatAmount } from '../../lib/format';
@@ -76,6 +76,7 @@ export function FixedPlanStep({ values, setValue }: { values: Values; setValue: 
               }}
               className={`relative flex flex-col gap-3 rounded-[var(--radius-card)] border p-5 cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${selected ? CARD_SELECTED : CARD_IDLE}`}
             >
+              {selected && <SelectedTick />}
               <div className="flex items-center justify-end gap-3">
                 <ConnectionTypeTag category="GigaHome Fibre" />
               </div>
