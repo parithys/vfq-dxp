@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
@@ -7,12 +7,103 @@ import tailwindcss from '@tailwindcss/vite'
 // layout and behaviour adapt to the real viewport and device. Each port gets its own dependency cache (cacheDir) so servers
 // started together don't race to pre-bundle into one shared folder, and a fixed port (strictPort) so a view never moves.
 const port = process.env.PORT ? Number(process.env.PORT) : 5173
+const publicBase = '/vfq-dxp-app/'
+const publicBaseWithoutSlash = publicBase.replace(/\/$/, '')
+const previewViteClient = `
+const hotData = new Map()
+
+export class ErrorOverlay extends HTMLElement {}
+
+export function createHotContext(ownerPath) {
+  if (!hotData.has(ownerPath)) hotData.set(ownerPath, {})
+  return {
+    data: hotData.get(ownerPath),
+    accept() {},
+    acceptExports() {},
+    decline() {},
+    dispose() {},
+    invalidate() {},
+    on() {},
+    off() {},
+    prune() {},
+    send() { return Promise.resolve() },
+  }
+}
+
+export function updateStyle(id, content) {
+  let style = document.querySelector(\`style[data-vite-dev-id="\${id}"]\`)
+  if (!style) {
+    style = document.createElement('style')
+    style.setAttribute('data-vite-dev-id', id)
+    document.head.appendChild(style)
+  }
+  style.textContent = content
+}
+
+export function removeStyle(id) {
+  document.querySelector(\`style[data-vite-dev-id="\${id}"]\`)?.remove()
+}
+
+export function injectQuery(url, query) {
+  const [path, hash = ''] = url.split('#', 2)
+  return \`\${path}\${path.includes('?') ? '&' : '?'}\${query}\${hash ? \`#\${hash}\` : ''}\`
+}
+`
+
+function basePathCompatibility(figmaPreview: boolean): Plugin {
+  return {
+    name: 'base-path-compatibility',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const [pathname, query] = (req.url ?? '').split('?', 2)
+        if (figmaPreview && pathname === '/@vite/client') {
+          res.statusCode = 200
+          res.setHeader('Content-Type', 'text/javascript')
+          res.setHeader('Cache-Control', 'no-store')
+          res.end(previewViteClient)
+          return
+        }
+        if (figmaPreview && (pathname === publicBaseWithoutSlash || pathname.startsWith(publicBase))) {
+          const previewPath = pathname.slice(publicBaseWithoutSlash.length) || '/'
+          res.statusCode = 302
+          res.setHeader('Location', `${previewPath}${query ? `?${query}` : ''}`)
+          res.end()
+          return
+        }
+        if (!figmaPreview && pathname === publicBaseWithoutSlash) {
+          req.url = `${publicBase}${query ? `?${query}` : ''}`
+        }
+        next()
+      })
+    },
+  }
+}
 
 // https://vite.dev/config/
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  // Tailwind runs through its Vite plugin; ignore postcss.config.mjs (that file is for the Next.js spike only).
-  css: { postcss: { plugins: [] } },
-  cacheDir: `node_modules/.vite-${port}`,
-  server: { port, strictPort: true, allowedHosts: ['.devtunnels.ms'] },
+export default defineConfig(({ command }) => {
+  const figmaPreview = command === 'serve' && process.env.FIGMA_MAKE_PREVIEW === '1'
+  const figmaDeploy = command === 'build' && process.env.FIGMA_MAKE_DEPLOY === '1'
+  return {
+    // Figma hosts both previews and published sites at the domain root.
+    // Other builds retain the enterprise subpath contract.
+    base: figmaPreview || figmaDeploy ? '/' : publicBase,
+    plugins: [basePathCompatibility(figmaPreview), react(), tailwindcss()],
+    // Tailwind runs through its Vite plugin; ignore postcss.config.mjs (that file is for the Next.js spike only).
+    css: { postcss: { plugins: [] } },
+    resolve: {
+      // Lazy route chunks and the eagerly loaded shell must share one React
+      // module identity, including after Vite rebuilds its dependency cache.
+      dedupe: ['react', 'react-dom'],
+    },
+    cacheDir: `node_modules/.vite-${port}`,
+    server: {
+      port,
+      strictPort: true,
+      allowedHosts: ['.devtunnels.ms'],
+      // Make's public proxy duplicates WebSocket Upgrade response headers.
+      // Disable its unusable socket; the preview client shim above preserves
+      // the runtime exports needed by transformed modules.
+      hmr: figmaPreview ? false : undefined,
+    },
+  }
 })

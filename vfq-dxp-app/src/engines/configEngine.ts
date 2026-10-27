@@ -13,6 +13,7 @@ import type {
   PersonaFeatureGrant,
   Customer360Field,
 } from '../types/config';
+import { appPath } from '../lib/basePath';
 
 
 interface ConfigData {
@@ -71,7 +72,7 @@ let cache: ConfigData | null = null;
 let loading: Promise<ConfigData> | null = null;
 
 async function fetchJson<T>(path: string): Promise<T> {
-  const res = await fetch(path);
+  const res = await fetch(appPath(path));
   if (!res.ok) throw new Error(`Failed to load ${path}: ${res.status}`);
   return res.json() as Promise<T>;
 }

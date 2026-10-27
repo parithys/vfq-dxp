@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { appPath } from '../../../lib/basePath';
 
 // ---- Customer view as a pop-up window --------------------------------------------------
 // "Customer view" opens THIS journey in a second window (?mirror=1) that follows the agent's
@@ -27,7 +28,7 @@ export function useCustomerViewShare(sharedStepKey: string | undefined) {
       stopCustomerView();
       return;
     }
-    const url = `${location.pathname}?mirror=1`;
+    const url = `${appPath(location.pathname)}?mirror=1`;
     const w = window.open(url, 'vfq-customer-view', 'popup=yes,width=1100,height=820');
     popupRef.current = w;
     setPopupBlocked(!w);

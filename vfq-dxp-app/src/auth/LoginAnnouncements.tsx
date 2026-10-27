@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Icon } from '../components/primitives/Icon';
 import { formatNewsDate, useLoginNews } from './useLoginNews';
 import type { NewsItem } from './useLoginNews';
+import { appPath } from '../lib/basePath';
 
 // The sign-in screen's "Company Updates & Announcements" panel: a carousel over the latest news from the Vodafone Qatar
 // news page (see useLoginNews) that shows two at a time (never more) on a glass card over the skyline photo. The arrows
@@ -22,7 +23,7 @@ function Card({ a }: { a: NewsItem }) {
       aria-label={`Read more: ${a.title} (opens in a new tab)`}
       className="group block w-full h-full text-left rounded-[var(--radius-card)] bg-bg text-fg overflow-hidden shadow-[var(--shadow-login-card)] focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
     >
-      <img src={a.image} alt="" className="block w-full aspect-[5/3] object-cover" />
+      <img src={appPath(a.image)} alt="" className="block w-full aspect-[5/3] object-cover" />
       <span className="block px-[6%] pt-4 pb-5 space-y-1.5">
         <span className="font-bold text-[length:var(--fs-body-lg)] leading-snug line-clamp-2 group-hover:underline">{a.title}</span>
         <span className="text-fg-2 text-[length:var(--fs-body)] leading-snug line-clamp-3">{a.summary}</span>

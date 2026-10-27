@@ -13,6 +13,7 @@ import { ToastContainer } from './capabilities';
 import { LoginPage } from './auth/LoginPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { MAIN_ID, useRouteAnnouncer } from './navigation/useRouteAnnouncer';
+import { ROUTER_BASENAME } from './lib/basePath';
 import { useRouteScroll } from './navigation/useRouteScroll';
 
 // The application, front to back, in three parts so a host other than the Vite entry (the Next.js spike) can reuse every piece:
@@ -81,7 +82,10 @@ export function AppBootstrap({ children }: { children: ReactNode }) {
 // is what lets a guided journey stop navigation and ask what to do with its progress (useBlocker). It is created when the
 // signed-in app mounts, not at page load, so it reads the URL LoginPage has already reset to "/".
 function AuthenticatedApp() {
-  const router = useMemo(() => createBrowserRouter([{ path: '*', element: <Shell><AppRouter /></Shell> }]), []);
+  const router = useMemo(
+    () => createBrowserRouter([{ path: '*', element: <Shell><AppRouter /></Shell> }], { basename: ROUTER_BASENAME }),
+    []
+  );
   return <RouterProvider router={router} />;
 }
 

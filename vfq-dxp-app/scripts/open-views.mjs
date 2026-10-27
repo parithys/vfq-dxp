@@ -33,7 +33,7 @@ function findChrome() {
 
 function open(name, chrome) {
   const v = VIEWS[name];
-  const url = `http://localhost:${process.env[`PORT_${name.toUpperCase()}`] ?? v.port}`;
+  const url = `http://localhost:${process.env[`PORT_${name.toUpperCase()}`] ?? v.port}/vfq-dxp-app/`;
   const child = spawn(
     chrome,
     [

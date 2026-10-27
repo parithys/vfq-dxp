@@ -13,6 +13,7 @@ import { detectDeviceType } from '../lib/deviceType';
 import { DEMO_LOGIN_PASSWORD, resolveRoleFromStaffId } from './staffIdRoleMap';
 import { ForgotPasswordFlow } from './ForgotPasswordFlow';
 import { LoginAnnouncements } from './LoginAnnouncements';
+import { appPath } from '../lib/basePath';
 
 const ICONS = {
   arrowRight: 'M5 12h14 M13 6l6 6-6 6',
@@ -27,7 +28,7 @@ const ICONS = {
 // The Vodafone logo: the supplied artwork (public/brand/vodafone-logo-big.svg) - the red speech-mark with the wordmark.
 // It scales with its container, so it keeps its proportions at every width.
 function VodafoneLogo() {
-  return <img src="/brand/vodafone-logo-big.svg" alt="Vodafone" className="block w-[28%] min-w-32 max-w-48 h-auto" />;
+  return <img src={appPath('/brand/vodafone-logo-big.svg')} alt="Vodafone" className="block w-[28%] min-w-32 max-w-48 h-auto" />;
 }
 
 // New auth gate - not evidenced in the source corpus (no SCR- id); implements
@@ -122,8 +123,9 @@ export function LoginPage() {
     // renders OUTSIDE the router (App returns it before <BrowserRouter>), so no
     // router hook is available here. Rewriting the URL before signIn() means the
     // router mounts already pointing at '/', so there is no visible redirect.
-    if (window.location.pathname !== '/' || window.location.search) {
-      window.history.replaceState(null, '', '/');
+    const homePath = appPath('/');
+    if (window.location.pathname !== homePath || window.location.search) {
+      window.history.replaceState(null, '', homePath);
     }
 
     signIn(staffId, profile);
@@ -242,7 +244,7 @@ export function LoginPage() {
           navy scrim that is darkest where the headline and the update cards sit. Not rendered on a phone or tablet. */}
       {showBrandPanel && (
         <div className="relative flex-1 px-[6%] py-8 flex flex-col text-on-dark md:order-1 overflow-hidden bg-[var(--login-bg)]">
-          <img src="/brand/login-bg.jpg" alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover" />
+          <img src={appPath('/brand/login-bg.jpg')} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute inset-0 bg-[image:var(--login-scrim)]" />
           <header className="relative flex items-start justify-between gap-6">
             <VodafoneLogo />

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { useCustomerContext } from './customerContextStore';
 import { persist } from 'zustand/middleware';
 import { resetApplicationState } from '../auth/resetSession';
+import { appPath } from '../lib/basePath';
 
 export interface AgentProfile {
   userId: string;
@@ -86,6 +87,6 @@ if (typeof window !== 'undefined' && typeof window.addEventListener === 'functio
     } catch {
       /* an unreadable value is treated as signed out */
     }
-    if (!stillSignedIn) window.location.replace('/');
+    if (!stillSignedIn) window.location.replace(appPath('/'));
   });
 }

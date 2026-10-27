@@ -44,3 +44,8 @@ next-env.d.ts
 /reference/journey-screenshots/
 /reference/postpaid-activation-screenshots/
 /reference/deliverables/
+
+# Office documents and workbooks are not committed (2026-10-27)
+*.docx
+*.xlsx
+~$*
