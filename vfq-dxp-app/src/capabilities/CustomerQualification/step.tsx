@@ -4,6 +4,7 @@ import { idTypesFor } from '../../data/idTypes';
 import { CUSTOMER_IDENTIFICATION_LABEL } from '../../data/stepLabels';
 import { hasIdentityDetails, isValidAltPhone, isValidEmail } from '../../components/patterns/guidedContactModel';
 import type { GuidedContactValue } from '../../components/patterns/guidedContactModel';
+import { newIdentityOf } from '../EligibilityGate/newIdentity';
 import { BillingAccountAutoResolver } from '../../components/patterns/BillingAccountAutoResolver';
 import type { BillingAccountValue } from '../../components/patterns/billingAccountModel';
 import { EligibilityGateStep } from '../EligibilityGate/EligibilityGateStep';
@@ -110,11 +111,7 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
             asCustomerId={flow === 'existing' ? existingCustomerId : actedForId}
             announcePass={false}
             // A customer created here (no registry knows the ID) is judged on what the agent entered.
-            newIdentity={
-              contact?.moiResult?.createdByAgent && contact.idType
-                ? { idNumber: contact.idNumber ?? '', idType: contact.idType, nationality: contact.moiResult.nationality, dob: contact.moiResult.dob, expiryDate: contact.moiResult.expiryDate }
-                : undefined
-            }
+            newIdentity={newIdentityOf(contact)}
             // A journey that has not chosen its product yet cannot judge the line count: the mobile limit would end a Fixed Line sale. Product Selection judges it.
             skipLineLimit={skipLineLimit || productAgnostic}
             // MNP does not know its connection type until Plan Type: the approvals that depend on it (the ID type's, the line-count and

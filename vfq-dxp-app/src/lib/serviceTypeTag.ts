@@ -22,6 +22,9 @@ export const SERVICE_TYPE_TAGS = {
   'pre-to-post': { label: 'Prepaid to Postpaid', colour: GREEN },
   'post-to-post': { label: 'Postpaid to Postpaid Upgrade', colour: INDIGO },
   postpaid: { label: 'Postpaid', colour: BLUE },
+  // A postpaid plan's class (planClass in products.json), worded short for the plan cards on Offers & Plans (the Recommended Offers page keeps the plain Postpaid tag).
+  'postpaid-voice': { label: 'Voice Plan', colour: BLUE },
+  'postpaid-broadband': { label: 'Broadband Plan', colour: TEAL },
   prepaid: { label: 'Prepaid', colour: GREEN },
   'fixed-line': { label: 'Fixed Line', colour: PINK },
 } as const;

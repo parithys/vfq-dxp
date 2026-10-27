@@ -17,7 +17,7 @@ export function SupportWorkspace() {
   return (
     <div className="p-8">
       <PageHeader title={<>Support</>} />
-      <Tabs items={TABS} />
+      <Tabs items={TABS} label="Support Views" />
     </div>
   );
 }

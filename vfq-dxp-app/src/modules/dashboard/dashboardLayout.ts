@@ -1,5 +1,6 @@
 import type { Persona, PersonaApproach } from '../../types/config';
 import { greeting } from './heroFigures';
+import { canSeeQnomyTicketNumber } from '../../engines/agentPrivilegeEngine';
 
 // The dashboard is ONE route rendering one or two zones. Approach - the
 // persona's own configured value, resolved automatically at login - decides
@@ -38,12 +39,15 @@ export interface DashboardLayout {
  * different roles - "product-first" for a Field Engineer means work-item-first,
  * not catalogue management - so the zone keeps one structure and swaps content
  * by persona group. */
-export type ProductZoneVariant = 'catalogue' | 'fulfilment' | 'field';
+export type ProductZoneVariant = 'catalogue' | 'fulfilment' | 'field' | 'counter-sales';
 
 export function productZoneVariantFor(persona: Persona | undefined): ProductZoneVariant {
   if (!persona) return 'catalogue';
   if (persona.group === 'Field Operations & Workforce Management') return 'field';
   if (persona.group === 'Order Fulfilment & Back Office') return 'fulfilment';
+  // A sales role that works the walk-in queue (Retail Sales) sells at a counter: its zone is its own orders, drafts, leads and queue, not
+  // catalogue health (price exceptions, live campaigns, channel mix), which it has no permission to act on.
+  if (persona.group === 'Sales & Acquisition' && canSeeQnomyTicketNumber(persona.id)) return 'counter-sales';
   // Platform Administration owns the catalogue; Management/oversight roles see
   // it too, since their Hybrid zone is about product and channel performance.
   return 'catalogue';

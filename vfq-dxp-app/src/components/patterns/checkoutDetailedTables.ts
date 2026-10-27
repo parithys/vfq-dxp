@@ -4,6 +4,7 @@ import type { SimTypeValue } from '../domain/SimTypeStep';
 import type { SummaryTable } from './CheckoutSummaryTables';
 import type { CheckoutSummaryDerived } from './useCheckoutSummary';
 import { formatQarAny } from '../../lib/format';
+import { toLocalMsisdn } from '../domain/msisdnPickerModel';
 
 interface DetailedTablesArgs extends CheckoutSummaryDerived {
   customerName: string | undefined;
@@ -73,7 +74,7 @@ export function buildDetailedTables({
       title: 'Order Summary',
       rows: [
         { label: 'Customer Name', value: customerName ?? '-' },
-        { label: 'Selected Number', value: msisdn ? `${msisdn} (${isStarNumber ? 'Star' : 'Free'})` : '-', boldValue: true },
+        { label: 'Selected Number', value: msisdn ? `${toLocalMsisdn(msisdn)} (${isStarNumber ? 'Star' : 'Free'})` : '-', boldValue: true },
         { label: 'Number Value', value: q(numberDelta) },
         { label: 'Number Discount Value', value: q(discountValueQar) },
         { label: 'Number Lock-in Value:', value: q(lockInValueQar) },

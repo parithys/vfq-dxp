@@ -3,6 +3,7 @@ import { numberWaiverLabel } from '../../engines/numberWaiver';
 import type { SimTypeValue } from '../domain/SimTypeStep';
 import type { Product, StarNumberTier } from './checkoutSummaryModel';
 import type { CheckoutSummaryDerived } from './useCheckoutSummary';
+import { toLocalMsisdn } from '../domain/msisdnPickerModel';
 
 interface CafSummaryRowsArgs
   extends Pick<
@@ -64,7 +65,7 @@ export function buildCafSummaryRows({
   const simIccid = simType?.simIccid;
   return [
     { label: 'Customer Name', value: customerName ?? '-' },
-    { label: 'Selected Number', value: msisdn ? `${msisdn} (${isStarNumber ? 'Star' : 'Free'})` : '-' },
+    { label: 'Selected Number', value: msisdn ? `${toLocalMsisdn(msisdn)} (${isStarNumber ? 'Star' : 'Free'})` : '-' },
     // The number's own catalogue value, separate from what it's actually
     // BILLED at (that's Star Number Charges below, net of BR-115's
     // entitlement) - a free-tier number still has a real catalogue price

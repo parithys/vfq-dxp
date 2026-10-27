@@ -156,7 +156,7 @@ export function WinCashPaymentStep({ amountDueQAR, value, onChange, onProceedWit
       {value.paid ? (
         <div className="flex items-center gap-2">
           <Badge variant="success">Paid</Badge>
-          <span className="text-[length:var(--fs-caption)] text-muted">Reference: {value.reference}</span>
+          <span className="text-[length:var(--fs-caption)] text-muted">{value.reference ? `Reference: ${value.reference}` : value.method ? `Paid by ${value.method}` : null}</span>
         </div>
       ) : value.sessionExpired ? (
         <div className="rounded-[var(--radius-card)] border border-[var(--danger-border)] bg-tone-danger-soft p-4 space-y-3">

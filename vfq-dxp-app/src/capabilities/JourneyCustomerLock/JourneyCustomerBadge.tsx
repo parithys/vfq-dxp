@@ -1,7 +1,7 @@
 import { useCustomerContext } from '../../stores/customerContextStore';
 
 /**
- * The customer a journey is for - name, QID and customer ID - shown beside the journey's title so the agent can
+ * The customer a journey is for - name, ID (with its type) and customer ID - shown beside the journey's title so the agent can
  * confirm the context at a glance. One component for every journey, so each shows the same thing.
  *
  * Reads the customer the journey is bound to; until they are identified, an Existing-flow journey (opened from
@@ -19,7 +19,7 @@ export function JourneyCustomerBadge({
   if (active?.wizardId === wizardId) {
     return (
       <span className="text-[length:var(--fs-body)] text-on-dark-2" title="The customer is fixed for this journey">
-        <span className="font-medium text-on-dark">{active.customerName}</span> - QID {active.idNumber}
+        <span className="font-medium text-on-dark">{active.customerName}</span> - {active.idType ? `${active.idType} ` : ''}{active.idNumber}
         {active.customerId ? ` - ${active.customerId}` : ''}
       </span>
     );

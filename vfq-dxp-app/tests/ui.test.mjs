@@ -38,7 +38,7 @@ test('TabStrip: tablist semantics, one tab in the tab order, accent underline an
   assert.match(out, /role="tablist"/);
   assert.equal((out.match(/role="tab"/g) ?? []).length, 2);
   assert.equal((out.match(/tabindex="0"/g) ?? []).length, 1);
-  assert.match(out, /aria-selected="true"[^>]*class="[^"]*border-accent[^"]*text-accent[^"]*font-bold/);
+  assert.match(out, /aria-selected="true"[^>]*class="[^"]*border-accent[^"]*text-\[var\(--accent-text\)\][^"]*font-bold/);
   assert.match(out, />4</);
 });
 

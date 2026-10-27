@@ -82,3 +82,22 @@ test('the SIM step names approval or submission for the eSIM QR code by context,
   assert.match(read('src/modules/new-connection/postpaidSteps.tsx'), /approvalRequired: expectsApproval/);
   assert.match(read('src/components/domain/SimSerialScanner.tsx'), /onChange\(value, true, r\.details\)/, 'the read-back tells the journey the serial is valid');
 });
+
+test('the selected number is shown without the +974 country code in the Summary and at Checkout', async () => {
+  const { numberSummary } = await load('/src/capabilities/NumberSelection/summary.ts');
+  const row = numberSummary().find((r) => r.key === 'msisdn');
+  assert.equal(row.value({ msisdn: '+97431552654' }), '3155 2654');
+  assert.equal(row.value({ msisdn: '+974 3155 2654' }), '3155 2654');
+  assert.equal(row.value({ prePaired: true }), 'Pre-Paired SIM');
+  assert.equal(row.value({}), undefined);
+  for (const f of ['src/components/patterns/checkoutSummaryRows.ts', 'src/components/patterns/checkoutDetailedTables.ts']) assert.match(read(f), /toLocalMsisdn\(msisdn\)/, f);
+});
+
+test('the Work Number is shown without +974 in the Summary, the actual user and Checkout', async () => {
+  const q = await load('/src/capabilities/CustomerQualification/summary.ts');
+  const row = (q.customerQualificationSummary ?? Object.values(q).find((v) => Array.isArray(v))).find((r) => r.key === 'altPhone');
+  assert.equal(row.value({ contact: { altPhone: '+97455667766' } }), '5566 7766');
+  assert.equal(row.value({ contact: { altPhone: '55667766' } }), '5566 7766');
+  assert.equal(row.value({ contact: {} }), undefined);
+  for (const f of ['src/components/patterns/wizard/commonSummaries.ts', 'src/capabilities/ActualUser/summary.ts', 'src/capabilities/ActualUser/actualUserModel.ts', 'src/components/patterns/CheckoutDefaultLayout.tsx']) assert.match(read(f), /toLocalMsisdn\(/, f);
+});

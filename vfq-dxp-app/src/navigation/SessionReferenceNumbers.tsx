@@ -364,7 +364,7 @@ export function SessionReferenceNumbers() {
               type="button"
               onClick={showTicketDetails}
               aria-label={`Show details for ticket ${activeQTicket.qTicketId}`}
-              className="shrink-0 text-muted hover:text-fg transition-colors"
+              className="inline-flex h-6 w-6 shrink-0 items-center justify-center text-muted hover:text-fg transition-colors"
             >
               <Icon path={INFO_ICON_PATH} className="w-4.5 h-4.5" />
             </button>

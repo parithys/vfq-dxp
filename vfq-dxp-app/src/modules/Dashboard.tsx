@@ -111,7 +111,7 @@ export function Dashboard() {
   const specFor = (id: string, compact: boolean) =>
     id === 'customer-ops'
       ? customerOpsSpec(m, { compact, framing, regional, regionLabel, recentCustomers })
-      : productWorkSpec(m, { variant, compact, framing, regionLabel, regional });
+      : productWorkSpec(m, { variant, compact, framing, regionLabel, regional, queueWaiting: waiting });
 
   const twoUp = layout.zones.filter((z) => z.size === 'half').length === 2;
 

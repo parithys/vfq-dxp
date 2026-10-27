@@ -142,7 +142,7 @@ export function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col md:flex-row font-sans">
       {/* Sign-in panel - ordered after the brand panel on md:+ (DOM order, and so tab order, is unchanged); takes the full width when the brand panel is not shown (phone, tablet). */}
-      <div className={`w-full shrink-0 md:order-2 bg-charcoal-panel text-on-dark flex flex-col px-[8%] py-8 ${showBrandPanel ? 'md:w-[42%] lg:w-[38%]' : ''}`}>
+      <div role="main" className={`w-full shrink-0 md:order-2 bg-charcoal-panel text-on-dark flex flex-col px-[8%] py-8 ${showBrandPanel ? 'md:w-[42%] lg:w-[38%]' : ''}`}>
         <div className="my-auto py-10 space-y-8">
           <div>
             <div className="flex items-center gap-3 mb-6">
@@ -187,7 +187,7 @@ export function LoginPage() {
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-on-dark-2 hover:text-on-dark"
+                    className="absolute right-3 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center text-on-dark-2 hover:text-on-dark"
                   >
                     <Icon path={showPassword ? ICONS.eyeOff : ICONS.eye} className="w-5 h-5" />
                   </button>

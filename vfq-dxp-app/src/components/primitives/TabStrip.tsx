@@ -68,7 +68,7 @@ export function TabStrip<K extends string>({
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(key)}
             className={`flex shrink-0 items-center gap-2 border-b-[length:var(--tab-active-w)] px-4 py-3 text-[length:var(--fs-body)] whitespace-nowrap transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
-              selected ? 'border-accent text-accent font-bold' : 'border-transparent text-fg hover:text-accent'
+              selected ? 'border-accent text-[var(--accent-text)] font-bold' : 'border-transparent text-fg hover:text-[var(--accent-text)]'
             }`}
           >
             {text}

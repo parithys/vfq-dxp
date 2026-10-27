@@ -1,4 +1,4 @@
-import { EligibilityGateStep } from '../../../capabilities';
+import { EligibilityGateStep, newIdentityOf } from '../../../capabilities';
 import type { GuidedContactValue } from '../../../capabilities';
 import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
 import { LAUNCH_CUSTOMER_KEY } from '../../../components/patterns/wizard/useJourneyStartResume';
@@ -39,6 +39,8 @@ export function ProductEligibility({
       linkedIdDocument={contact.moiResult?.linkedIdUpdate}
       asCustomerId={flow === 'existing' ? existingCustomerId : (values[LAUNCH_CUSTOMER_KEY] as string | undefined)}
       announcePass={false}
+      // A customer the agent created is judged on what they entered, as at Customer Verification.
+      newIdentity={newIdentityOf(contact)}
       idNumber={contact.idNumber}
       journeyType={eligibilityJourney(values)}
       connectionType={connectionOf(values)}

@@ -61,7 +61,7 @@ export function WaiveOff({ chargeQar, waiver, onChange }: { chargeQar: number; w
         }
       >
         <p className="text-fg-2 text-[length:var(--fs-body)]">
-          The Star number's upfront charge is <strong className="text-fg">{formatQar(chargeQar)}</strong>. Choose how much of it to waive off; the order is sent for approval.
+          The Star number's upfront charge is <strong className="text-fg">{formatQar(chargeQar)}</strong>. Choose how much of it to waive off; the order is sent for approval. Its supporting document is asked for at the end of the journey, after the CAF is signed.
         </p>
         <fieldset className="mt-4 space-y-3">
           <legend className="sr-only">Waive Off</legend>

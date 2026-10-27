@@ -42,6 +42,8 @@ export interface JourneyContext {
   journey: string;
   customerName: string;
   idNumber: string;
+  /** The kind of document idNumber is (QID, Passport, GCC ID, Diplomatic ID); unknown stays unknown, and is then shown without a type. */
+  idType?: string;
   /** Known once the eligibility check has resolved the customer record. */
   customerId?: string;
   /** Known once customerId is: the customer's segment (Consumer, Enterprise ...). */

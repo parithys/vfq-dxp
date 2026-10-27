@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useWorkflowStore } from '../../../stores/workflowStore';
+import { draftHasProgress, useWorkflowStore } from '../../../stores/workflowStore';
 import { useNotificationStore } from '../../../stores/notificationStore';
 import { useAuthStore } from '../../../stores/authStore';
 import * as mockDataEngine from '../../../engines/mockDataEngine';
@@ -103,12 +103,19 @@ export function useWizardDraftActions({
       }
     };
 
+  // The saved Draft Order and its Draft Orders task, removed together: an abandoned or a submitted journey leaves neither behind.
+  const discardSavedDraft = async (orderId: string) => {
+    const tasks = await mockDataEngine.list<{ taskId: string; relatedOrderId?: string }>('tasks');
+    for (const t of tasks.filter((x) => x.relatedOrderId === orderId)) await entity().removeRecord('tasks', 'taskId', t.taskId);
+    await entity().removeRecord('orders', 'orderId', orderId);
+  };
+
   const abandonOrder = once(async () => {
     if (!activityComments.trim()) return;
     await recordActivity('abandoned', draftOrderId, activityComments);
     useCustomerContext.getState().endJourney(wizardId);
     setActivityComments('');
-    if (draftOrderId) await entity().removeRecord('orders', 'orderId', draftOrderId);
+    if (draftOrderId) await discardSavedDraft(draftOrderId);
     clearDraft(wizardId);
     setAbandonOpen(false);
     onAbandon?.();
@@ -128,13 +135,15 @@ export function useWizardDraftActions({
   const persistDraft = async (): Promise<string | undefined> => {
     const activeKey = activeSteps[currentIndex]?.key;
     if (!activeKey) return undefined;
-    if (draftOrderId) {
-      await entity().updateRecord('orders', 'orderId', draftOrderId, {
+    // The order this journey already has, read fresh: a page save still running in the background may have created it since this render.
+    const savedId = useWorkflowStore.getState().getDraft(wizardId).draftOrderId ?? draftOrderId;
+    if (savedId) {
+      await entity().updateRecord('orders', 'orderId', savedId, {
         draftStepKey: activeKey,
         draftValues: values,
       });
       // The Draft Orders list shows when the draft last changed.
-      const task = (await mockDataEngine.list<{ taskId: string; relatedOrderId?: string }>('tasks')).find((t) => t.relatedOrderId === draftOrderId);
+      const task = (await mockDataEngine.list<{ taskId: string; relatedOrderId?: string }>('tasks')).find((t) => t.relatedOrderId === savedId);
       if (task) await entity().updateRecord('tasks', 'taskId', task.taskId, { updatedAt: new Date().toISOString() });
     } else {
       const newOrderId = `ORD-${Date.now().toString().slice(-6)}`;
@@ -164,7 +173,7 @@ export function useWizardDraftActions({
       });
       return newOrderId;
     }
-    return draftOrderId;
+    return savedId;
   };
 
   // `stay` saves without sending the agent anywhere: the caller is already on its way somewhere else (the leave-journey
@@ -183,7 +192,7 @@ export function useWizardDraftActions({
   const abandonOnLeave = once(async () => {
     await recordActivity('abandoned', draftOrderId, 'Journey abandoned when the agent left it.');
     useCustomerContext.getState().endJourney(wizardId);
-    if (draftOrderId) await entity().removeRecord('orders', 'orderId', draftOrderId);
+    if (draftOrderId) await discardSavedDraft(draftOrderId);
     clearDraft(wizardId);
   });
 
@@ -197,6 +206,23 @@ export function useWizardDraftActions({
     clearDraft(wizardId);
     useNotificationStore.getState().pushToast('success', 'Draft saved', { key: `draft-saved-${wizardId}`, detail: 'This order can be resumed from Draft Orders.' });
   });
+
+  // Page-level saving: Continue saves everything entered on the page being left - the Draft Order (created on the first save, then updated) -
+  // before the journey moves on, so a page that is done is a page that is saved. Quiet: no toast, no activity, the journey carries on.
+  // Only once there is something worth keeping (the customer is identified and nothing hard-stops the order: the step's canSaveDraft).
+  const savingPage = useRef(false);
+  const savePage = async (): Promise<void> => {
+    if (isMirror || savingPage.current) return;
+    const step = activeSteps[currentIndex];
+    if (!step || (step.canSaveDraft && !step.canSaveDraft(values)) || !draftHasProgress(useWorkflowStore.getState().getDraft(wizardId))) return;
+    savingPage.current = true;
+    try {
+      const id = await persistDraft();
+      if (id && !useWorkflowStore.getState().getDraft(wizardId).draftOrderId) useWorkflowStore.getState().setDraftOrderId(wizardId, id);
+    } finally {
+      savingPage.current = false;
+    }
+  };
 
   const requestAbandon = () => {
     setAbandonNoKeep(false);
@@ -217,5 +243,7 @@ export function useWizardDraftActions({
     saveDraft,
     requestAbandon,
     abandonOnLeave,
+    savePage,
+    discardSavedDraft,
   };
 }

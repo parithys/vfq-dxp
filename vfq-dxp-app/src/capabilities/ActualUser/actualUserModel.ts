@@ -1,6 +1,7 @@
 import type { GuidedContactValue } from '../../components/patterns/guidedContactModel';
 import { isValidEmail, isValidAltPhone } from '../../components/patterns/guidedContactModel';
 import { ageOn, isIdExpired, MINIMUM_AGE } from '../../engines/eligibilityEngine';
+import { toLocalMsisdn } from '../../components/domain/msisdnPickerModel';
 
 /**
  * ACTUAL USER - who will really use the line when it is not the customer who owns it (a parent buys, the daughter uses the SIM).
@@ -66,7 +67,7 @@ export function supplementaryRows(v: ActualUserValue | undefined): { label: stri
     { label: 'Nationality', value: i.moiResult?.nationality ?? '-' },
     { label: 'Date of Birth', value: i.moiResult?.dob ?? '-' },
     { label: 'Email', value: i.email ?? '-' },
-    ...(i.altPhone ? [{ label: 'Work Number', value: i.altPhone }] : []),
+    ...(i.altPhone ? [{ label: 'Work Number', value: toLocalMsisdn(i.altPhone) }] : []),
   ];
 }
 

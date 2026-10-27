@@ -69,6 +69,7 @@ export function useJourneyCustomerLock({
         journey: flow === 'existing' ? 'New Connection - Existing Customer' : 'New Connection - New Customer',
         customerName: draftContact.moiResult.name,
         idNumber: draftContact.idNumber,
+        idType: draftContact.idType,
         customerId: draftCustomerId,
         startedAt: new Date().toISOString(),
         taskId: newTaskId(),
@@ -77,7 +78,7 @@ export function useJourneyCustomerLock({
     } else if (store.journey?.wizardId === WIZARD_ID && !store.journey.finalOrder) {
       store.endJourney(WIZARD_ID); // nothing identified in this draft (e.g. started fresh): no stale hold
     }
-  }, [isMirrorWindow, heldByAnotherJourney, releaseStale, active, draftContact?.moiResult, draftContact?.idNumber, draftContact?.moiResult?.name, draftCustomerId, WIZARD_ID, flow, location.pathname, navigate]);
+  }, [isMirrorWindow, heldByAnotherJourney, releaseStale, active, draftContact?.moiResult, draftContact?.idNumber, draftContact?.idType, draftContact?.moiResult?.name, draftCustomerId, WIZARD_ID, flow, location.pathname, navigate]);
   // The held customer's segment, once their record is known: from the customer being viewed when it is the
   // same person, else from their record.
   const heldCustomerId = active?.wizardId === WIZARD_ID ? active.customerId : undefined;

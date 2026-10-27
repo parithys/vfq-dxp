@@ -53,6 +53,9 @@ export interface ZoneMetrics {
   /** Orders waiting on the signed-in role specifically; undefined when the role has no approval rights (the card stays the shared total). */
   ordersAwaitingMyDecision: number | undefined;
   totalLeads: number;
+  /** The signed-in agent's own: orders they submitted (drafts are counted as Drafts, not here) and leads they own. */
+  myOrders: number;
+  myLeads: number;
   simSwapsPending: number;
   customersOnFile: number;
   bulkJobsProcessed: number;
@@ -121,6 +124,8 @@ export function useZoneMetrics(scopeId: string): ZoneMetrics {
       ? ordersAwaitingDecisionBy(get<{ orderId: string; orderType: string; status: string; approverRole?: string; assignedApproverId?: string | null }>('orders'), { personaId, jobTitle: currentJobTitle, userId: currentAgentId }).length
       : undefined,
     totalLeads: get('leads').length,
+    myOrders: get<{ createdBy?: string; status: string }>('orders').filter((o) => o.createdBy === currentAgentId && o.status !== 'Draft').length,
+    myLeads: get<{ ownerId?: string | null }>('leads').filter((l) => l.ownerId === currentAgentId).length,
     simSwapsPending: get<SimSwapOrder>('sim-swap-orders').filter((s) => isSimSwapAwaitingDecision(s.status)).length,
     customersOnFile: get('customers').length,
     bulkJobsProcessed: get<BulkJob>('bulk-activation-orders')
