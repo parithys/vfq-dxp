@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Icon } from '../primitives/Icon';
+import { SelectedTick } from '../primitives/offerCardParts';
 import { Button } from '../primitives/Button';
 import { Checkbox } from '../primitives/Checkbox';
 import { SignatureCapture } from './SignatureCapture';
@@ -14,7 +15,7 @@ import type { TncLegalFacts } from './checkoutSummaryModel';
 import { buildTncBullets } from './cafTermsModel';
 import type { TncBulletTemplate } from './cafTermsModel';
 import { FullTerms } from './CafTerms';
-import { CHECK_ICON, CAF_TYPES, detectCafType } from './cafTypes';
+import { CAF_TYPES, detectCafType } from './cafTypes';
 import type { CafType } from './cafTypes';
 
 
@@ -487,11 +488,7 @@ export function CafSignatureCapture({
                   selected ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] shadow-[var(--shadow-selected-ring)] text-[var(--field-card-selected)]' : 'border-[var(--field-card-border)] bg-bg text-fg enabled:hover:border-[var(--field-card-hover-border)] enabled:hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]'
                 }`}
               >
-                {selected && (
-                  <span className="absolute top-2 right-2 w-4 h-4 rounded-[var(--radius-pill)] bg-[var(--field-card-selected)] text-on-dark flex items-center justify-center">
-                    <Icon path={CHECK_ICON} className="w-2.5 h-2.5" />
-                  </span>
-                )}
+                {selected && <SelectedTick />}
                 <Icon path={t.icon} className="w-6 h-6" />
                 <span className="text-[length:var(--fs-caption)] font-medium">{t.label}</span>
               </button>

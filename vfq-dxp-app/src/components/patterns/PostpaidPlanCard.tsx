@@ -1,7 +1,6 @@
 import { Icon } from '../primitives/Icon';
-import { Button } from '../primitives/Button';
 import { ConnectionTypeTag } from '../primitives/ConnectionTypeTag';
-import { CARD_HIGHLIGHT, CARD_IDLE, CARD_SELECTED, ICON_CALL, ICON_CARD, ICON_DATA, ICON_GIFT, STAR_ICON, planFeatureRows } from '../primitives/offerCardParts';
+import { CARD_IDLE, CARD_SELECTED, SelectedTick, ICON_CALL, ICON_CARD, ICON_DATA, ICON_GIFT, STAR_ICON, planFeatureRows } from '../primitives/offerCardParts';
 import { PLAN_CLASS_TAG, isPlanClass, type PostpaidPlan } from './postpaidPlanModel';
 import { ServiceTypeTag } from '../primitives/ServiceTypeTag';
 import { formatQar, formatAmount } from '../../lib/format';
@@ -17,7 +16,7 @@ interface PostpaidPlanCardProps {
 
 export function PostpaidPlanCard({ p, selectedProductId, billLimit, onSelectProduct, onDeselectProduct, setDetailPlan }: PostpaidPlanCardProps) {
       const selected = selectedProductId === p.productId;
-      // Card per plan: name, price, bill limit, one Select button.
+      // Card per plan: name, price, bill limit, no button: the whole card selects.
       // The full allowance table, benefits and contract term live in
       // the details drawer ("View details", which stops propagation
       // so opening it never selects the plan), so the cards stay
@@ -43,9 +42,10 @@ export function PostpaidPlanCard({ p, selectedProductId, billLimit, onSelectProd
         }
       }}
       className={`relative flex flex-col gap-3 rounded-[var(--radius-card)] border p-5 cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
-        selected ? CARD_SELECTED : p.popular ? CARD_HIGHLIGHT : CARD_IDLE
+        selected ? CARD_SELECTED : CARD_IDLE
       }`}
     >
+      {selected && <SelectedTick />}
       {/* Same card as Recommended offers: the flag (hidden, not removed, when absent so
           titles line up) on the left, the service on the right. */}
       <div className="flex items-center justify-between gap-3">
@@ -98,7 +98,7 @@ export function PostpaidPlanCard({ p, selectedProductId, billLimit, onSelectProd
           </p>
         )}
       </div>
-      <div className="flex items-center justify-between gap-3 pt-1">
+      <div className="flex items-center pt-1">
         <button
           type="button"
           onClick={(e) => {
@@ -111,10 +111,6 @@ export function PostpaidPlanCard({ p, selectedProductId, billLimit, onSelectProd
           View details
           <Icon path="M9 18l6-6-6-6" className="w-4 h-4" />
         </button>
-        {/* Presentational: the card is the control, so this must not take focus or fire a second toggle. */}
-        <Button variant={selected ? 'primary' : 'secondary'} tabIndex={-1} aria-hidden className="pointer-events-none">
-          {selected ? 'Selected' : 'Select plan'}
-        </Button>
       </div>
     </div>
   );

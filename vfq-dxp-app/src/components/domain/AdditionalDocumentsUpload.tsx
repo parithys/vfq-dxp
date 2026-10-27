@@ -31,16 +31,47 @@ function fileTypeOf(fileName: string | undefined, dataUrl: string | undefined): 
   return 'DOC';
 }
 
+/** Size in bytes of a data URL's content, or undefined when it cannot be read. */
+function byteSizeOf(dataUrl: string | undefined): number | undefined {
+  const m = dataUrl ? /^data:[^,]*?(;base64)?,(.*)$/s.exec(dataUrl) : null;
+  if (!m) return undefined;
+  if (m[1]) return Math.floor((m[2].length * 3) / 4) - (m[2].endsWith('==') ? 2 : m[2].endsWith('=') ? 1 : 0);
+  try {
+    return new TextEncoder().encode(decodeURIComponent(m[2])).length;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Pages: a PDF's own page objects; an image is one page; anything else is unknown (shown without). */
+function pageCountOf(type: FileType, dataUrl: string | undefined): number | undefined {
+  if (type === 'PNG' || type === 'JPG' || type === 'IMG') return 1;
+  if (type !== 'PDF' || !dataUrl) return undefined;
+  const m = /;base64,(.*)$/s.exec(dataUrl);
+  if (!m) return undefined;
+  try {
+    const n = (atob(m[1]).match(/\/Type\s*\/Page(?![s\w])/g) ?? []).length;
+    return n > 0 ? n : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** "1.2 MB · 1 page", from what is known of the file: size, then pages. */
+function factsOf(sizeBytes: number | undefined, pages: number | undefined): string {
+  return [sizeBytes !== undefined ? formatSize(sizeBytes) : undefined, pages !== undefined ? `${pages} page${pages === 1 ? '' : 's'}` : undefined].filter(Boolean).join(' · ');
+}
+
 /** A page with a folded corner and the file type on it - PDFs in the brand red, images in blue, anything else neutral. */
 function FileTypeIcon({ type }: { type: FileType }) {
   const tone = type === 'PDF' ? 'text-[var(--tag-primary-fg)]' : type === 'DOC' ? 'text-muted' : 'text-[var(--tag-blue-fg)]';
   return (
-    <span aria-hidden className={`relative flex h-12 w-10 shrink-0 items-end justify-center pb-2 ${tone}`}>
-      <svg viewBox="0 0 40 48" fill="none" className="absolute inset-0 h-full w-full">
-        <path d="M2 6a4 4 0 0 1 4-4h20l12 12v28a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4z" className="fill-[var(--bg)] stroke-[var(--border-soft)]" strokeWidth="1.5" />
-        <path d="M26 2v8a4 4 0 0 0 4 4h8" className="fill-[var(--surface)] stroke-[var(--border-soft)]" strokeWidth="1.5" />
+    <span aria-hidden className={`relative flex h-14 w-11 shrink-0 items-end justify-center pb-3 ${tone}`}>
+      <svg viewBox="0 0 44 56" fill="none" className="absolute inset-0 h-full w-full">
+        <path d="M6 1.5h22l14.5 14.5V50a4.5 4.5 0 0 1-4.5 4.5H6A4.5 4.5 0 0 1 1.5 50V6A4.5 4.5 0 0 1 6 1.5z" className="fill-[var(--bg)] stroke-[var(--field-card-border)]" strokeWidth="1.5" strokeLinejoin="round" />
+        <path d="M28 1.5V12a4 4 0 0 0 4 4h10.5" className="fill-[var(--surface)] stroke-[var(--field-card-border)]" strokeWidth="1.5" strokeLinejoin="round" />
       </svg>
-      <span className="relative font-bold text-[length:var(--fs-micro)] leading-none">{type}</span>
+      <span className="relative font-bold text-[length:var(--fs-caption)] leading-none tracking-wide">{type}</span>
     </span>
   );
 }
@@ -257,14 +288,13 @@ export function AdditionalDocumentsUpload({
                     // A capture the reader kept no image of (the demo scanner) opens as a labelled specimen, never as someone's document.
                     const dataUrl = held ?? (d.source.endsWith('Scanned') ? scanSpecimen(d.label) : undefined);
                     const name = d.fileName ?? fileNameOf(d);
-                                        return (
+                    return (
                       <li key={d.id} className="flex items-center gap-3 rounded-[var(--radius-card)] border border-border-soft bg-surface px-3 py-3">
                         <FileTypeIcon type={fileTypeOf(d.fileName, dataUrl)} />
                         <span className="min-w-0 flex-1">
                           <span className="block text-fg font-semibold text-[length:var(--fs-body)] truncate">{g.items.length > 1 || g.kind !== d.label ? sideOf(d.label) : d.label}</span>
-                          <span className="block text-muted text-[length:var(--fs-caption)] truncate">
-                            {[d.fileName, d.sizeBytes !== undefined ? formatSize(d.sizeBytes) : undefined].filter(Boolean).join(' · ')}
-                          </span>
+                          <span className="block text-muted text-[length:var(--fs-caption)] truncate">{name}</span>
+                          <span className="block text-muted text-[length:var(--fs-caption)] truncate">{factsOf(d.sizeBytes ?? byteSizeOf(dataUrl), pageCountOf(fileTypeOf(d.fileName, dataUrl), dataUrl))}</span>
                         </span>
                         <Tooltip content={dataUrl ? 'View' : 'No copy of this document is held'} placement="bottom">
                           <IconButton bordered icon={EYE} label={`View ${d.label}`} className="rounded-[var(--radius-pill)] border-border-soft! text-fg-2! enabled:hover:bg-surface" disabled={!dataUrl} onClick={() => dataUrl && openDocument(dataUrl)} />

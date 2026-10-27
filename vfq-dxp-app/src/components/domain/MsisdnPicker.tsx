@@ -7,7 +7,7 @@ import { Button } from '../primitives/Button';
 import { Badge } from '../primitives/Badge';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { Icon } from '../primitives/Icon';
-import { CARD_IDLE, CARD_SELECTED, SelectedCardTexture } from '../primitives/offerCardParts';
+import { CARD_IDLE, CARD_SELECTED, SelectedTick, SelectedCardTexture } from '../primitives/offerCardParts';
 import { Select } from '../primitives/Select';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { usePersonaStore } from '../../stores/personaStore';
@@ -614,20 +614,13 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
                     toggle();
                   }
                 }}
-                className={`relative isolate overflow-hidden flex flex-col gap-3 rounded-[var(--radius-card)] border px-6 py-5 cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
+                className={`relative isolate flex flex-col gap-3 rounded-[var(--radius-card)] border px-6 py-5 cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
                   isSelected ? CARD_SELECTED : CARD_IDLE
                 }`}
               >
                 {isSelected && <SelectedCardTexture />}
-                {/* The state mark: a ring when free to pick, a red tick when selected (also exposed as aria-pressed). */}
-                <span
-                  aria-hidden="true"
-                  className={`absolute right-5 top-5 inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-pill)] border ${
-                    isSelected ? 'border-accent bg-accent text-on-dark' : 'border-[var(--field-border)] bg-bg'
-                  }`}
-                >
-                  {isSelected && <Icon path="M20 6L9 17l-5-5" className="w-4 h-4" strokeWidth={3} />}
-                </span>
+                {/* The state mark: the shared corner tick when selected (also exposed as aria-pressed). */}
+                {isSelected && <SelectedTick />}
                 <p className="font-bold text-[length:var(--fs-h4)] text-fg leading-tight pr-10">{toLocalMsisdn(n.msisdn)}</p>
                 {/* The facts sit side by side while the card has room for two and stack when it does not (a narrow panel, a phone), never overflow. */}
                 <div className="relative grid grid-cols-[repeat(auto-fit,minmax(7.5rem,1fr))] gap-x-6 gap-y-4">
@@ -662,11 +655,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
               {/* Selected is shown by more than the fill: a red border and ring (CARD_SELECTED) and a tick
                   badge. Nothing marks an unselected card. The state is exposed to assistive tech through
                   aria-pressed on the card. */}
-              {isSelected && (
-                <span aria-hidden="true" className="absolute -right-2 -top-2 inline-flex h-5 w-5 items-center justify-center rounded-[var(--radius-pill)] bg-accent text-on-dark ring-2 ring-bg">
-                  <Icon path="M20 6L9 17l-5-5" className="w-3 h-3" strokeWidth={3} />
-                </span>
-              )}
+              {isSelected && <SelectedTick />}
               {/* On the selected surface the green FREE pill text is darkened (#1f6b2c, about 6:1) to keep 4.5:1. */}
               <div className={`relative flex flex-wrap items-center justify-between gap-x-3 gap-y-1 ${isSelected ? '[&_.text-success]:text-[var(--tint-green-fg)]' : ''}`}>
                 <p className="font-bold text-[length:var(--fs-h5,20px)] text-fg whitespace-nowrap">{toLocalMsisdn(n.msisdn)}</p>

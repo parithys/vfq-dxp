@@ -1,4 +1,4 @@
-import { CARD_SELECTED } from '../primitives/offerCardParts';
+import { CARD_SELECTED, SelectedTick } from '../primitives/offerCardParts';
 import { BARCODE_DEMO_NUMBERS } from '../../data/synthetic/idScanSamples';
 import { ID_TYPES, idTypeLabel, type IdType } from '../../data/idTypes';
 import type { ReactNode, Ref } from 'react';
@@ -84,7 +84,6 @@ interface QidNumberFieldProps {
    */
   statusDetail?: ReactNode;
 }
-const CHECK = 'M20 6L9 17l-5-5';
 const SEARCH_ICON = 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3';
 /** A row of bars of varying width, standing in for a 1D barcode symbol at the
  * small size this renders at (the field's trailing icon, ~16px). */
@@ -172,11 +171,7 @@ export function QidTypeSelector({
                     : 'border-[var(--field-card-border)] bg-bg text-fg enabled:hover:border-[var(--field-card-hover-border)] enabled:hover:ring-1 hover:ring-inset hover:ring-[var(--field-card-hover-border)] hover:bg-[var(--field-card-hover-bg)]'
               }`}
             >
-              {selected && (
-                <span className="absolute top-2 right-2 w-4 h-4 rounded-[var(--radius-pill)] bg-[var(--field-card-selected)] text-on-dark flex items-center justify-center">
-                  <Icon path={CHECK} className="w-2.5 h-2.5" />
-                </span>
-              )}
+              {selected && <SelectedTick />}
               {/* White tile behind the icon when selected. Padding is always
                   present so the card does not change size between states. */}
               <span className={`inline-flex p-2 rounded-[var(--radius-card)] ${selected && !isUnavailable ? 'bg-[var(--field-card-selected)] text-on-dark' : 'bg-[var(--icon-tile-bg)] text-[var(--icon-tile-fg)]'}`}>

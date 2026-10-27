@@ -128,9 +128,8 @@ test('SIM_02: a Pre-Paired SIM step needs a validated Pre-Paired SIM and its MSI
   const scanned = { simType: 'Physical', simValid: true, prePaired: true, prePairedMsisdn: '+97433990001' };
   assert.equal(step.isValid({ prePaired: true, simType: scanned }), false, 'the MSISDN has not reached the journey yet');
   assert.equal(step.isValid({ prePaired: true, msisdn: '+97433990001', simType: scanned }), true);
-  assert.equal(step.autoAdvanceWhen({ prePaired: true, msisdn: '+97433990001', simType: scanned }), false);
-  // An ordinary scanned SIM still auto-advances for the same journey when the SIM is not pre-paired.
-  assert.equal(step.autoAdvanceWhen({ simType: simOk }), true);
+  // No SIM step moves on by itself any more: the SIM Type and ICCID are on screen for the agent to read before Continue.
+  assert.equal(step.autoAdvanceWhen, undefined);
 });
 
 test('Pre-Paired SIMs are in their own stock, with an MSISDN and Available', async () => {

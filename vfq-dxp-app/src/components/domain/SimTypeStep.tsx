@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '../primitives/Button';
 import { Badge } from '../primitives/Badge';
 import { SimSerialScanner } from './SimSerialScanner';
+import * as mockDataEngine from '../../engines/mockDataEngine';
 import type { DeviceType } from '../../lib/deviceType';
 
 export type SimType = 'Physical' | 'eSIM';
@@ -120,8 +121,11 @@ export function SimTypeStep({ value, customerEmail, onChange, device, prePaired,
   const generateEsim = async () => {
     setIssuing(true);
     await new Promise((r) => setTimeout(r, 500));
+    // The eSIM profile takes its ICCID from the eSIM stock (a stocked, unassigned "Printed eSIM"); with none in stock it stays unknown, shown as "-".
+    const stock = await mockDataEngine.list<{ iccid: string; type?: string; stockStatus: string; prePaired?: boolean }>('sims').catch(() => []);
+    const profile = stock.find((x) => x.type === 'Printed eSIM' && x.stockStatus === 'Available' && !x.prePaired);
     setIssuing(false);
-    onChange({ ...value, simType: 'eSIM', esimIssued: true, esimActivationCode: generateActivationCode() });
+    onChange({ ...value, simType: 'eSIM', esimIssued: true, esimActivationCode: generateActivationCode(), simIccid: profile?.iccid, simSerial: undefined, simValid: undefined });
   };
 
   return (
@@ -170,12 +174,18 @@ export function SimTypeStep({ value, customerEmail, onChange, device, prePaired,
                 customer before payment. Calling it "issued" four steps early
                 described a handover that has not happened. */}
             <Badge variant="success">eSIM selected</Badge>
+            <dl className="rounded-[var(--radius-card)] border border-success bg-tone-success p-3 space-y-1 text-[length:var(--fs-caption)]">
+              <div className="flex justify-between gap-3">
+                <dt className="text-fg">SIM Type</dt>
+                <dd className="text-fg font-medium">eSIM</dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-fg">ICCID</dt>
+                <dd className="text-fg font-medium">{value.simIccid ?? '-'}</dd>
+              </div>
+            </dl>
             <p className="text-fg-2 text-[length:var(--fs-body)]">
-              An eSIM activation QR code will be generated and sent to {customerEmail ?? 'the customer'}.
-            </p>
-            <p className="text-muted text-[length:var(--fs-caption)]">
-              The eSIM QR code will be available only after successful payment and order submission - it is never
-              shown active before then.
+              The eSIM activation QR code will be generated only after successful payment and order {approvalRequired ? 'approval' : 'submission'}, and will then be sent to {customerEmail ?? 'the customer'}.
             </p>
           </>
         ) : (

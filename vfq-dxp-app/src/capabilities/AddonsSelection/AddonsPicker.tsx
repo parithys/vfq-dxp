@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Icon } from '../../components/primitives/Icon';
 import { TabStrip } from '../../components/primitives/TabStrip';
 import { SegmentedTabs } from '../../components/primitives/SegmentedTabs';
-import { CARD_IDLE, CARD_SELECTED, SelectedCardTexture } from '../../components/primitives/offerCardParts';
+import { CARD_IDLE, CARD_SELECTED, SelectedTick, SelectedCardTexture } from '../../components/primitives/offerCardParts';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { isAddonEligible, type AddonEligibilityContext, type AddonEligibilityRule } from '../../engines/addonEligibility';
 import { ADDON_CATEGORIES, ADDON_PRICING_FILTERS, DEFAULT_ADDON_PRICING, addonsFor, selectedPerCategory, type AddonCategory, type AddonPricing, type AddonPricingModel, addonPriceDisplay } from '../../engines/addonCategories';
@@ -208,10 +208,11 @@ export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityCon
                     toggle(a.productId);
                   }
                 }}
-                className={`flex items-center gap-4 rounded-[var(--radius-card)] border p-4 cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
+                className={`relative flex items-center gap-4 rounded-[var(--radius-card)] border p-4 cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
                   selected ? CARD_SELECTED : CARD_IDLE
                 }`}
               >
+                {selected && <SelectedTick />}
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center card text-[var(--brand-plum)] shadow-[var(--shadow-icon-tile)]">
                   <Icon path={PHONE_ICON} className="w-5 h-5" />
                 </span>
@@ -261,11 +262,7 @@ export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityCon
               }`}
             >
               {selected && <SelectedCardTexture />}
-              {selected && (
-                <span aria-hidden="true" className="absolute -right-2 -top-2 inline-flex h-6 w-6 items-center justify-center rounded-[var(--radius-pill)] bg-accent text-on-dark ring-2 ring-bg">
-                  <Icon path="M20 6L9 17l-5-5" className="w-3.5 h-3.5" strokeWidth={3} />
-                </span>
-              )}
+              {selected && <SelectedTick />}
               <p className="text-fg font-bold text-[length:var(--fs-h5)] leading-snug">{a.name}</p>
               {a.description && <p className="text-fg-2 text-[length:var(--fs-caption)]">{a.description}</p>}
               <p className="text-accent mt-auto">

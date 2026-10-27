@@ -88,22 +88,9 @@ export function buildCafSummaryRows({
     },
     { label: 'Add-Ons', value: addons.length ? addons.map((a) => `${a.name} (${formatQar(a.mrcQAR)}/mo)`).join(', ') : 'None' },
     { label: 'SIM Type', value: simType?.simType ?? '-' },
-    {
-      label: 'SIM Number / ICCID',
-      value:
-        simType?.simType === 'Physical'
-          ? simSerial
-            ? `${simSerial}${simIccid ? ` (ICCID: ${simIccid})` : ''}`
-            : '-'
-          : // The eSIM's activation code is deliberately NOT read back here -
-            // it is the same string that generates the QR, and this journey's
-            // own rule is that nothing eSIM-shaped is shown active before
-            // payment (SimTypeStep's own note). Confirming issuance without
-            // printing the code keeps that true on this panel too.
-            simType?.simType === 'eSIM'
-            ? 'eSIM - active after payment and order submission'
-            : '-',
-    },
+    ...(simType?.simType === 'Physical' ? [{ label: 'SIM Serial Number', value: simSerial ?? '-' }] : []),
+    // The eSIM's activation code is deliberately NOT read back here - it is the string that generates the QR, and nothing eSIM-shaped is shown active before payment.
+    { label: 'ICCID', value: simIccid ?? '-' },
     { label: 'Plan Lock-In', value: plan.commitmentMonths ? `${plan.commitmentMonths} months` : 'No lock-in' },
     ...(isStarNumber
       ? [

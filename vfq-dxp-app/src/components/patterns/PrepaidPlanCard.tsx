@@ -1,7 +1,7 @@
 import { Icon } from '../primitives/Icon';
 import { Button } from '../primitives/Button';
 import { ConnectionTypeTag } from '../primitives/ConnectionTypeTag';
-import { CARD_HIGHLIGHT, CARD_IDLE, CARD_SELECTED, ICON_CALL, ICON_CARD, ICON_DATA, STAR_ICON } from '../primitives/offerCardParts';
+import { CARD_HIGHLIGHT, CARD_IDLE, CARD_SELECTED, SelectedTick, ICON_CALL, ICON_CARD, ICON_DATA, STAR_ICON } from '../primitives/offerCardParts';
 import type { PrepaidPlan } from './prepaidPlanModel';
 import { formatQar, formatAmount } from '../../lib/format';
 
@@ -44,6 +44,7 @@ export function PrepaidPlanCard({ p, selectedProductId, onSelectProduct, onDesel
         selected ? CARD_SELECTED : p.popular ? CARD_HIGHLIGHT : CARD_IDLE
       }`}
     >
+      {selected && <SelectedTick />}
       <div className="flex items-center justify-between gap-3">
         <span
           className={`inline-flex items-center gap-1 rounded-[var(--radius-pill)] bg-accent text-on-dark px-2.5 py-0.5 text-[length:var(--fs-tag)] font-medium ${p.popular ? '' : 'invisible'}`}

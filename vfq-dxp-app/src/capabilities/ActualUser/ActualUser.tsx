@@ -1,5 +1,5 @@
 import { CustomerIdentification } from '../CustomerIdentification';
-import { CARD_SELECTED, CARD_IDLE } from '../../components/primitives/offerCardParts';
+import { CARD_SELECTED, SelectedTick, CARD_IDLE } from '../../components/primitives/offerCardParts';
 import { Icon } from '../../components/primitives/Icon';
 import { CARD_SELECTABLE } from '../stepStyles';
 import type { GuidedContactValue } from '../../components/patterns/guidedContactModel';
@@ -18,7 +18,6 @@ import type { ActualUserValue } from './actualUserModel';
  */
 const PERSON = 'M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z';
 const PEOPLE = 'M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM21 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8';
-const CHECK = 'M5 12.5l4.5 4.5L19 7.5';
 
 const OPTIONS: { key: 'primary' | 'other'; label: string; hint: string; icon: string }[] = [
   { key: 'primary', label: 'Same as Primary Customer', hint: 'The customer will use the line themself', icon: PERSON },
@@ -63,6 +62,7 @@ export function ActualUser({
               }}
               className={`${CARD_SELECTABLE} cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${checked ? CARD_SELECTED : CARD_IDLE}`}
             >
+              {checked && <SelectedTick />}
               <div className="flex items-center gap-3">
                 <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-button)] transition-colors ${checked ? 'bg-accent text-accent-on' : 'bg-surface-warm text-accent'}`}>
                   <Icon path={o.icon} className="w-5 h-5" />
@@ -70,9 +70,6 @@ export function ActualUser({
                 <span className="min-w-0 flex-1">
                   <span className="block text-fg font-medium text-[length:var(--fs-body)]">{o.label}</span>
                   <span className="block text-fg-2 text-[length:var(--fs-caption)]">{o.hint}</span>
-                </span>
-                <span aria-hidden="true" className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-[var(--radius-circle)] border ${checked ? 'border-transparent bg-accent text-accent-on' : 'border-[var(--field-card-border)] bg-bg'}`}>
-                  {checked && <Icon path={CHECK} className="w-3 h-3" strokeWidth={3} />}
                 </span>
               </div>
             </div>

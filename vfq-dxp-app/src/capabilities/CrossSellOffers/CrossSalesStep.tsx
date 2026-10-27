@@ -3,7 +3,7 @@ import { Button } from '../../components/primitives/Button';
 import { Icon } from '../../components/primitives/Icon';
 import { OfferDetailsDrawer } from './OfferDetailsDrawer';
 import type { OfferProduct } from '../../components/primitives/offerCardParts';
-import { CARD_HIGHLIGHT, CARD_IDLE, CARD_SELECTED, STAR_ICON } from '../../components/primitives/offerCardParts';
+import { CARD_HIGHLIGHT, CARD_IDLE, CARD_SELECTED, SelectedTick, STAR_ICON } from '../../components/primitives/offerCardParts';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { ServiceTypeTag } from '../../components/primitives/ServiceTypeTag';
 import { journeyLabel, continuesHere, offerTypeOf, hasDestination, offerTypesFor, isHomeJourney, isPrepaidJourney } from './serviceJourneys';
@@ -162,6 +162,7 @@ export function CrossSalesStep({
                 selected ? CARD_SELECTED : recommended ? CARD_HIGHLIGHT : CARD_IDLE
               }`}
             >
+              {selected && <SelectedTick />}
               {/* Top row: the Recommended flag on the left, the journey tag pinned right. */}
               <div className="flex min-h-[25px] items-center gap-1.5">
                 {recommended && (

@@ -6,6 +6,9 @@ import { BillLimitEditor } from '../domain/BillLimitEditor';
 import { PlanSearchBox } from './PlanSearchBox';
 import type { AddonPricing } from '../../engines/addonCategories';
 import { PlanTabStrip } from './PlanTabStrip';
+import { Select } from '../primitives/Select';
+import { PLAN_TYPE_FILTERS } from './postpaidPlanModel';
+import type { PlanTypeFilter } from './postpaidPlanModel';
 import { PlanGroupPanel } from './PlanGroupPanel';
 import { PostpaidAddonsPanel } from './PostpaidAddonsPanel';
 import { PostpaidDiscountsPanel } from './PostpaidDiscountsPanel';
@@ -97,6 +100,8 @@ export function PostpaidPlanAddonsStep({
     plansLoaded,
     activeTab,
     setActiveTab,
+    planTypeFilter,
+    setPlanTypeFilter,
     planGroupTabs,
     groupPlans,
     suggestions,
@@ -105,7 +110,6 @@ export function PostpaidPlanAddonsStep({
     selectionSource,
     bundledItems,
     selectedAddons,
-    resetNotice,
     discountsState,
     retryDiscounts,
     selectedDiscount,
@@ -158,39 +162,44 @@ export function PostpaidPlanAddonsStep({
               setActiveTab={setActiveTab}
             />
 
-            {/* Search by plan NAME or PRICE (2026-09-27), under the tabs and scoped to whichever plan-group tab is
-                active: it narrows that tab's cards, and the type-ahead dropdown added 2026-09-28 suggests that tab's
-                plans only (closest match, one click to select). */}
-            <PlanSearchBox
-                searchRef={searchRef}
-                searchOpen={searchOpen}
-                setSearchOpen={setSearchOpen}
-                planSearch={planSearch}
-                setPlanSearch={setPlanSearch}
-                suggestions={suggestions}
-                selectedProductId={selectedProductId}
-                onSelectProduct={selectPlan}
-                scopeLabel={planGroupTabs.find((g) => g.key === activeTab)?.label}
-                onPickResult={(plan) => {
-                  // A result is always on the tab being shown: select it, clear the filter and bring its card into view.
-                  selectPlan(plan.productId);
-                  setPlanSearch('');
-                  setSearchOpen(false);
-                  window.setTimeout(() => {
-                    const el = document.getElementById(`plan-card-${plan.productId}`);
-                    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    el?.classList.add('ring-4', 'ring-accent-border');
-                    window.setTimeout(() => el?.classList.remove('ring-4', 'ring-accent-border'), 1800);
-                  }, 80);
-                }}
-              />
-
-            {/* The plan was changed: what was chosen for the previous plan is gone. */}
-            {resetNotice && (
-              <p role="status" className="rounded-[var(--radius-card)] border border-[var(--info-border)] bg-tone-info-soft px-4 py-3 text-[length:var(--fs-body)] text-fg">
-                Add-ons and discounts were reset for the new plan.
-              </p>
-            )}
+            {/* Search by plan NAME or PRICE (2026-09-27), under the tabs and scoped to whichever plan-group tab is active: it narrows that tab's
+                cards, and the type-ahead dropdown suggests that tab's plans only. Beside it, the plan-type filter (All Plans, Voice Plan or
+                Broadband Plan), which starts at All Plans on each tab. */}
+            <div className="flex items-start gap-3">
+              <div className="min-w-0 flex-1">
+                <PlanSearchBox
+                    searchRef={searchRef}
+                    searchOpen={searchOpen}
+                    setSearchOpen={setSearchOpen}
+                    planSearch={planSearch}
+                    setPlanSearch={setPlanSearch}
+                    suggestions={suggestions}
+                    selectedProductId={selectedProductId}
+                    onSelectProduct={selectPlan}
+                    scopeLabel={planGroupTabs.find((g) => g.key === activeTab)?.label}
+                    onPickResult={(plan) => {
+                      // A result is always on the tab being shown: select it, clear the filter and bring its card into view.
+                      selectPlan(plan.productId);
+                      setPlanSearch('');
+                      setSearchOpen(false);
+                      window.setTimeout(() => {
+                        const el = document.getElementById(`plan-card-${plan.productId}`);
+                        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        el?.classList.add('ring-4', 'ring-accent-border');
+                        window.setTimeout(() => el?.classList.remove('ring-4', 'ring-accent-border'), 1800);
+                      }, 80);
+                    }}
+                  />
+              </div>
+              <div className="w-56 shrink-0">
+                <Select
+                  aria-label="Plan Type"
+                  options={PLAN_TYPE_FILTERS.map((f) => ({ value: f.key, label: f.label }))}
+                  value={planTypeFilter}
+                  onChange={(e) => setPlanTypeFilter(e.target.value as PlanTypeFilter)}
+                />
+              </div>
+            </div>
 
             {/* Plan-group panel */}
             {planGroupTabs.some((g) => g.key === activeTab) && (

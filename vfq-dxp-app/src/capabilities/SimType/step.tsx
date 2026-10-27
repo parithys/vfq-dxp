@@ -56,12 +56,6 @@ export function simTypeStep(
       if (s?.simType === 'eSIM') return s.esimIssued === true;
       return false;
     },
-    autoAdvanceWhen: (values) => {
-      const s = values.simType as SimTypeValue | undefined;
-      // A Pre-Paired SIM stays on screen: its SIM and MSISDN details are what the agent confirms (SIM_02).
-      if (opts.prePaired?.(values)) return false;
-      return s?.simType === 'Physical' && s.simValid === true;
-    },
   };
 }
 
