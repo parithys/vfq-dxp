@@ -113,7 +113,10 @@ export function requirementForCondition(condition: string): { id: string; label:
 /** The labels offered in the Document Type list: every configured type that applies here, except those already asked for as a required card. */
 export function documentTypeOptionsFor(ctx: DocumentContext): string[] {
   const required = new Set(requiredDocumentsFor(ctx).map((r) => r.id));
-  return getDocumentTypes().filter((t) => !required.has(t.id) && documentTypeApplies(t, ctx)).map((t) => t.label);
+  const types = getDocumentTypes().filter((t) => !required.has(t.id) && (t.offerAlways !== undefined || documentTypeApplies(t, ctx)));
+  // The always-offered types first, in their set order; then the ones this journey, role and customer make relevant.
+  const always = types.filter((t) => t.offerAlways !== undefined).sort((a, b) => a.offerAlways! - b.offerAlways!);
+  return [...always, ...types.filter((t) => t.offerAlways === undefined)].map((t) => t.label);
 }
 
 interface Scan {

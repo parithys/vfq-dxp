@@ -242,7 +242,7 @@ export function ActivationCompleteScreen({
         }
         handoverPanel={
           order.esimActivationCode ? (
-            <EsimActivationPanel activationCode={order.esimActivationCode} emailSent={emailStatus === 'sent'} />
+            <EsimActivationPanel activationCode={order.esimActivationCode} />
           ) : undefined
         }
         summaryLines={[

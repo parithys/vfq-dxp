@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Icon } from '../primitives/Icon';
 import { SelectedTick } from '../primitives/offerCardParts';
 import { Button } from '../primitives/Button';
@@ -171,6 +171,9 @@ export function CafSignatureCapture({
   requireTermsAgreement = false,
   termsScrollMode,
 }: CafSignatureCaptureProps) {
+  // The latest value: an asynchronous write (a document read, the signed form drawn) must build on what the journey holds now, not on the render that started it.
+  const valueRef = useRef(value);
+  valueRef.current = value;
   // A document type is chosen but its file is not uploaded yet: Continue waits.
   const [documentPending, setDocumentPendingState] = useState(false);
   // A required document is not uploaded yet: Continue waits for it too.
@@ -281,14 +284,14 @@ export function CafSignatureCapture({
           closingHeader={
             signed ? (
               // Signed: the same heading row as the secondary contact's form (the name is on the Signed by line below).
-              <div className="flex items-center justify-between gap-3 text-[length:var(--fs-caption)] text-muted">
+              <div className="text-[length:var(--fs-caption)] text-muted">
                 <h3 className="text-fg font-semibold text-[length:var(--fs-body)]">Key Terms &amp; Conditions: Primary Contact</h3>
-                {customerName && <p className="text-fg font-medium text-right">{customerName}</p>}
+                {customerName && <p className="text-fg font-medium">{customerName}</p>}
               </div>
             ) : (
-              <div className="mt-2 flex items-center justify-between gap-3 border-t border-border-soft pt-4 text-[length:var(--fs-caption)] text-muted">
+              <div className="mt-2 border-t border-border-soft pt-4 text-[length:var(--fs-caption)] text-muted">
                 <h3 className="text-fg font-semibold text-[length:var(--fs-body)]">Terms &amp; Conditions: Primary Contact</h3>
-                {customerName && <p className="text-fg font-medium text-right">{customerName}</p>}
+                {customerName && <p className="text-fg font-medium">{customerName}</p>}
               </div>
             )
           }
@@ -414,7 +417,7 @@ export function CafSignatureCapture({
                         signatureDataUrl: dataUrl,
                       })
                     )
-                    .then((signedCafDataUrl) => onChange({ ...value, signatureDataUrl: dataUrl, signedCafDataUrl }))
+                    .then((signedCafDataUrl) => onChange({ ...valueRef.current, signatureDataUrl: dataUrl, signedCafDataUrl }))
                     .catch(() => undefined);
                 }}
               />
@@ -476,7 +479,7 @@ export function CafSignatureCapture({
           <div className="agent-only">
             <AdditionalDocumentsUpload
               documents={value.additionalDocuments ?? []}
-              onChange={(documents) => onChange({ ...value, additionalDocuments: documents })}
+              onChange={(documents) => onChange({ ...valueRef.current, additionalDocuments: documents })}
               labelOptions={documentLabelOptions}
               whiteBackground={documentsOnWhite}
               maxDocuments={maxAdditionalDocuments}

@@ -2,19 +2,12 @@ import { QRCodeSVG } from 'qrcode.react';
 
 interface EsimActivationPanelProps {
   activationCode: string;
-  /**
-   * Whether the order details and eSIM details were sent to the customer's email. They are sent
-   * automatically when the order is submitted (see ActivationCompleteScreen): to the Billing
-   * Profile address for an existing customer, the NAS address for a new one. There is no manual
-   * send here, and the address itself is not shown.
-   */
-  emailSent: boolean;
 }
 
 // The scannable half of eSIM issuance: QR, the LPA string to key in by hand, and the notice that
 // the details were emailed. Rendered on the activation-complete screen rather than the SIM Type
 // step, because by then the provisioning has happened, so the code shown is one that will work.
-export function EsimActivationPanel({ activationCode, emailSent }: EsimActivationPanelProps) {
+export function EsimActivationPanel({ activationCode }: EsimActivationPanelProps) {
   // One card holding the QR, the code to key in by hand and the email notice; it fills the height of its grid cell so it
   // matches the receipt card beside it.
   return (
@@ -32,11 +25,6 @@ export function EsimActivationPanel({ activationCode, emailSent }: EsimActivatio
           {activationCode}
         </code>
       </div>
-      {emailSent ? null : (
-        <p className="text-[var(--warn-text)] text-[length:var(--fs-caption)] mt-auto">
-          The order details and eSIM details could not be sent: there is no verified email address for this customer.
-        </p>
-      )}
     </div>
   );
 }

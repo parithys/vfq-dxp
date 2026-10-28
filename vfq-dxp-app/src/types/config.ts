@@ -205,6 +205,8 @@ export interface DocumentTypeConfig {
   };
   /** Conditions that make the document required (asked for as its own card). */
   requiredWhen?: string[];
+  /** Always offered in the Document Type list, whatever the journey, role or customer, in this position (1 first); a document required as its own card is not offered twice. */
+  offerAlways?: number;
   reason?: string;
   /** Where the rule comes from; "assumed" ones await business confirmation. */
   basis?: string;

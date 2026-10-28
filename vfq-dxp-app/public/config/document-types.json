@@ -1,8 +1,9 @@
 {
-  "_comment": "Document types for Additional Documents, and when each applies. Edit here - no code change. appliesTo dimensions (all given must match; omit one for no restriction; an empty list means never): journeys, personas (role ids), products (postpaid|prepaid|mnp|fixed-line), idTypes, segments (customer segment, matched by prefix: 'Enterprise' matches 'Enterprise (EBU)'), conditions (all must hold). Conditions are computed from the journey draft: number-waiver, minor-applicant, special-discount:mada|b2b2c|retired, actual-user-other, manual-caf, upfront-payment, vat-registration. requiredWhen (conditions) makes the document required, asked for as its own card. basis says where each rule comes from; 'assumed' rules need business confirmation.",
+  "_comment": "Document types for Additional Documents, and when each applies. Edit here - no code change. offerAlways (1-7) lists a type in the Document Type dropdown for everyone, in that order, ahead of the contextual ones. appliesTo dimensions (all given must match; omit one for no restriction; an empty list means never): journeys, personas (role ids), products (postpaid|prepaid|mnp|fixed-line), idTypes, segments (customer segment, matched by prefix: 'Enterprise' matches 'Enterprise (EBU)'), conditions (all must hold). Conditions are computed from the journey draft: number-waiver, minor-applicant, special-discount:mada|b2b2c|retired, actual-user-other, manual-caf, upfront-payment, vat-registration. requiredWhen (conditions) makes the document required, asked for as its own card. basis says where each rule comes from; 'assumed' rules need business confirmation.",
   "types": [
     {
       "id": "qid",
+      "offerAlways": 1,
       "label": "QID",
       "appliesTo": {
         "idTypes": [
@@ -13,6 +14,7 @@
     },
     {
       "id": "passport",
+      "offerAlways": 2,
       "label": "Passport",
       "appliesTo": {
         "idTypes": [
@@ -23,6 +25,7 @@
     },
     {
       "id": "gcc-id",
+      "offerAlways": 3,
       "label": "GCC ID",
       "appliesTo": {
         "idTypes": [
@@ -33,6 +36,7 @@
     },
     {
       "id": "employee-id",
+      "offerAlways": 4,
       "label": "Employee ID",
       "appliesTo": {
         "conditions": [
@@ -43,6 +47,7 @@
     },
     {
       "id": "special-needs-card",
+      "offerAlways": 6,
       "label": "Special Needs Card",
       "appliesTo": {
         "conditions": [
@@ -53,6 +58,7 @@
     },
     {
       "id": "caf",
+      "offerAlways": 5,
       "label": "CAF",
       "appliesTo": {
         "conditions": [
@@ -113,6 +119,7 @@
     },
     {
       "id": "star-number-discount-approval",
+      "offerAlways": 7,
       "label": "Star Number Discount Approval",
       "appliesTo": {
         "journeys": [

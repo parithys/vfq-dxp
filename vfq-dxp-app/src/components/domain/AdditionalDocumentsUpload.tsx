@@ -83,6 +83,8 @@ export function AdditionalDocumentsUpload({
   // The file chosen or dropped but not uploaded yet.
   const [staged, setStaged] = useState<File | null>(null);
   // The document opened from Journey Documents, shown in the side drawer.
+  const documentsRef = useRef(documents);
+  documentsRef.current = documents;
   const [journeyOpen, setJourneyOpen] = useState(false);
   // 0-100 while a document is being uploaded; undefined when none is.
   const [progress, setProgress] = useState<number | undefined>();
@@ -123,7 +125,8 @@ export function AdditionalDocumentsUpload({
     } catch {
       /* the document is still attached; it just cannot be opened */
     }
-    onChange([...documents, { id, label: doc.label, fileName: file.name, sizeBytes: file.size, requirementId: doc.requirementId }]);
+    // Appended to what is held NOW, not to the list this render saw: the file is read asynchronously, and a stale list would drop a document added meanwhile.
+    onChange([...documentsRef.current, { id, label: doc.label, fileName: file.name, sizeBytes: file.size, requirementId: doc.requirementId }]);
     return true;
   };
 
@@ -177,7 +180,7 @@ export function AdditionalDocumentsUpload({
 
   const remove = (id: string) => {
     forgetDocumentFile(id);
-    onChange(documents.filter((d) => d.id !== id));
+    onChange(documentsRef.current.filter((d) => d.id !== id));
   };
 
   // Everything the journey holds, then what was uploaded here.
@@ -189,7 +192,8 @@ export function AdditionalDocumentsUpload({
   // One section per kind of document within the page that produced it: "Customer Verification: QID Document".
   const sections = (() => {
     const out: { key: string; name: string; kind: string; title: string; how: string; items: typeof rows }[] = [];
-    for (const d of rows) {
+    // Journey documents only: what the journey scanned or signed. They can be opened, never removed; what was uploaded here is listed apart, with Remove.
+    for (const d of rows.filter((r) => !r.removable)) {
       const name = d.source.split(' · ')[0];
       const kind = kindOf(d.label);
       let g = out.find((x) => x.name === name && x.kind === kind);
@@ -313,9 +317,34 @@ export function AdditionalDocumentsUpload({
         ) : (
           <p className="text-muted text-[length:var(--fs-caption)]">Maximum of {maxDocuments} documents reached. Remove one to upload another.</p>
         )}
-        {rows.length > 0 && (
+        {(rows.some((r) => !r.removable) || documents.length > 0) && (
           // One flat list of every document scanned or uploaded earlier in the journey: no container per document or per group.
           <section aria-label="Journey documents" className="space-y-2">
+            {documents.length > 0 && (
+              <div className="space-y-1.5" aria-label="Uploaded documents" role="group">
+                <p className="text-fg font-semibold text-[length:var(--fs-body)]">Uploaded Documents</p>
+                <ul className="space-y-1.5">
+                  {documents.map((d) => {
+                    const dataUrl = documentFileOf(d.id)?.dataUrl;
+                    return (
+                      <li key={d.id} className="text-[length:var(--fs-body)]">
+                        {dataUrl ? (
+                          <button type="button" className="text-link underline text-left" onClick={() => setViewing({ title: `${d.label} - ${d.fileName}`, dataUrl })}>
+                            {d.label}
+                          </button>
+                        ) : (
+                          <span className="text-fg-2">{d.label}</span>
+                        )}
+                        <span className="text-muted text-[length:var(--fs-caption)]"> ({d.fileName})</span>{' '}
+                        <button type="button" className="text-[length:var(--fs-caption)] text-fg-2 underline hover:text-fg" aria-label={`Remove ${d.fileName}`} onClick={() => remove(d.id)}>
+                          Remove
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
             {/* Collapsed until asked for: one toggle under the upload, then the list of everything the journey scanned or uploaded. */}
             <button
               type="button"
@@ -324,7 +353,7 @@ export function AdditionalDocumentsUpload({
               onClick={() => setJourneyOpen((o) => !o)}
               className="inline-flex items-center gap-1 text-link font-medium text-[length:var(--fs-body)] hover:underline focus:outline-none focus-visible:shadow-[var(--focus-ring)] rounded-[var(--radius-sm)]"
             >
-              View All Journey Documents <span className="text-muted font-normal text-[length:var(--fs-caption)]">({rows.length})</span>
+              View All Journey Documents <span className="text-muted font-normal text-[length:var(--fs-caption)]">({rows.filter((r) => !r.removable).length})</span>
               <Icon path={journeyOpen ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6'} className="w-4 h-4" />
             </button>
             <ul id="journey-documents-list" hidden={!journeyOpen} className="space-y-1.5">
@@ -348,14 +377,6 @@ export function AdditionalDocumentsUpload({
                         </button>
                       ) : (
                         <span className="text-fg-2">{title}</span>
-                      )}
-                      {d.removable && d.fileId && (
-                        <>
-                          {' '}
-                          <button type="button" className="text-[length:var(--fs-caption)] text-fg-2 underline hover:text-fg" aria-label={`Remove ${d.fileName ?? d.label}`} onClick={() => remove(d.fileId!)}>
-                            Remove
-                          </button>
-                        </>
                       )}
                     </li>
                   );

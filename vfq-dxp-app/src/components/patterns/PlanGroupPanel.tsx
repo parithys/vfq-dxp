@@ -42,8 +42,10 @@ export function PlanGroupPanel({
             onDeselectProduct={onDeselectProduct}
             setDetailPlan={setDetailPlan}
             compact={activeTab === 'specials'}
-            // Special Offers are the plans the customer's Special Discount applies to: every card shows its discounted price (the chosen plan, the discount chosen for it).
-            discountPct={p.productId === selectedProductId ? discountPct : activeTab === 'special' ? SPECIAL_DISCOUNT_RATE : 0}
+            // Special Offers are the plans the customer's Special Discount applies to: every card, the chosen one included, shows the discounted price from the
+            // start. (The chosen plan's discount is picked a moment after the click, once its discounts load; following it would add the struck-through line then and
+            // make the card jump.) Other tabs show a discount only on the chosen plan.
+            discountPct={activeTab === 'special' ? SPECIAL_DISCOUNT_RATE : p.productId === selectedProductId ? discountPct : 0}
             displayName={activeTab === 'special' ? specialOfferPlanName(p.name, specialDiscountType) : undefined}
           />
         ))}

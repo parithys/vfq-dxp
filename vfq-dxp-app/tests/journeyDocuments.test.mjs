@@ -101,17 +101,18 @@ test('every document type the business named is configured, with a unique id and
 
 test('the list offered is narrowed by the customer, the scenario, the journey and the role - nothing is hardcoded', () => {
   const plain = { product: 'postpaid', contact: { idType: 'QID' }, eligibility: { segment: 'Consumer' } };
-  assert.deepEqual(labels(plain), ['QID']);
-  assert.deepEqual(labels({ ...plain, contact: { idType: 'Passport' } }), ['Passport']);
-  assert.ok(labels({ ...plain, customerType: { type: 'mada' } }).includes('Special Needs Card'));
-  assert.ok(labels({ ...plain, customerType: { type: 'mada', rejected: true } }).every((l) => l !== 'Special Needs Card'), 'a rejected benefit has no evidence');
-  assert.ok(labels({ ...plain, customerType: { type: 'b2b2c' } }).includes('Employee ID'));
+  // Seven types are offered to everyone, in this order; the rest follow only where they apply (the contextual ones below).
+  const ALWAYS = ['QID', 'Passport', 'GCC ID', 'Employee ID', 'CAF', 'Special Needs Card', 'Star Number Discount Approval'];
+  assert.deepEqual(labels(plain), ALWAYS);
+  assert.deepEqual(labels({ ...plain, contact: { idType: 'Passport' } }), ALWAYS);
+  assert.deepEqual(labels({ ...plain, customerType: { type: 'mada', rejected: true } }), ALWAYS, 'a rejected benefit adds nothing');
   assert.ok(labels({ ...plain, actualUser: { choice: 'other' } }).includes('Supplementary Form'));
   assert.ok(labels({ ...plain, actualUser: { choice: 'primary' } }).every((l) => l !== 'Supplementary Form'));
   assert.ok(labels({ ...plain, checkoutTotals: { dueTodayQar: 50 } }).includes('Upfront Payment Receipt'));
   assert.ok(labels({ ...plain, checkoutTotals: { dueTodayQar: 0 } }).every((l) => l !== 'Upfront Payment Receipt'));
   assert.ok(labels({ ...plain, product: 'mnp' }).includes('MNP Form') && !labels(plain).includes('MNP Form'));
   assert.ok(!labels({ ...plain, eligibility: { segment: 'Consumer' } }).includes('Trade License'));
+  assert.deepEqual(labels({ ...plain, eligibility: { segment: 'Enterprise (EBU)' } }).slice(0, 7), ALWAYS, 'the always-offered types stay first');
   assert.ok(labels({ ...plain, eligibility: { segment: 'Enterprise (EBU)' } }).includes('Trade License'), 'segment matched by prefix');
   assert.ok(!labels(plain).includes('eKYC'), 'an empty applicability list means never');
   assert.deepEqual(labels(plain, { journey: undefined }).includes('TON Form'), false);
@@ -120,7 +121,7 @@ test('the list offered is narrowed by the customer, the scenario, the journey an
 test('a required type is asked for as its own card, not repeated in the list; unknown conditions never hold', () => {
   const waived = { product: 'postpaid', contact: { idType: 'QID' }, numberWaiver: 2000 };
   assert.deepEqual(jd.requiredDocumentsFor({ ...base, values: waived }).map((r) => r.label), ['Star Number Discount Approval']);
-  assert.ok(!labels(waived).includes('Star Number Discount Approval'));
+  assert.ok(!labels(waived).includes('Star Number Discount Approval'), 'offered as a card, not repeated in the list');
   assert.equal(jd.documentTypeApplies({ id: 'x', label: 'X', appliesTo: { conditions: ['no-such-condition'] } }, { values: {} }), false);
   assert.equal(jd.documentTypeApplies({ id: 'x', label: 'X', appliesTo: { personas: ['ROLE-99'] } }, { values: {}, personaId: 'ROLE-01' }), false);
   assert.equal(jd.documentTypeApplies({ id: 'x', label: 'X', appliesTo: { personas: ['ROLE-01'] } }, { values: {}, personaId: 'ROLE-01' }), true);
