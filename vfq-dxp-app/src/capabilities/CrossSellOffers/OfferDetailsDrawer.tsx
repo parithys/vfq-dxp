@@ -89,6 +89,9 @@ export function OfferDetailsDrawer({
   fixedService,
   highlight,
   includedNames,
+  showRelatedDocuments = true,
+  planDetails,
+  hideStatusTags = false,
   selected,
   onSelect,
   onClose,
@@ -103,6 +106,12 @@ export function OfferDetailsDrawer({
   /** One line of what the linked plan includes, read from its product record; null hides the banner. */
   highlight: { title: string; subtitle: string } | null;
   includedNames: string[];
+  /** The "Need more information?" block. A plan's drawer leaves it out: no document exists for it, so it is generic filler. */
+  showRelatedDocuments?: boolean;
+  /** The plan's own facts (data, minutes, SMS, bill limit), listed as "Plan Details" under the banner. */
+  planDetails?: string[];
+  /** Leaves out the Available / type pills under the title (a plan's drawer: they say nothing about the plan). */
+  hideStatusTags?: boolean;
   selected: boolean;
   /** Selects this offer (a no-op to the caller if it already is). The drawer closes after. */
   onSelect: () => void;
@@ -167,10 +176,10 @@ export function OfferDetailsDrawer({
             <div className="min-w-0 space-y-2">
               <h2 className="text-fg font-bold text-[length:var(--fs-h5)] leading-tight">{o.offerName}</h2>
               <p className="text-fg-2 text-[length:var(--fs-body)]">{o.offerDescription}</p>
-              <div className="flex flex-wrap gap-2">
+              {!hideStatusTags && <div className="flex flex-wrap gap-2">
                 <span className="rounded-[var(--radius-pill)] bg-surface-warm text-accent px-3 py-1 text-[length:var(--fs-caption)] font-medium">{o.status}</span>
                 {o.offerType && <span className="rounded-[var(--radius-pill)] bg-surface text-fg-2 px-3 py-1 text-[length:var(--fs-caption)] font-medium">{o.offerType}</span>}
-              </div>
+              </div>}
             </div>
           </div>
 
@@ -187,6 +196,19 @@ export function OfferDetailsDrawer({
                 <circle cx="120" cy="40" r="32" fill="var(--accent)" fillOpacity="0.45" />
               </svg>
             </div>
+          )}
+
+          {planDetails && planDetails.length > 0 && (
+            <Section title="Plan Details">
+              <ul className={`${PANEL} p-4 space-y-2`}>
+                {planDetails.map((d) => (
+                  <li key={d} className="flex items-center gap-3 text-fg text-[length:var(--fs-body)]">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-[var(--radius-pill)] bg-accent" />
+                    {d}
+                  </li>
+                ))}
+              </ul>
+            </Section>
           )}
 
           {o.policy ? (
@@ -287,7 +309,7 @@ export function OfferDetailsDrawer({
             </>
           )}
 
-          {!o.policy && (
+          {!o.policy && showRelatedDocuments && (
           <Section title="Need more information?" chevronWhenOpen="down">
             <div className={`${PANEL} p-4 flex items-center gap-4`}>
               <IconDisc path={ICONS.doc} className="h-14 w-14 bg-surface text-fg-2" />

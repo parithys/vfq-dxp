@@ -33,7 +33,7 @@ export function ServiceChangeWizard({
   buildSteps: (ctx: ServiceChangeContext) => WizardStep[];
   submit: (values: Record<string, unknown>, deps: { createRecord: ReturnType<typeof useEntityStore.getState>['createRecord']; updateRecord: ReturnType<typeof useEntityStore.getState>['updateRecord'] }) => Promise<ConfirmedOrder>;
 }) {
-  const { navigate, createRecord, confirmedOrder, setConfirmedOrder, isMirrorWindow, draftCustomerId, heldByAnotherJourney, guardedContactChange } =
+  const { navigate, createRecord, confirmedOrder, setConfirmedOrder, isMirrorWindow, draftStep, draftCustomerId, heldByAnotherJourney, guardedContactChange } =
     useJourneySession<ConfirmedOrder>({ wizardId, flow: 'new' });
   const updateRecord = useEntityStore((s) => s.updateRecord);
   const customerBenefits = useCustomerBenefits(draftCustomerId);
@@ -53,7 +53,8 @@ export function ServiceChangeWizard({
         allowCustomerView={device === 'web'}
         title={title}
         draftActionLabel={title}
-        titleAside={<JourneyCustomerBadge wizardId={wizardId} />}
+        // Not on Customer Verification (step 0, always the first step): the customer is only confirmed there.
+        titleAside={(draftStep ?? 0) > 0 ? <JourneyCustomerBadge wizardId={wizardId} /> : undefined}
         onAbandon={() => navigate(POST_EXIT_DESTINATION)}
         hideAbandonFrom="payment"
         onSaveExit={() => navigate(DRAFT_ORDERS_PATH)}

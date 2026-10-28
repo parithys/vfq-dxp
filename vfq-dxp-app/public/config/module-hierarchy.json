@@ -361,7 +361,7 @@
             "capabilities": [
               "MNP port-in postpaid sales front-end journey",
               "MNP postpaid conversion via cross sales (desktop)",
-              "MNP postpaid port-in desktop (Ooredoo to Vodafone)",
+              "MNP postpaid port-in desktop (Other Operator to Vodafone)",
               "MNP postpaid port-in with add-on (tablet, HRN/expatriate)",
               "MNP prepaid port-in (tablet)",
               "MNP switch journey (IT stack modernization walkthrough)",

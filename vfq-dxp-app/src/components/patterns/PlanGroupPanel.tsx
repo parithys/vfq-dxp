@@ -1,4 +1,4 @@
-import type { PostpaidPlan, PlanGroupKey, TabKey } from './postpaidPlanModel';
+import { specialOfferPlanName, type PostpaidPlan, type PlanGroupKey, type TabKey } from './postpaidPlanModel';
 import { PostpaidPlanCard } from './PostpaidPlanCard';
 
 interface PlanGroupPanelProps {
@@ -9,6 +9,10 @@ interface PlanGroupPanelProps {
   onSelectProduct: (productId: string) => void;
   onDeselectProduct?: () => void;
   setDetailPlan: (plan: PostpaidPlan) => void;
+  /** The customer's validated Special Discount: names the plans on the Special Offers tab. */
+  specialDiscountType?: 'mada' | 'b2b2c' | 'retired' | 'none';
+  /** The chosen plan's applied discount as a fraction (0.25 = 25%): its card shows the discounted price. */
+  discountPct?: number;
 }
 
 export function PlanGroupPanel({
@@ -19,6 +23,8 @@ export function PlanGroupPanel({
   onSelectProduct,
   onDeselectProduct,
   setDetailPlan,
+  specialDiscountType,
+  discountPct = 0,
 }: PlanGroupPanelProps) {
   return (
     <div className="space-y-3">
@@ -35,6 +41,9 @@ export function PlanGroupPanel({
             onSelectProduct={onSelectProduct}
             onDeselectProduct={onDeselectProduct}
             setDetailPlan={setDetailPlan}
+            compact={activeTab === 'specials'}
+            discountPct={p.productId === selectedProductId ? discountPct : 0}
+            displayName={activeTab === 'special' ? specialOfferPlanName(p.name, specialDiscountType) : undefined}
           />
         ))}
         </div>

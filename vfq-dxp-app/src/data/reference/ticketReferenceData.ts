@@ -150,8 +150,8 @@ export const TT_ACTUAL_ISSUES = [
   'CCT-Rude Behavior', 'CCT-TON Request',
   // Added with the Customer 360 query flow: values the Query Issues map to, verbatim from the real Siebel
   // VFQA_TT_ACTUAL_ISSUE export (Business Documents/TT Hashtags and Actual Issue.xlsx).
-  'Dropped Calls', 'Make Calls International', 'Make Calls Local All', 'Make Calls Local/Int', 'Make Calls Ooredoo',
-  'Receive Calls International', 'Receive Calls Local All', 'Receive Calls Local/Int', 'Receive Calls Ooredoo', 'Roaming Calls',
+  'Dropped Calls', 'Make Calls International', 'Make Calls Local All', 'Make Calls Local/Int', 'Make Calls Other Operator',
+  'Receive Calls International', 'Receive Calls Local All', 'Receive Calls Local/Int', 'Receive Calls Other Operator', 'Roaming Calls',
 ];
 
 export const RESOLUTION_CODES = [

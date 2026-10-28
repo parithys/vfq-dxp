@@ -8,7 +8,8 @@ import { useCustomerContext } from '../stores/customerContextStore';
 import { useQnomyQueueStore } from '../stores/qnomyQueueStore';
 import { useAuthStore } from '../stores/authStore';
 import { ensureWalkInWaiting } from '../engines/qnomyWalkIns';
-import { nextTicketFor, waitingCountFor, queueLabelsForRole, mobileMatches } from '../engines/qnomyQueueEngine';
+import { closeHeldQnomyTicket } from '../engines/qnomyRelease';
+import { nextTicketFor, waitingCountFor, queueLabelsForRole, queueScope, mobileMatches } from '../engines/qnomyQueueEngine';
 import { usePersonaStore } from '../stores/personaStore';
 import { canSeeQnomyTicketNumber, canSeeCtiReferenceNumber } from '../engines/agentPrivilegeEngine';
 import { toActiveCustomerSummary, type CustomerRecord } from '../engines/customer360Engine';
@@ -16,7 +17,7 @@ import { Badge } from '../components/primitives/Badge';
 import { Button } from '../components/primitives/Button';
 import { Icon } from '../components/primitives/Icon';
 import { Tooltip } from '../components/primitives/Tooltip';
-import { factsForKioskNumber, launchTargetFor, loadServiceSources, ticketToast, mostRecentFor } from './sessionReferenceLookups';
+import { factsForKioskNumber, loadServiceSources, ticketToast, mostRecentFor } from './sessionReferenceLookups';
 import type { QTicketRecord, TroubleTicketRecord, KioskCustomerFacts } from './sessionReferenceLookups';
 
 
@@ -72,7 +73,6 @@ export function SessionReferenceNumbers() {
   const pushToast = useNotificationStore((s) => s.pushToast);
   const awaitingNext = useQnomyQueueStore((s) => s.awaitingNext);
   const setAwaitingNext = useQnomyQueueStore((s) => s.setAwaitingNext);
-  const recordCustomerServed = useQnomyQueueStore((s) => s.recordCustomerServed);
   const assignedQTicketId = useQnomyQueueStore((s) => s.assignedQTicketId);
   const kioskMobileNumber = useQnomyQueueStore((s) => s.kioskMobileNumber);
   const setKioskMobileNumber = useQnomyQueueStore((s) => s.setKioskMobileNumber);
@@ -152,9 +152,9 @@ export function SessionReferenceNumbers() {
     if (!showQnomy) return;
     let cancelled = false;
     // The queue is never empty: a kiosk walk-in is issued when the role's queue has been worked down.
-    ensureWalkInWaiting(activePersonaId).then(() => mockDataEngine.list<QTicketRecord>('qtickets')).then((qTickets) => {
+    ensureWalkInWaiting(activePersonaId).then(() => Promise.all([mockDataEngine.list<QTicketRecord>('qtickets'), mockDataEngine.list<CustomerRecord>('customers')])).then(([qTickets, customers]) => {
       if (cancelled) return;
-      setWaitingCount(waitingCountFor(activePersonaId, qTickets));
+      setWaitingCount(waitingCountFor(activePersonaId, qTickets, queueScope(customers)));
     });
     return () => {
       cancelled = true;
@@ -181,29 +181,14 @@ export function SessionReferenceNumbers() {
   const handleFinish = async () => {
     if (!activeQTicket) return;
     setFinishing(true);
-    // handledByUserId/releasedAt are written HERE, not on assignTicket, and
-    // never cleared afterward - unlike agentInDxpSessionId, which still
-    // nulls on release because it answers a different question ("is this
-    // actively held right now"). Without a field that survives release, the
-    // Ticket History page would have nothing to filter "my tickets" by -
-    // exactly the gap qnomyQueueStore.ts's customersServed comment already
-    // named.
-    await updateRecord('qtickets', 'qTicketId', activeQTicket.qTicketId, {
-      status: 'Completed',
-      agentInDxpSessionId: null,
-      handledByUserId: staffUserId,
-      releasedAt: new Date().toISOString(),
-    });
+    // The same close as Done & Exit and Create Activity on the order confirmation (closeHeldQnomyTicket): the ticket is Completed, attributed to
+    // this agent for Ticket History, and counted as served.
+    const held = activeQTicket;
+    await closeHeldQnomyTicket();
     setFinishing(false);
     setReleasedAs('completed');
-    setCompletedQTicket(activeQTicket);
+    setCompletedQTicket(held);
     setActiveQTicket(undefined);
-    setAssignedQTicketId(null);
-    setKioskMobileNumber(null);
-    setAwaitingNext(true);
-    // Counted here and not in handleAbandon - see the store's note.
-    recordCustomerServed();
-    pushToast('success', `Customer servicing for ticket ${activeQTicket.qTicketId} completed.`);
   };
 
   // Same release path as handleFinish - completes the servicing session,
@@ -264,7 +249,7 @@ export function SessionReferenceNumbers() {
       loadServiceSources(),
     ]);
     // Only from a queue this role serves (qnomyQueueEngine), oldest first.
-    const waiting = nextTicketFor(activePersonaId, qTickets);
+    const waiting = nextTicketFor(activePersonaId, qTickets, queueScope(customers));
     setCallingNext(false);
     if (!waiting) {
       pushToast('info', `No customers waiting in your queue (${queueLabelsForRole(activePersonaId)}).`);
@@ -297,52 +282,13 @@ export function SessionReferenceNumbers() {
 
     pushToast(...ticketToast(waiting, matched?.name ?? null, matched?.customerId ?? null, waiting.kioskMobileNumber, facts));
 
-    // The ticket NAMES a journey (JOURNEY_LAUNCH_SCREENS) - go straight there,
-    // starting from that journey's own first step, rather than opening
-    // Customer 360 or the Dashboard and leaving the agent to find it. Per
-    // direction (2026-09-27): every call is a fresh start regardless of
-    // whether this customer left an earlier journey unfinished - an
-    // incomplete order is a DRAFT TASK, resumed only by an agent explicitly
-    // choosing to from the dashboard, never something Next Customer walks
-    // back into on its own. `startFresh` is the exact mechanism
-    // JourneyCard's own product-line launcher uses for the same reason - see
-    // GuidedActivationWizard's consumption of it - so a queue-driven start and
-    // a manually-clicked one behave identically once they reach the wizard.
-    //
-    // Matched and unmatched are treated alike here: a walk-in with no
-    // Vodafone record wanting a new connection is the ordinary case for this
-    // journey, not an exception that should dead-end at the Dashboard.
-    const launch = launchTargetFor(waiting.journeyCode, matched?.customerId ?? null);
-    if (launch) {
-      navigate(launch.to, { state: launch.state });
-      return;
-    }
-
-    // No mapped screen for this queue (J020/J030 today - see
-    // JOURNEY_LAUNCH_SCREENS' own note on why only J011 has one). Falls back
-    // to the pre-existing landing: Customer 360 for a match, so the agent
-    // isn't left hunting for the record the queue just resolved; the
-    // Dashboard for a walk-in with none, where the retained kiosk number in
-    // the header and the quick actions are both in reach.
-    if (matched) {
-      // NOT gated behind identity verification - BR-01 governs "demographic,
-      // contact, address or billing maintenance", and Customer360Layout /
-      // ContactSection / AddressSection each already call requireVerification
-      // before any such edit. Blocking the mere act of opening the record made
-      // calling a customer impossible until you had verified someone you
-      // could not yet see.
-      //
-      // A queue walk-in arrives through the New Connections journey, so that
-      // is what the rail should show rather than Customer Search - the agent
-      // did not search for this customer, the queue handed them over.
-      navigate(`/customer/${matched.customerId}`, { state: { navKey: 'new-connections' } });
-      return;
-    }
-    // Navigating away matters as much as clearing the store above.
-    // Customer360Layout reads the route param, not activeCustomer, so staying
-    // put left the PREVIOUS customer's record on screen while the header
-    // announced a new one - the agent would be reading Mohammed's file while
-    // serving someone else.
+    // Per direction (2026-10-27): calling the next customer keeps the agent on
+    // the Dashboard with the Assigned Ticket Number notification showing. No
+    // journey or Customer 360 is opened for them - they choose where to go
+    // from here. Navigating to '/' (rather than staying put) still matters when
+    // Next Customer was clicked from another page: Customer360Layout reads the
+    // route param, not activeCustomer, so staying would leave the PREVIOUS
+    // customer's record on screen while the header announced a new one.
     navigate('/');
   };
 
@@ -393,9 +339,6 @@ export function SessionReferenceNumbers() {
               <span className="text-fg font-semibold text-[length:var(--fs-body)]">{activeQTicket.qTicketId}</span>
             </div>
           </Tooltip>
-          {/* A walk-in with no record is a normal outcome, not an error - the
-              agent needs to see it, keep the number, and start an activation. */}
-          {!activeCustomer && <Badge variant="warning">New Customer</Badge>}
           <Button variant="primary" compact disabled={finishing || abandoning} onClick={handleFinish}>
             {finishing ? 'Finishing…' : 'Finish'}
           </Button>

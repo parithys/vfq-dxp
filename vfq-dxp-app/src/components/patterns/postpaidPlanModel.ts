@@ -127,15 +127,16 @@ export type PlanGroupKey = 'specials' | 'for-you' | 'standard' | 'special';
 
 export const PLAN_GROUPS: { key: PlanGroupKey; label: string }[] = [
   { key: 'specials', label: 'Offers' },
-  { key: 'for-you', label: 'Plans' },
+  { key: 'for-you', label: 'Standard Plans' },
   { key: 'standard', label: 'Standard BAU Catalogue' },
 ];
 
 /** The one name of the special-discount tab, whichever of the three types the customer holds (the type itself is not shown). */
-/** The two classes of postpaid plan (the plan's `planClass`): decided by what the plan is primarily for, never by whether it has minutes or data. */
+/** The classes of postpaid plan (the plan's `planClass`): decided by what the plan is primarily for, never by whether it has minutes or data. */
 export const PLAN_CLASS_TAG = {
   'Postpaid Voice Plans': 'postpaid-voice',
   'Postpaid Broadband Plans': 'postpaid-broadband',
+  'Postpaid Family Plans': 'postpaid-family',
 } as const;
 export type PlanClass = keyof typeof PLAN_CLASS_TAG;
 export const isPlanClass = (v: unknown): v is PlanClass => typeof v === 'string' && v in PLAN_CLASS_TAG;
@@ -146,16 +147,27 @@ export const PLAN_TYPE_FILTERS: { key: PlanTypeFilter; label: string }[] = [
   { key: 'all', label: 'All Plans' },
   { key: 'Postpaid Voice Plans', label: 'Voice Plan' },
   { key: 'Postpaid Broadband Plans', label: 'Broadband Plan' },
+  { key: 'Postpaid Family Plans', label: 'Family Plan' },
 ];
 export const matchesPlanType = (p: { planClass?: string }, filter: PlanTypeFilter): boolean => filter === 'all' || p.planClass === filter;
 
 export const SPECIAL_OFFERS_TAB_LABEL = 'Special Offers';
 
-export const SPECIAL_DISCOUNT_TYPE: Record<'mada' | 'b2b2c' | 'retired', { addonType: string }> = {
-  mada: { addonType: 'MADA Discount' },
-  b2b2c: { addonType: 'B2B2C Discount' },
-  retired: { addonType: 'Retired Discount' },
+/** The Offers tab lists at most this many offers (the demo catalogue holds exactly this many, so it always shows six). */
+export const OFFERS_TAB_LIMIT = 6;
+
+export const SPECIAL_DISCOUNT_TYPE: Record<'mada' | 'b2b2c' | 'retired', { addonType: string; /** How the discount is named to the agent (the Customer Verification card label). */ label: string }> = {
+  mada: { addonType: 'MADA Discount', label: 'MADA' },
+  b2b2c: { addonType: 'B2B2C Discount', label: 'Consumer B2B2C' },
+  retired: { addonType: 'Retired Discount', label: 'Retiree' },
 };
+
+/** A plan's name on the Special Offers tab: led by the Special Discount it is offered under ("Retiree Postpaid Plus Essential Promotion"), unless the name already starts with it. */
+export function specialOfferPlanName(name: string, discount: 'mada' | 'b2b2c' | 'retired' | 'none' | undefined): string {
+  if (!discount || discount === 'none') return name;
+  const label = SPECIAL_DISCOUNT_TYPE[discount].label;
+  return name.toLowerCase().startsWith(label.toLowerCase()) ? name : `${label} ${name}`;
+}
 
 /** The addon types that are a Special Discount (MADA / B2B2C / Retired): one is held by the customer, chosen at Customer Verification. */
 export const SPECIAL_DISCOUNT_ADDON_TYPES: ReadonlySet<string> = new Set(Object.values(SPECIAL_DISCOUNT_TYPE).map((t) => t.addonType));

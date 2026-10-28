@@ -5,11 +5,10 @@ import { OfferDetailsDrawer } from './OfferDetailsDrawer';
 import type { OfferProduct } from '../../components/primitives/offerCardParts';
 import { CARD_HIGHLIGHT, CARD_IDLE, CARD_SELECTED, SelectedTick, STAR_ICON } from '../../components/primitives/offerCardParts';
 import * as mockDataEngine from '../../engines/mockDataEngine';
-import { ServiceTypeTag } from '../../components/primitives/ServiceTypeTag';
 import { journeyLabel, continuesHere, offerTypeOf, hasDestination, offerTypesFor, isHomeJourney, isPrepaidJourney } from './serviceJourneys';
 import type { OfferJourneys } from './serviceJourneys';
 import { HandOff } from './HandOff';
-import { offerFeatures, offerHighlight } from './crossSalesModel';
+import { offerHighlight } from './crossSalesModel';
 import type { CrossSalesValue, Offer } from './crossSalesModel';
 import { OFFERS_PER_TYPE, SAMPLE_OFFERS } from '../../data/synthetic/sampleOffers';
 
@@ -133,7 +132,6 @@ export function CrossSalesStep({
           const selected = value.decision === 'accepted' && value.offerId === o.offerId;
           const recommended = o.offerId === recommendedId;
           const perMonth = !(o.serviceJourney === 'new-prepaid' || o.serviceJourney === 'mnp-prepaid');
-          const features = offerFeatures(o, products);
           // The whole card is the control: click (or Enter/Space) selects it,
           // and clicking the selected one again clears it.
           const toggle = () =>
@@ -173,7 +171,6 @@ export function CrossSalesStep({
                 )}
                 {/* Every card carries its journey tag, pinned right. */}
                 {o.sample && <span className="shrink-0 rounded-[var(--radius-pill)] border border-border-soft px-2 py-0.5 text-muted text-[length:var(--fs-tag)]">Sample</span>}
-                {o.serviceJourney && <ServiceTypeTag type={o.serviceJourney} className="ml-auto min-w-0 truncate" />}
               </div>
               <div className="flex-1 space-y-2">
                 <p className="text-fg font-bold text-[length:var(--fs-h5)] leading-snug">{o.offerName}</p>
@@ -183,14 +180,6 @@ export function CrossSalesStep({
                   <span className="text-[length:var(--fs-h3)] font-bold">{o.monthlyRental}</span>
                   {perMonth && <span className="text-fg-2 text-[length:var(--fs-caption)]"> /month</span>}
                 </p>
-                <ul className="space-y-1.5">
-                  {features.map((f) => (
-                    <li key={f.text} className="flex items-center gap-2 text-fg-2 text-[length:var(--fs-caption)]">
-                      <Icon path={f.icon} className="w-4 h-4 shrink-0 text-accent" />
-                      {f.text}
-                    </li>
-                  ))}
-                </ul>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pt-1">
                 {/* Opens the full offer details in the side drawer; it stops

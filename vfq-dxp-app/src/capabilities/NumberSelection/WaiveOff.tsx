@@ -1,27 +1,35 @@
 import { useState } from 'react';
 import { Button } from '../../components/primitives/Button';
+import { Input } from '../../components/primitives/Input';
 import { Modal } from '../../components/primitives/Modal';
-import { Radio } from '../../components/primitives/Radio';
-import { NUMBER_WAIVER_OPTIONS, numberWaiverLabel, waivedQar, chargeAfterWaiverQar, type NumberWaiver } from '../../engines/numberWaiver';
+import { chargeAfterWaiverQar, waivedQar, waiverAmountProblem, type NumberWaiver } from '../../engines/numberWaiver';
 import { formatQar } from '../../engines/postpaidPricing';
 
 /**
- * The "Waive Off" action beside Continue on Number Selection: the agent chooses Partial or Full Waive Off of the Star number's upfront charge.
- * The choice is kept on the journey (`numberWaiver`) and read by Checkout, Payment and the order. Shown only when the chosen number has an
+ * The "Waive Off" action beside Continue on Number Selection: the agent enters a FIXED AMOUNT (QAR) to waive off the Star number's upfront charge - not a
+ * percentage. The amount is kept on the journey (`numberWaiver`) and read by Checkout, Payment and the order. Shown only when the chosen number has an
  * upfront charge to waive.
  */
-export function WaiveOff({ chargeQar, waiver, onChange }: { chargeQar: number; waiver: NumberWaiver | undefined; onChange: (w: NumberWaiver | undefined) => void }) {
+export function WaiveOff({ chargeQar, numberChosen = false, waiver, onChange }: { chargeQar: number; /** A number is chosen: the button then shows even when it has no charge (disabled, saying why). */ numberChosen?: boolean; waiver: NumberWaiver | undefined; onChange: (w: NumberWaiver | undefined) => void }) {
   const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState<NumberWaiver | undefined>(waiver);
-  if (chargeQar <= 0) return null;
+  const [text, setText] = useState('');
+  if (chargeQar <= 0) {
+    return numberChosen ? (
+      <Button variant="secondary" disabled title="This number has no upfront charge to waive off.">
+        Waive Off
+      </Button>
+    ) : null;
+  }
+  const amount = text.trim() === '' ? undefined : Number(text.replace(/,/g, ''));
+  const problem = waiverAmountProblem(amount, chargeQar);
   const openDialog = () => {
-    setDraft(waiver);
+    setText(waiver ? String(waiver) : '');
     setOpen(true);
   };
   return (
     <>
       <Button variant="secondary" onClick={openDialog}>
-        {waiver ? `Waive Off: ${waiver === 'full' ? 'Full' : 'Partial'}` : 'Waive Off'}
+        {waiver ? `Waive Off: ${formatQar(waiver)}` : 'Waive Off'}
       </Button>
       <Modal
         open={open}
@@ -48,9 +56,9 @@ export function WaiveOff({ chargeQar, waiver, onChange }: { chargeQar: number; w
               </Button>
               <Button
                 variant="primary"
-                disabled={!draft}
+                disabled={Boolean(problem)}
                 onClick={() => {
-                  onChange(draft);
+                  if (amount !== undefined) onChange(waivedQar(chargeQar, amount));
                   setOpen(false);
                 }}
               >
@@ -61,27 +69,26 @@ export function WaiveOff({ chargeQar, waiver, onChange }: { chargeQar: number; w
         }
       >
         <p className="text-fg-2 text-[length:var(--fs-body)]">
-          The Star number's upfront charge is <strong className="text-fg">{formatQar(chargeQar)}</strong>. Choose how much of it to waive off; the order is sent for approval. Its supporting document is asked for at the end of the journey, after the CAF is signed.
+          The Star number's upfront charge is <strong className="text-fg">{formatQar(chargeQar)}</strong>. Enter the amount to waive off; the order is sent for approval. Its supporting document is asked for at the end of the journey, after the CAF is signed.
         </p>
-        <fieldset className="mt-4 space-y-3">
-          <legend className="sr-only">Waive Off</legend>
-          {NUMBER_WAIVER_OPTIONS.map((o) => (
-            <label key={o.key} className="flex cursor-pointer items-start gap-3 rounded-[var(--radius-card)] border border-[var(--field-card-border)] p-4 hover:border-[var(--field-hover-border)]">
-              <Radio className="mt-1" name="number-waive-off" checked={draft === o.key} onChange={() => setDraft(o.key)} />
-              <span className="min-w-0 flex-1">
-                <span className="block text-fg font-semibold text-[length:var(--fs-body)]">{o.label}</span>
-                <span className="block text-fg-2 text-[length:var(--fs-caption)]">{o.description}</span>
-                <dl className="mt-2 grid max-w-xs grid-cols-2 text-[length:var(--fs-caption)] [&>*]:border-t [&>*]:border-border-soft [&>*]:py-1">
-                  <dt className="text-fg-2">Waived</dt>
-                  <dd className="text-right font-semibold text-fg">{formatQar(waivedQar(chargeQar, o.key))}</dd>
-                  <dt className="text-fg-2">Payable</dt>
-                  <dd className="text-right font-semibold text-fg">{formatQar(chargeAfterWaiverQar(chargeQar, o.key))}</dd>
-                </dl>
-              </span>
-            </label>
-          ))}
-        </fieldset>
-        {waiver && <p className="mt-3 text-muted text-[length:var(--fs-caption)]">Current choice: {numberWaiverLabel(waiver)}.</p>}
+        <div className="mt-4 space-y-3">
+          <Input
+            label="Waive Off Amount (QAR)"
+            required
+            inputMode="decimal"
+            value={text}
+            onChange={(e) => setText(e.target.value.replace(/[^0-9.,]/g, ''))}
+            error={text.trim() !== '' ? problem : undefined}
+          />
+          <dl className="grid max-w-xs grid-cols-2 text-[length:var(--fs-caption)] [&>*]:border-t [&>*]:border-border-soft [&>*]:py-1">
+            <dt className="text-fg-2">Upfront Charge</dt>
+            <dd className="text-right font-semibold text-fg">{formatQar(chargeQar)}</dd>
+            <dt className="text-fg-2">Waived</dt>
+            <dd className="text-right font-semibold text-fg">{formatQar(problem ? 0 : waivedQar(chargeQar, amount))}</dd>
+            <dt className="text-fg-2">Payable</dt>
+            <dd className="text-right font-semibold text-fg">{formatQar(problem ? chargeQar : chargeAfterWaiverQar(chargeQar, amount))}</dd>
+          </dl>
+        </div>
       </Modal>
     </>
   );

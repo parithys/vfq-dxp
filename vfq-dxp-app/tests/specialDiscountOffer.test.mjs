@@ -41,7 +41,7 @@ test('a Standard customer (none chosen, or the benefit rejected) is offered none
   assert.equal(out.length + all.filter((d) => SPECIAL.has(d.addonType)).length, all.length, 'conservation');
   // The plan step tells Standard apart from "this journey has no such choice".
   const step = fs.readFileSync('src/capabilities/PlanSelection/postpaidStep.tsx', 'utf8');
-  assert.match(step, /\(v \? \(v\.type && v\.type !== 'none' && !v\.rejected \? v\.type : 'none'\) : undefined\)/);
+  assert.match(step, /\(v \? \(v\.type && v\.type !== 'none' && !v\.rejected && isCustomerTypeValid\(v\) \? v\.type : 'none'\) : undefined\)/);
 });
 
 test('nothing chosen / unknown: the list is returned as it is', () => {

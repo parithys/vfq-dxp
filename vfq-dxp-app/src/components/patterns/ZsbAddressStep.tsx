@@ -2,12 +2,11 @@ import { useEffect, useState } from 'react';
 import { Input } from '../primitives/Input';
 import { Select } from '../primitives/Select';
 import { Textarea } from '../primitives/Textarea';
-import { FibreReadinessBanner } from '../domain/FibreReadinessBanner';
 import * as mockDataEngine from '../../engines/mockDataEngine';
-import { lookupServiceLocation } from '../../engines/serviceLocationLookup';
+import { listServiceLocationOptions, lookupServiceLocation } from '../../engines/serviceLocationLookup';
+import type { ServiceLocationOption } from '../../engines/serviceLocationLookup';
+import { ServiceLocationSearchInput } from '../domain/ServiceLocationSearchInput';
 import { useAreaOptions } from '../../hooks/useAreaOptions';
-import { Button } from '../primitives/Button';
-import { Icon } from '../primitives/Icon';
 
 export interface ZsbAddressValue {
   zone?: string;
@@ -21,6 +20,8 @@ export interface ZsbAddressValue {
    * - displayed as "Area/City" (2026-09-28) since that field is exactly what
    * it holds either way. */
   area?: string;
+  /** The PO box, free text. Prefilled from the service point a Kahramaa / Vodafone ID lookup names, when it carries one. */
+  poBox?: string;
   /**
    * A free-text catch-all line for anything the granular fields above don't
    * capture (a landmark, a combined description) - added 2026-09-28,
@@ -70,8 +71,6 @@ interface ZsbAddressStepProps {
    * correction is never clobbered by the effect running again. */
   idNumber?: string;
   nationality?: string;
-  /** A journey that reports fibre readiness itself (Fixed Activation: from its RFS check) hides this built-in banner. */
-  hideFibreReadiness?: boolean;
 }
 
 interface AddressRecord {
@@ -109,11 +108,10 @@ interface AddressRecord {
 // reference/blueprint conflict-report.md (Conflict 2) and in ruleEngine's
 // BR-ZSB-MANDATORY-FOR-MOBILE, which still evaluates; it simply no longer
 // addresses the agent, who cannot action it.
-const CARD = 'card p-4 space-y-4';
-const SEARCH_ICON = 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.3-4.3';
-const CARD_TITLE = 'text-fg text-[length:var(--fs-h5)] font-semibold';
+// Plain groups, not bordered cards: everything sits directly inside the step's own Address container.
+const CARD = 'space-y-4';
 
-export function ZsbAddressStep({ value, onChange, idNumber, nationality, hideFibreReadiness = false }: ZsbAddressStepProps) {
+export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAddressStepProps) {
   const [fetching, setFetching] = useState(false);
   // Area / District suggestions (see useAreaOptions).
   const areaOptions = useAreaOptions();
@@ -130,23 +128,15 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality, hideFib
       vfidMap.find((v) => v.mappedKidIds.some((m) => m.toUpperCase() === k)))?.format;
   };
 
-  // Search next to the Kahramaa Meter ID and the Vodafone Premise ID: looks the entered ID up and fills the address fields
-  // below from the record it names. `lookupNote` says what happened, under the ID it belongs to.
-  const [searching, setSearching] = useState<'kid' | 'vfid' | null>(null);
-  const [lookupNote, setLookupNote] = useState<{ field: 'kid' | 'vfid'; ok: boolean; text: string } | null>(null);
-  const searchLocation = async (field: 'kid' | 'vfid') => {
-    const id = (field === 'kid' ? value.kidLocationId : value.vodafoneId)?.trim();
-    if (!id || searching) return;
-    setSearching(field);
-    setLookupNote(null);
-    const result = await lookupServiceLocation(field === 'kid' ? { kid: id } : { vodafoneId: id });
-    setSearching(null);
-    if (!result.found) {
-      setLookupNote({ field, ok: false, text: `No location found for ${id}. Check the ID, or enter the address below.` });
-      return;
-    }
-    onChange({ ...value, ...result.fields });
-    setLookupNote({ field, ok: true, text: 'Location found - the address fields below have been filled in.' });
+  // The Kahramaa Meter ID and Vodafone Premise ID are searchable dropdowns: choosing a row looks the ID up and fills the address fields
+  // below from the record it names.
+  const [locationOptions, setLocationOptions] = useState<{ kids: ServiceLocationOption[]; vodafoneIds: ServiceLocationOption[] }>({ kids: [], vodafoneIds: [] });
+  useEffect(() => {
+    void listServiceLocationOptions().then(setLocationOptions);
+  }, []);
+  const chooseLocation = async (query: { kid?: string; vodafoneId?: string }) => {
+    const result = await lookupServiceLocation(query);
+    if (result.found) onChange({ ...value, ...result.fields });
   };
 
   useEffect(() => {
@@ -184,98 +174,45 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality, hideFib
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idNumber, nationality]);
 
-  // The service identifiers card (Kahramaa Meter ID / Vodafone Premise ID, each with Search): always the first card of the
+  // The service identifiers card (Kahramaa Meter ID / Vodafone Premise ID, each a searchable dropdown): always the first card of the
   // form, above the address - the one layout every journey's address step uses.
   const serviceInformation = (
     <section className={CARD}>
-      <div>
-        <h3 className={CARD_TITLE}>
-          Service Information <span className="font-normal">(Optional)</span>
-        </h3>
-        <p className="text-fg-2 text-[length:var(--fs-body)]">These details are used for service activation.</p>
-      </div>
       <div className="grid grid-cols-2 gap-4">
         {/* Optional for a postpaid mobile line, which needs no serviceable premises - unlike the
             fibre journeys, where the KID is what makes an address installable. */}
-        <div>
-          <div className="flex items-end gap-2">
-            <div className="flex-1 min-w-0">
-              <Input
-                label="Kahramaa Meter ID (Optional)"
-                placeholder="e.g. KID-00123456"
-                value={value.kidLocationId ?? ''}
-                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void searchLocation('kid'))}
-                onChange={(e) => {
-                  const kid = e.target.value;
-                  const mapped = vfidFor(kid);
-                  // Prefill when the KID maps to a Vodafone ID; if it stops mapping,
-                  // clear only a value this lookup put there (never something the
-                  // agent typed). The field stays editable either way.
-                  const wasAuto = value.vodafoneId !== undefined && value.vodafoneId === vfidFor(value.kidLocationId);
-                  setLookupNote(null);
-                  onChange({
-                    ...value,
-                    kidLocationId: kid,
-                    vodafoneId: mapped ?? (wasAuto ? '' : value.vodafoneId),
-                  });
-                }}
-              />
-            </div>
-            <Button
-              variant="secondary"
-              className="!px-3"
-              onClick={() => void searchLocation('kid')}
-              disabled={!value.kidLocationId?.trim() || searching !== null}
-              aria-label="Search by Kahramaa Meter ID"
-              title="Search by Kahramaa Meter ID"
-            >
-              <Icon path={SEARCH_ICON} className="w-5 h-5" />
-            </Button>
-          </div>
-          {lookupNote?.field === 'kid' && (
-            <p role="status" className={`mt-1 text-[length:var(--fs-caption)] ${lookupNote.ok ? 'text-success' : 'text-danger'}`}>
-              {lookupNote.text}
-            </p>
-          )}
-        </div>
+        <ServiceLocationSearchInput
+          label="Kahramaa Meter ID"
+          id="kahramaa-meter-id"
+          placeholder="e.g. KID-00123456"
+          value={value.kidLocationId ?? ''}
+          options={locationOptions.kids}
+          onSelect={(o) => void chooseLocation({ kid: o.value })}
+          onTextChange={(kid) => {
+            const mapped = vfidFor(kid);
+            // Prefill when the KID maps to a Vodafone ID; if it stops mapping,
+            // clear only a value this lookup put there (never something the
+            // agent typed). The field stays editable either way.
+            const wasAuto = value.vodafoneId !== undefined && value.vodafoneId === vfidFor(value.kidLocationId);
+            onChange({ ...value, kidLocationId: kid, vodafoneId: mapped ?? (wasAuto ? '' : value.vodafoneId) });
+          }}
+        />
         {/* Vodafone ID follows from the Kahramaa ID (vfidFor), so the pair stays on one row, after the Kahramaa Meter ID it derives from. */}
-        <div>
-          <div className="flex items-end gap-2">
-            <div className="flex-1 min-w-0">
-              <Input
-                label="Vodafone Premise ID (Optional)"
-                placeholder="e.g. WKR-0231-A"
-                value={value.vodafoneId ?? ''}
-                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void searchLocation('vfid'))}
-                onChange={(e) => {
-                  setLookupNote(null);
-                  onChange({ ...value, vodafoneId: e.target.value });
-                }}
-              />
-            </div>
-            <Button
-              variant="secondary"
-              className="!px-3"
-              onClick={() => void searchLocation('vfid')}
-              disabled={!value.vodafoneId?.trim() || searching !== null}
-              aria-label="Search by Vodafone Premise ID"
-              title="Search by Vodafone Premise ID"
-            >
-              <Icon path={SEARCH_ICON} className="w-5 h-5" />
-            </Button>
-          </div>
-          {lookupNote?.field === 'vfid' && (
-            <p role="status" className={`mt-1 text-[length:var(--fs-caption)] ${lookupNote.ok ? 'text-success' : 'text-danger'}`}>
-              {lookupNote.text}
-            </p>
-          )}
-        </div>
+        <ServiceLocationSearchInput
+          label="Vodafone Premise ID"
+          id="vodafone-premise-id"
+          placeholder="e.g. WKR-0231-A"
+          value={value.vodafoneId ?? ''}
+          options={locationOptions.vodafoneIds}
+          onSelect={(o) => void chooseLocation({ vodafoneId: o.value })}
+          onTextChange={(text) => onChange({ ...value, vodafoneId: text })}
+        />
       </div>
     </section>
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {serviceInformation}
       {fetching && <p className="text-muted text-[length:var(--fs-body)]">Checking for an address on file…</p>}
       {/* The provenance line ("Retrieved from the customer's Qatar ID. Edit any
@@ -289,7 +226,9 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality, hideFib
           Zone/Street/Building are visual: this step is still Mandatory: No (FLD-523-526) and does
           not gate Continue (see serviceAddressStep.isValid). */}
       <section className={CARD}>
-        <div className="grid grid-cols-3 gap-4">
+        {/* One grid, in the order the agent fills it: Zone, Street, Building, Floor, Flat / Unit, Area, PO Number.
+            items-end keeps the inputs level when a long label (Flat / Apartment / Unit Number *) wraps. */}
+        <div className="grid grid-cols-3 items-end gap-4">
           <Input
             label="Zone Number"
             required
@@ -314,14 +253,19 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality, hideFib
             value={value.buildingNo ?? ''}
             onChange={(e) => onChange({ ...value, buildingNo: e.target.value })}
           />
-        </div>
-      </section>
-
-      <section className={CARD}>
-        <h3 className={CARD_TITLE}>
-          Additional Details <span className="font-normal">(Optional)</span>
-        </h3>
-        <div className="grid grid-cols-3 gap-4">
+          <Input
+            label="Floor"
+            placeholder="e.g. 4"
+            value={value.floor ?? ''}
+            onChange={(e) => onChange({ ...value, floor: e.target.value })}
+          />
+          <Input
+            label="Flat / Apartment / Unit Number"
+            required
+            placeholder="e.g. 4B, 1402"
+            value={value.aptFlatUnit ?? ''}
+            onChange={(e) => onChange({ ...value, aptFlatUnit: e.target.value })}
+          />
           <Select
             label="Area / District"
             placeholder="Select an area"
@@ -333,37 +277,23 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality, hideFib
             onChange={(e) => onChange({ ...value, area: e.target.value })}
           />
           <Input
-            label="Flat / Apartment / Unit Number"
-            placeholder="e.g. 4B, 1402"
-            value={value.aptFlatUnit ?? ''}
-            onChange={(e) => onChange({ ...value, aptFlatUnit: e.target.value })}
-          />
-          <Input
-            label="Floor"
-            placeholder="e.g. 4"
-            value={value.floor ?? ''}
-            onChange={(e) => onChange({ ...value, floor: e.target.value })}
+            label="PO Number"
+            inputMode="numeric"
+            placeholder="e.g. 24501"
+            value={value.poBox ?? ''}
+            onChange={(e) => onChange({ ...value, poBox: e.target.value })}
           />
         </div>
         {/* Free-text catch-all (addressLine) - see ZsbAddressValue's note on why it sits
             alongside the granular fields rather than instead of them. */}
         <Textarea
-          label="Directions / Landmark (Optional)"
+          label="Directions / Landmark"
           rows={2}
           placeholder="e.g. Near City Center Mall, opposite Al Rayyan Park"
-          helperText="Add any landmarks, directions or additional notes to help us locate you"
           value={value.addressLine ?? ''}
           onChange={(e) => onChange({ ...value, addressLine: e.target.value })}
         />
       </section>
-
-
-      {/* Read-only, checked against the ZSB (Zone/Street/Building) the agent
-          just typed above - see FibreReadinessBanner's own note on why "NAS"
-          isn't a term this corpus evidences and what this reads the request
-          as instead. Renders nothing until Zone/Street/Building are all
-          filled in, so it never reports on a half-typed address. */}
-      {!hideFibreReadiness && <FibreReadinessBanner zone={value.zone} street={value.streetNo} building={value.buildingNo} />}
     </div>
   );
 }

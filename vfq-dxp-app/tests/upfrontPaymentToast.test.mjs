@@ -14,7 +14,7 @@ test('only the HRN advance row is the upfront-payment row; every other outcome a
   const hrnRows = m.buildEligibilityRows([], true, 'Pakistani', 'postpaid', false, true);
   const upfront = hrnRows.filter(m.isUpfrontPaymentRow);
   assert.equal(upfront.length, 1);
-  assert.equal(upfront[0].title, 'Upfront Payment Required');
+  assert.equal(upfront[0].title, 'Upfront Payment Required (HRN)');
   assert.match(upfront[0].detail, /advance payment/i);
   // Not HRN: the "Non-HRN new account" pass row is not the upfront row.
   assert.equal(m.buildEligibilityRows([], false, 'Qatari', 'postpaid', false, true).filter(m.isUpfrontPaymentRow).length, 0);

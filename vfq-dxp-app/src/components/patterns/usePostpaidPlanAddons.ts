@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { discountsForCustomer, type CustomerBenefit } from '../../engines/customerBenefitEngine';
 import { monthlyCharges } from '../../engines/postpaidPricing';
-import { closestPlans, PLAN_GROUPS, SPECIAL_DISCOUNT_TYPE, discountsForSpecialType, specialDiscountToPreselect, isPlanOfferedTo, SPECIAL_OFFERS_TAB_LABEL, planGroupOf, matchesPlanType } from './postpaidPlanModel';
+import { closestPlans, PLAN_GROUPS, SPECIAL_DISCOUNT_TYPE, discountsForSpecialType, specialDiscountToPreselect, isPlanOfferedTo, SPECIAL_OFFERS_TAB_LABEL, OFFERS_TAB_LIMIT, planGroupOf, matchesPlanType } from './postpaidPlanModel';
 import type { PostpaidPlan, Discount, AddonProduct, PlanGroupKey, TabKey, PlanTypeFilter } from './postpaidPlanModel';
 
 interface UsePostpaidPlanAddonsArgs {
@@ -88,14 +88,20 @@ export function usePostpaidPlanAddons({
   const special = specialDiscountType && specialDiscountType !== 'none' ? SPECIAL_DISCOUNT_TYPE[specialDiscountType] : undefined;
   // planDiscounts holds only the SELECTED plan's discounts, so the tab reads the whole catalogue of this discount type.
   const [specialDiscountRows, setSpecialDiscountRows] = useState<Discount[]>([]);
+  // Whether the special-discount rows have been read (true at once when the customer holds no Special Discount): the opening tab waits for it.
+  const [specialRowsLoaded, setSpecialRowsLoaded] = useState(false);
   useEffect(() => {
     if (!special) {
       setSpecialDiscountRows([]);
+      setSpecialRowsLoaded(true);
       return;
     }
     let cancelled = false;
+    setSpecialRowsLoaded(false);
     void mockDataEngine.list<Discount>('addons-discounts').then((all) => {
-      if (!cancelled) setSpecialDiscountRows(all.filter((d) => d.category === 'Discount' && d.addonType === special.addonType));
+      if (cancelled) return;
+      setSpecialDiscountRows(all.filter((d) => d.category === 'Discount' && d.addonType === special.addonType));
+      setSpecialRowsLoaded(true);
     });
     return () => {
       cancelled = true;
@@ -111,22 +117,31 @@ export function usePostpaidPlanAddons({
     ...PLAN_GROUPS.filter((g) => plans.some((p) => planGroupOf(p) === g.key)),
     ...(hasSpecialTab && special ? [{ key: 'special' as PlanGroupKey, label: SPECIAL_OFFERS_TAB_LABEL }] : []),
   ];
-  const groupPlans = (key: PlanGroupKey) =>
-    visiblePlans.filter((p) => (key === 'special' ? specialPlanIds.has(p.productId) : planGroupOf(p) === key));
+  const groupPlans = (key: PlanGroupKey) => {
+    const list = visiblePlans.filter((p) => (key === 'special' ? specialPlanIds.has(p.productId) : planGroupOf(p) === key));
+    return key === 'specials' ? list.slice(0, OFFERS_TAB_LIMIT) : list;
+  };
   // The selection was withdrawn while its tab was open: fall back to Offers.
   useEffect(() => {
     if (activeTab === 'special' && !hasSpecialTab) setActiveTab('specials');
   }, [activeTab, hasSpecialTab]);
 
+  // The opening tab: Special Offers for a customer whose Special Discount (Consumer B2B2C, Retiree or MADA) is validated - its details given and
+  // its supporting document scanned and accepted, which is what makes `specialDiscountType` a type at all - otherwise Offers.
   useEffect(() => {
     if (defaultTabSet.current || plans.length === 0) return;
+    if (special && !specialRowsLoaded) return;
     defaultTabSet.current = true;
+    if (hasSpecialTab) {
+      setActiveTab('special');
+      return;
+    }
     const firstNonEmpty = PLAN_GROUPS.find((g) => plans.some((p) => planGroupOf(p) === g.key));
     if (firstNonEmpty) setActiveTab(firstNonEmpty.key);
-  }, [plans]);
+  }, [plans, special, specialRowsLoaded, hasSpecialTab]);
 
   // The search belongs to the tab being shown: its suggestions come from that tab's plans only, never the other tabs'.
-  const tabPlans = plans.filter((p) => matchesPlanType(p, planTypeFilter)).filter((p) => (activeTab === 'special' ? specialPlanIds.has(p.productId) : planGroupOf(p) === activeTab));
+  const tabPlans = plans.filter((p) => matchesPlanType(p, planTypeFilter)).filter((p) => (activeTab === 'special' ? specialPlanIds.has(p.productId) : planGroupOf(p) === activeTab)).slice(0, activeTab === 'specials' ? OFFERS_TAB_LIMIT : undefined);
   const suggestions = closestPlans(planSearch, tabPlans);
 
   useEffect(() => {
@@ -205,14 +220,20 @@ export function usePostpaidPlanAddons({
   const benefitType = customerBenefit === 'mada' ? 'MADA Discount' : customerBenefit === 'b2b2c' ? 'B2B2C Discount' : customerBenefit === 'retired' ? 'Retired Discount' : undefined;
   const benefitAppliedFor = useRef<string | undefined>(undefined);
   useEffect(() => {
-    if (!benefitType || discountId || !selectedProductId || benefitAppliedFor.current === selectedProductId) return;
-    const match = specialDiscountToPreselect(discounts, customerBenefit);
+    // Selected by itself only for a plan chosen on Special Offers; on Standard Plans the choice starts at No Discount (Add Discount offers the rest).
+    if (!benefitType || discountId || !selectedProductId || discountsState !== 'ready' || activeTab !== 'special') return;
+    // Once per plan AND type: choosing "No discount" afterwards sticks, but a changed Special Discount type is selected afresh.
+    const key = `${selectedProductId}|${customerBenefit}`;
+    if (benefitAppliedFor.current === key) return;
+    // Only this plan's own discounts: while a newly chosen plan's discounts load, the list still holds the previous plan's, and selecting
+    // from it would be dropped again once the right ones arrive - leaving the Special Discount unselected for good.
+    const match = specialDiscountToPreselect(discounts.filter((d) => d.planId === selectedProductId), customerBenefit);
     if (match) {
-      benefitAppliedFor.current = selectedProductId; // once per plan: choosing "No discount" afterwards sticks
+      benefitAppliedFor.current = key;
       onSelectDiscount(match.addonDiscountId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [benefitType, selectedProductId, discounts, discountId]);
+  }, [benefitType, customerBenefit, selectedProductId, discounts, discountId, discountsState, activeTab]);
 
   // Max ONE discount, and it is scoped to the plan it was picked against
   // (Discount.planId) - so a plan change retires whatever discount the

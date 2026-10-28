@@ -11,7 +11,6 @@ import {
   postpaidPlanStep,
   serviceAddressStep,
   simTypeStep,
-  actualUserStep,
   isSpecialDiscountsValid,
 } from '../../capabilities';
 import type { SpecialDiscountsValue } from '../../capabilities';
@@ -39,12 +38,10 @@ export const hasValidatedSpecialDiscount = (values: Record<string, unknown>): bo
   return Boolean(t && t.type && t.type !== 'none' && !t.rejected && isSpecialDiscountsValid(t));
 };
 
-/** The Addons & Discounts step is skipped for an accepted offer, and for a plan chosen on the Offers or Special Offers tab of Offers & Plans: the agent goes on to Number Selection. */
+/** The Addons & Discounts step is skipped for an accepted offer and for a plan chosen on the Offers tab of Offers & Plans: the agent goes on to Number Selection. A plan chosen under Special Offers keeps the step (2026-10-27). */
 const extrasSkip = (products: Product[]) => (values: Record<string, unknown>) =>
   offerAccepted(values) ||
   values.selectionSource === 'OFFER' ||
-  // A plan chosen under Special Offers goes straight to Number Selection, like an Offers plan (its special discount is applied when the plan is chosen).
-  (Boolean(values.productId) && values.planTab === 'special') ||
   Boolean(products.find((p) => p.productId === values.productId && isOffersTabPlan(p)));
 
 /**
@@ -52,7 +49,7 @@ const extrasSkip = (products: Product[]) => (values: Record<string, unknown>) =>
  * agent), Plan and Add-ons, Number, SIM, Checkout, the full CAF and Payment, which submits.
  */
 export function postpaidSteps({ products, customerBenefits, device }: PostpaidStepContext): WizardStep[] {
-  const planContext = { products, customerBenefits, skipWhen: offerAccepted };
+  const planContext = { products, customerBenefits, skipWhen: offerAccepted, announceHrn: true };
   return [
     serviceAddressStep({ mode: 'structured', autoPass: true }),
     billingAccountStep(),
@@ -68,9 +65,8 @@ export function postpaidSteps({ products, customerBenefits, device }: PostpaidSt
         return plan ? { mrcQar: plan.mrcQAR, starEntitlementQar: starEntitlementQar(plan) } : undefined;
       },
     }),
-    simTypeStep({ device, approvalRequired: expectsApproval }),
-    // After the SIM, before the summary and the CAF: who will use the line (when it is not the owner) is named on the Supplementary Form.
-    actualUserStep(),
+    // Who will use the line (when it is not the owner) is added on this same page, from "Add Actual User": it is named on the Supplementary Form.
+    simTypeStep({ device, approvalRequired: expectsApproval, withActualUser: true }),
     checkoutSummaryStep({
       // An accepted offer fixes the plan, so the Plan & Add-ons step is skipped and 'plan' is not a reachable
       // key - jump to Number Selection (the first step still editable) instead of doing nothing.

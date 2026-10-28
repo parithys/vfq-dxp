@@ -50,7 +50,8 @@ export function AbandonDialog({
       {!noKeep && (
         <div className="mt-4">
           <Textarea
-            label="Comments (Required)"
+            label="Comments"
+            required
             rows={3}
             value={comments}
             onChange={(e) => onCommentsChange(e.target.value)}
@@ -96,7 +97,7 @@ export function SaveExitDialog({
       <p className="text-fg-2 text-[length:var(--fs-body)]">This order is saved as a draft and can be resumed from Draft Orders.</p>
       <div className="mt-4">
         <Textarea
-          label="Comments (Optional)"
+          label="Comments"
           rows={3}
           value={comments}
           onChange={(e) => onCommentsChange(e.target.value)}

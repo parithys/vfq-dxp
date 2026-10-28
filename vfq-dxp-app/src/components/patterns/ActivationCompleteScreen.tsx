@@ -15,6 +15,9 @@ import { Button } from '../primitives/Button';
 import { Modal } from '../primitives/Modal';
 import { Textarea } from '../primitives/Textarea';
 import { formatQar } from '../../lib/format';
+import { printSupplementaryTerms, printTerms } from './termsPrint';
+import { closeHeldQnomyTicket } from '../../engines/qnomyRelease';
+import type { OrderTerms } from './cafTermsModel';
 
 /**
  * The standard "Activation complete" page, for every activation journey.
@@ -23,7 +26,8 @@ import { formatQar } from '../../lib/format';
  * about its order and nothing else:
  *
  *   Customer | MSISDN | Plan | SIM Type | Due today | Monthly recurring | Status
- *   [View Order]  [Print]  [Create Activity]  [Done & Exit]  [Create Lead]  [Continue with Fibre]
+ *   [Done & Exit (primary)]  [View My Orders]  [Continue with Fibre]  [Create Lead]  [Create Activity]
+ *   [Print Order]  [Print CAF]  [Print Supplementary Form - only with an actual user other than the customer]
  *
  * Monthly recurring is omitted for an order that has none (prepaid). An eSIM
  * order adds the QR handover panel beside the receipt. An order held for
@@ -60,17 +64,24 @@ export interface ActivationCompleteOrder {
   trackAction?: { label: string; to: string };
   /** Omit when the order carries no recurring charge. */
   monthlyRecurringQar?: number;
+  /** The add-ons the line starts with, by name (empty: none). Absent when the journey does not take add-ons. */
+  activeAddons?: string[];
+  /** The billing cycle of the account the line is billed on. Absent when the journey has no billing account. */
+  billingCycle?: string;
   /** eSIM orders only - drives the QR handover panel. */
   esimActivationCode?: string;
   customerEmail?: string;
   /** The address as Customer Verification shows it (masked for a new customer). Defaults to customerEmail. */
   customerEmailDisplay?: string;
   customerEmailVerified?: boolean;
+  /** The terms the customer signed, when the journey signs a CAF: Print T&C, and Print Supplement T&C with an actual user. */
+  terms?: OrderTerms;
 }
 
 /** Cross-sell into the Fixed Line/Fibre wizard for the same counter visit (SCR-043). */
 const FIBRE_ACTIVATION_ROUTE = '/fixed-line-fibre/new-fixed-line-wizard-contact-step';
-const ORDER_DETAIL_ROUTE = '/order-management/order-approval-detail-attachments-order-details-activities-a';
+/** The agent's Orders page. */
+const MY_ORDERS_ROUTE = '/orders';
 
 // The heading follows the ORDER: "for approval" only when it was actually held (its Status row and the email say the same), "Activation complete"
 // when it went through. (It used to follow the submitter's role, which could say "for approval" over a Complete order.)
@@ -159,6 +170,8 @@ export function ActivationCompleteScreen({
       await logActivity(order.completionActivity);
     }
     await closeOrderActivities(order.orderId);
+    // Done & Exit closes the Qnomy ticket held for this customer, so the agent can call the next one.
+    await closeHeldQnomyTicket();
     // The journey is over: the customer context is released.
     useCustomerContext.getState().endJourney();
     pushToast('success', order.activityId ? `Activity ${order.activityId} closed` : 'Activity closed', { key: `activity-closed-${order.orderId}` });
@@ -180,6 +193,8 @@ export function ActivationCompleteScreen({
       idNumber: order.completionActivity?.idNumber,
       comments: activityComments,
     });
+    // Creating an activity closes the held Qnomy ticket too.
+    await closeHeldQnomyTicket();
     setSavingActivity(false);
     setActivityOpen(false);
     setActivityComments('');
@@ -233,29 +248,32 @@ export function ActivationCompleteScreen({
           ) : undefined
         }
         summaryLines={[
-          { label: 'Customer', value: order.customerName },
+          { label: 'Customer Name', value: order.customerName },
           { label: numberLabel, value: order.msisdn },
           { label: 'Plan', value: order.planName },
+          ...(order.activeAddons ? [{ label: 'Active Add-Ons', value: order.activeAddons.length ? order.activeAddons.join(', ') : 'None' }] : []),
+          ...(order.billingCycle ? [{ label: 'Billing Cycle', value: order.billingCycle }] : []),
+          ...(order.monthlyRecurringQar !== undefined ? [{ label: 'Monthly Rental', value: `${formatQar(order.monthlyRecurringQar)}/mo` }] : []),
           ...(hideSimType ? [] : [{ label: 'SIM Type', value: order.simType ?? '-' }]),
-          ...(order.dueTodayQar !== undefined ? [{ label: 'Due Today', value: `${formatQar(order.dueTodayQar)}` }] : []),
-          ...(order.monthlyRecurringQar !== undefined
-            ? [{ label: 'Monthly Recurring', value: `${formatQar(order.monthlyRecurringQar)}/mo` }]
-            : []),
-          { label: 'Status', value: order.statusLabel ?? (order.pendingApproval ? 'Submitted for Approval' : 'Complete') },
+          // A port-in request's own references (NPAS reference, form number, response deadline).
           ...(order.extraLines ?? []),
-          // The cue for the fibre actions below: whether the customer's location can be served by fibre.
-          { label: 'Customer Location', value: fibre === 'rfs' ? 'RFS - Eligible for Fibre' : fibre === 'not-rfs' ? 'Not RFS (not ready for service)' : fibre === 'unknown' ? 'Not on file' : 'Checking...' },
         ]}
         actions={[
-          { label: 'View Order', variant: 'primary', onClick: () => navigate(`${ORDER_DETAIL_ROUTE}?id=${order.orderId}`) },
+          // Done & Exit closes the activity and is the primary action; View My Orders and the rest follow.
+          { label: 'Done & Exit', variant: 'primary', onClick: () => void closeActivity() },
+          { label: 'View My Orders', onClick: () => navigate(MY_ORDERS_ROUTE) },
           ...(order.trackAction ? [{ label: order.trackAction.label, onClick: () => navigate(order.trackAction!.to) }] : []),
           // A location that is ready for service can go on to fibre activation. Create Lead (always offered once the
           // location is read) records the fibre interest as a lead straight away and confirms it with a toast.
           ...(fibre === 'rfs' ? [{ label: 'Continue with Fibre', onClick: () => navigate(FIBRE_ACTIVATION_ROUTE) }] : []),
           ...(fibre !== undefined ? [{ label: leadId ? `Lead ${leadId} created` : 'Create Lead', onClick: () => void createLead() }] : []),
-          { label: 'Print', onClick: () => window.print() },
-          { label: 'Create Activity', onClick: () => setActivityOpen(true) },
-          { label: 'Done & Exit', onClick: () => void closeActivity() },
+          { label: 'Additional Notes', onClick: () => setActivityOpen(true) },
+        ]}
+        // Print, then the terms the customer signed; the Supplementary Form only for a line with an actual user other than the customer.
+        printActions={[
+          { label: 'Print Order', onClick: () => window.print() },
+          ...(order.terms ? [{ label: 'Print CAF', onClick: () => void printTerms(order) }] : []),
+          ...(order.terms?.supplementary ? [{ label: 'Print Supplementary Form', onClick: () => printSupplementaryTerms(order) }] : []),
         ]}
       />
       <Modal
@@ -279,6 +297,7 @@ export function ActivationCompleteScreen({
         <div className="mt-4">
           <Textarea
             label="Comments"
+            required
             rows={4}
             value={activityComments}
             onChange={(e) => setActivityComments(e.target.value)}
@@ -286,26 +305,19 @@ export function ActivationCompleteScreen({
           />
         </div>
       </Modal>
-      {/* Always shown: the fibre offer when the location is ready for service, otherwise why there is none. */}
-      <section aria-label="Eligible offers" className="w-full max-w-xl mx-auto mt-6 card p-5 text-center no-print print:hidden">
-        <h2 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-3">{fibre === 'rfs' || fibre === undefined ? 'Eligible offers' : 'No eligible offers'}</h2>
-        {fibre === 'rfs' ? (
+      {/* Only when there is an offer: the fibre offer for a location that is ready for service. Nothing is shown while the location is being
+          read, or when there is none (no location on file, or not ready for fibre). */}
+      {fibre === 'rfs' && (
+        <section aria-label="Eligible offers" className="w-full max-w-xl mx-auto mt-6 card p-5 text-center no-print print:hidden">
+          <h2 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-3">This customer location is Ready for Service.</h2>
           <ul className="divide-y divide-border-soft">
             <li className="flex items-center justify-between gap-3 py-2">
               <span className="text-fg text-[length:var(--fs-body)]">Fibre at the customer's location</span>
               <Badge variant="success">RFS - Eligible for Fibre</Badge>
             </li>
           </ul>
-        ) : (
-          <p className="text-fg-2 text-[length:var(--fs-body)]">
-            {fibre === undefined
-              ? 'Checking the customer\'s location...'
-              : fibre === 'not-rfs'
-                ? 'The customer\'s location is not ready for fibre service.'
-                : 'There is no location on file to check for fibre.'}
-          </p>
-        )}
-      </section>
+        </section>
+      )}
     </div>
   );
 }

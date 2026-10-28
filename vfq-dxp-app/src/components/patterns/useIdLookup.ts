@@ -7,7 +7,7 @@ import { useActedForCustomer } from './useActedForCustomer';
 import { useEnterToSubmit } from '../../hooks/useEnterToSubmit';
 import type { NationalAddress, NewCustomerMoi } from './idLookupModel';
 import { pickHrnDemoNas, type DemoNasRecord } from './idLookupModel';
-import { MAX_SCAN_ATTEMPTS, LEGACY_MAX_SCAN_ATTEMPTS, SCANNABLE_ID_TYPES, captureModeOf, NEW_CUSTOMER_ID_TYPES, buildNewCustomerPatch, misread, misreadDate, isoToDmy, selectScanCandidates } from './idLookupModel';
+import { MAX_SCAN_ATTEMPTS, LEGACY_MAX_SCAN_ATTEMPTS, SCANNABLE_ID_TYPES, captureModeOf, NEW_CUSTOMER_ID_TYPES, buildNewCustomerPatch, isoToDmy, selectScanCandidates } from './idLookupModel';
 import type { DuplicateCandidate, IdLookupValue } from './idLookupModel';
 import { isIdExpired } from '../../engines/eligibilityEngine';
 import { canViewCustomerSegment } from '../../engines/agentPrivilegeEngine';
@@ -286,7 +286,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
           ? undefined
           : (
               await callService('nas', () =>
-                mockDataEngine.list<{ documentNumber: string; linkedPassportNumber?: string; expiryDate?: string; name: string; firstName?: string; middleName?: string; lastName?: string; dob: string; nationality: string; gender?: string; email?: string; occupation?: string; nationalAddress?: NationalAddress }>(
+                mockDataEngine.list<{ documentNumber: string; linkedPassportNumber?: string; expiryDate?: string; name: string; firstName?: string; middleName?: string; lastName?: string; dob: string; nationality: string; gender?: string; email?: string; mobile?: string; occupation?: string; nationalAddress?: NationalAddress }>(
                   'nas-records'
                 )
               )
@@ -304,7 +304,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
       const settle = (moiResult: NonNullable<IdLookupValue['moiResult']>) => {
         // What the reader printed is captured only while the reader read it: an upload, and the typed-entry pass after the reader failed, supply
         // just the number and expiry the agent typed.
-        const card = captureMode === 'manual' || captureMode === 'upload' ? undefined : latest.current.qidScans?.captured;
+        const card = captureMode === 'upload' ? undefined : latest.current.qidScans?.captured;
         const result = verifyThenFetch
           ? reconcileIdentity(
               { idNumber: requested, expiry: latest.current.scannedExpiry, name: card?.name, dob: card?.dob, nationality: card?.nationality },
@@ -435,6 +435,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
             dob: src.dob,
             nationality: src.nationality,
             email: src.email,
+            mobile: nasRecord?.mobile,
             emailSource: 'NAS',
             isNewCustomer: true,
             gender: src.gender,
@@ -632,6 +633,16 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
     return true;
   };
 
+  // The barcode button (Retake 3 onwards): the demo reader scans the card's barcode and the number lands in the field. It resolves the same
+  // document the OCR passes do, so the MOI lookup that follows finds the same person.
+  const handleBarcodeScan = async () => {
+    const scanned = await readDocumentFromScan();
+    if (!scanned) return;
+    setNotFound(false);
+    setReconciliation(undefined);
+    onChange({ ...latest.current, idNumber: scanned.documentNumber, moiResult: undefined });
+  };
+
   // Simulated OCR. A real scanner reads the number off the card, which is the
   // only reason the number field can be locked at all - with no scanner and no
   // typing, nothing could ever be looked up.
@@ -712,8 +723,8 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
       // has to Retake, which arrives clear and re-runs this effect.
       if (value.qidScans?.clear === false && !verifyThenFetch) return;
       const typeAtStart = chosenType;
-      // Uploaded, or past the barcode pass: nothing is read - the agent types the number and expiry from the document.
-      if (captureMode === 'upload' || captureMode === 'manual') return;
+      // Uploaded, or the barcode passes: no number is read off the card - the agent types the expiry, and a barcode scan supplies the number.
+      if (captureMode === 'upload' || captureMode === 'barcode') return;
       void readDocumentFromScan().then((scanned) => {
         const now = latest.current;
         // The agent switched type while the read was in flight: that read belongs to the document they walked away from.
@@ -735,28 +746,20 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
         // downstream - the field label, the MOI lookup, the eligibility ID-type
         // check - keys off what was actually in the reader rather than off the
         // 'QID' default this step starts on.
-        // Blurred first pass (verifyThenFetch): OCR captures a WRONG number. The
-        // agent must Retake; nothing here can be fetched until they do.
-        const blurred = verifyThenFetch && now.qidScans?.clear === false;
         onChange({
           ...now,
           // The selected type stands; only the scan-first flow takes the type from the document.
           idType: typeAtStart ?? scanned.documentType,
-          idNumber: blurred ? misread(scanned.documentNumber) : scanned.documentNumber,
-          // The first pass reads both wrongly (blurred); a clear read gets both right; the barcode gives the number only.
-          scannedExpiry:
-            verifyThenFetch && captureMode !== 'barcode' && scanned.expiryDate
-              ? blurred
-                ? misreadDate(isoToDmy(scanned.expiryDate))
-                : isoToDmy(scanned.expiryDate)
-              : undefined,
+          idNumber: scanned.documentNumber,
+          // A clear read gets both right. Retake 2 reads the number only: the agent types the expiry.
+          scannedExpiry: verifyThenFetch && captureMode === 'ocr-auto' && scanned.expiryDate ? isoToDmy(scanned.expiryDate) : undefined,
         });
       });
       return;
     }
     if (value.moiResult || loading) return;
-    // verifyThenFetch: the agent verifies against the card and presses Fetch.
-    if (verifyThenFetch) return;
+    // verifyThenFetch: the agent types the expiry and presses Fetch - except for a clear read (first scan, Retake 1), which calls MOI itself.
+    if (verifyThenFetch && captureMode !== 'ocr-auto') return;
     if (autoFetchedNumber.current === number) return;
     autoFetchedNumber.current = number;
     void runMoiValidation();
@@ -822,6 +825,7 @@ export function useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType,
     manualEntryUnlocked,
     handleScanAttempt,
     handleDemoScan,
+    handleBarcodeScan,
     handleKeyDown,
   };
 }

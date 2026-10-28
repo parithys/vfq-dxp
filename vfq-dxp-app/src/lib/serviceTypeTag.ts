@@ -25,6 +25,7 @@ export const SERVICE_TYPE_TAGS = {
   // A postpaid plan's class (planClass in products.json), worded short for the plan cards on Offers & Plans (the Recommended Offers page keeps the plain Postpaid tag).
   'postpaid-voice': { label: 'Voice Plan', colour: BLUE },
   'postpaid-broadband': { label: 'Broadband Plan', colour: TEAL },
+  'postpaid-family': { label: 'Family Plan', colour: AMBER },
   prepaid: { label: 'Prepaid', colour: GREEN },
   'fixed-line': { label: 'Fixed Line', colour: PINK },
 } as const;

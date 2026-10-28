@@ -2,10 +2,11 @@ import type { GuidedContactValue } from '../../components/patterns/guidedContact
 import { accountTypeForJourney } from '../../engines/creditLimit';
 import { CreditLimitCard } from '../../components/patterns/CreditLimitCard';
 import { billingAccountSummary } from './summary';
-import { maskEmail } from '../../components/patterns/guidedContactModel';
+import { displayedEmail, primaryContactMobile } from '../../components/patterns/guidedContactModel';
 import type { EligibilityResult } from '../../components/domain/eligibilityTypes';
 import type { ZsbAddressValue } from '../../components/patterns/ZsbAddressStep';
 import { BillingAccount } from './BillingAccount';
+import { toLocalMsisdn } from '../../components/domain/msisdnPickerModel';
 import { BillingAccountAutoResolver } from '../../components/patterns/BillingAccountAutoResolver';
 import { BILLING_PROFILE_LABEL } from '../../data/stepLabels';
 import { isBillingAccountValid } from '../../components/patterns/billingAccountModel';
@@ -78,20 +79,26 @@ export function billingAccountStep(
           customerName={(values.contact as GuidedContactValue | undefined)?.moiResult?.name}
           customerEmail={(() => {
             const c = values.contact as GuidedContactValue | undefined;
-            return c?.moiResult?.isNewCustomer && !c?.moiResult?.createdByAgent && c.email ? maskEmail(c.email) : c?.email;
+            return displayedEmail(c);
+          })()}
+          // A NEW account (a new customer, or one with no billing account yet) gets its credit limit in the Billing Details: the default for the segment, and the agent's choice from the values that apply.
+          creditLimit={
+            billing.creatingNew && !billing.selectedProfileId && nationality ? (
+              <CreditLimitCard
+                embedded
+                nationality={nationality}
+                accountType={accountTypeForJourney(typeof opts.journey === 'function' ? opts.journey(values) : (opts.journey ?? 'postpaid'))}
+                customerSegment={eligibility?.segment}
+                selected={billing.newAccount?.creditLimitQar}
+                onChange={(limit) => setValue('billingAccount', { ...billing, newAccount: { ...billing.newAccount, creditLimitQar: limit } })}
+              />
+            ) : undefined
+          }
+          customerMobile={(() => {
+            const phone = primaryContactMobile(values.contact as GuidedContactValue | undefined);
+            return phone ? toLocalMsisdn(phone) : undefined;
           })()}
         />
-        {/* A NEW account (a new customer, or one with no billing account yet) gets its credit limit here: the default for the segment, and the agent's choice from the values that apply. */}
-        {billing.creatingNew && !billing.selectedProfileId && nationality && (
-          <CreditLimitCard
-            nationality={nationality}
-            accountType={accountTypeForJourney(typeof opts.journey === 'function' ? opts.journey(values) : (opts.journey ?? 'postpaid'))}
-            hrnFeeApplies={eligibility?.requiresHrnAdvance}
-            customerSegment={eligibility?.segment}
-            selected={billing.newAccount?.creditLimitQar}
-            onChange={(limit) => setValue('billingAccount', { ...billing, newAccount: { ...billing.newAccount, creditLimitQar: limit } })}
-          />
-        )}
         </>
       );
     },

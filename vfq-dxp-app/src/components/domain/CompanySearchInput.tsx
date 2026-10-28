@@ -37,6 +37,7 @@ interface CompanySearchInputProps {
 
 const BUILDING_ICON = 'M4 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16 M15 21V9h4a1 1 0 0 1 1 1v11 M8 8h3 M8 12h3 M8 16h3';
 const PLUS_ICON = 'M12 5v14 M5 12h14';
+const CHEVRON_ICON = 'M6 9l6 6 6-6';
 
 // Company search and selection for a B2B2C order, replacing the free-text
 // "Company Name (B2B2C)" box. Mirrors LocationInput's interaction (search
@@ -79,9 +80,10 @@ export function CompanySearchInput({ label, value, onChange, id, allowAddNew = t
   const q = query.trim().toLowerCase();
   // Name AND CR number, because a B2B2C employer is as often identified by its
   // commercial registration as by a name the agent would have to spell.
+  // A dropdown with search (2026-10-27): with nothing typed, the whole registry is on offer; typing narrows it.
   const results = q
     ? accounts.filter((a) => a.name.toLowerCase().includes(q) || (a.crNumber ?? '').toLowerCase().includes(q)).slice(0, 20)
-    : [];
+    : accounts;
 
   // An exact name match means "Add new company" would create a duplicate of a
   // row already on offer, so it is withheld in that one case.
@@ -101,19 +103,19 @@ export function CompanySearchInput({ label, value, onChange, id, allowAddNew = t
 
   // Keyboard: Arrow keys walk the registry rows and then "Add new company"; Enter picks the highlighted row; Escape closes
   // the list but keeps the text. Same hook (and same markup contract) as PlanSearchBox and GlobalSearch.
-  const showAddNew = allowAddNew && !exactMatch;
+  const showAddNew = allowAddNew && Boolean(q) && !exactMatch;
   const inputRef = useRef<HTMLInputElement>(null);
   const optionPrefix = `${inputId}-opt`;
   const nav = useSearchListNav({
     idPrefix: optionPrefix,
     count: results.length + (showAddNew ? 1 : 0),
-    enabled: open && Boolean(q),
+    enabled: open,
     resetKey: `${q}|${results.length}`,
     inputRef,
     onSelect: (i) => (i < results.length ? pickExisting(results[i]) : addNew()),
     onEscape: () => setOpen(false),
   });
-  const activeRow = 'bg-surface ring-2 ring-inset ring-[var(--focus-outline)]';
+  const activeRow = 'bg-[var(--field-focus-bg)]';
 
   const selectedAccount = value.companyAccountId
     ? accounts.find((a) => a.enterpriseAccountId === value.companyAccountId)
@@ -121,27 +123,18 @@ export function CompanySearchInput({ label, value, onChange, id, allowAddNew = t
 
   return (
     <div className="flex flex-col gap-1">
-      {(label || (committed && selectedAccount)) && (
-        // The account the company is linked to sits at the right of the label row.
-        <div className="flex items-center justify-between gap-3">
-          {label ? (
-            <label htmlFor={inputId} className="text-[length:var(--fs-label)] text-fg">
-              {label}
-              {required && (
-                <span className="text-[var(--field-border-error)]" aria-hidden="true">
-                  {' *'}
-                </span>
-              )}
-            </label>
-          ) : (
-            <span />
+      {label && (
+        <label htmlFor={inputId} className="text-[length:var(--fs-label)] text-fg">
+          {label}
+          {required && (
+            <span className="text-[var(--field-border-error)]" aria-hidden="true">
+              {' *'}
+            </span>
           )}
-          {committed && selectedAccount && (
-            <span className="text-[length:var(--fs-caption)] text-success">Linked to <strong className="font-semibold">{selectedAccount.enterpriseAccountId}</strong></span>
-          )}
-        </div>
+        </label>
       )}
       <SearchField
+        hideIcon
         wrapperRef={containerRef}
         ref={inputRef}
         {...nav.inputProps}
@@ -149,11 +142,11 @@ export function CompanySearchInput({ label, value, onChange, id, allowAddNew = t
         value={query}
         role="combobox"
         aria-required={required || undefined}
-        aria-expanded={open && Boolean(q)}
-        aria-controls={open && q ? `${inputId}-listbox` : undefined}
+        aria-expanded={open}
+        aria-controls={open ? `${inputId}-listbox` : undefined}
         aria-autocomplete="list"
         autoComplete="off"
-        placeholder="Search by company name or CR number"
+        placeholder="Search by company name"
         onChange={(e) => {
           setQuery(e.target.value);
           setOpen(true);
@@ -162,7 +155,16 @@ export function CompanySearchInput({ label, value, onChange, id, allowAddNew = t
         }}
         onFocus={() => setOpen(true)}
       >
-        {open && q && (
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-label={open ? 'Close company list' : 'Open company list'}
+          onClick={() => setOpen((o) => !o)}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-fg"
+        >
+          <Icon path={CHEVRON_ICON} className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} />
+        </button>
+        {open && (
           <ul
             id={`${inputId}-listbox`}
             role="listbox"
@@ -175,7 +177,7 @@ export function CompanySearchInput({ label, value, onChange, id, allowAddNew = t
                 role="option"
                 aria-selected={a.enterpriseAccountId === value.companyAccountId}
                 onClick={() => pickExisting(a)}
-                className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-surface ${nav.active === i ? activeRow : ''}`}
+                className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-[var(--field-focus-bg)] ${nav.active === i ? activeRow : ''}`}
               >
                 <span className="mt-0.5 text-[var(--field-icon)] shrink-0">
                   <Icon path={BUILDING_ICON} className="w-5 h-5" />
@@ -210,7 +212,7 @@ export function CompanySearchInput({ label, value, onChange, id, allowAddNew = t
                 role="option"
                 aria-selected={false}
                 onClick={addNew}
-                className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-surface ${nav.active === results.length ? activeRow : ''}`}
+                className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-[var(--field-focus-bg)] ${nav.active === results.length ? activeRow : ''}`}
               >
                 <span className="mt-0.5 text-accent shrink-0">
                   <Icon path={PLUS_ICON} className="w-5 h-5" />

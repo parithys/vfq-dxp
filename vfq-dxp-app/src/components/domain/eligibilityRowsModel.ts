@@ -1,8 +1,4 @@
-import { evaluateRule } from '../../engines/ruleEngine';
-import { hrnAdvanceQar } from '../../engines/hrnConfiguration';
-import { usePersonaStore } from '../../stores/personaStore';
 import { type EligibilityCheck, type EligibilityOutcome } from '../../engines/eligibilityEngine';
-import { formatQar } from '../../lib/format';
 
 // Row treatment per outcome, for the divided-list layout adopted 2026-09-25.
 //
@@ -47,7 +43,7 @@ export const ROW_ICON: Record<RowTone, string> = {
 type RowTone = EligibilityOutcome | 'advisory';
 
 /** The title of the HRN advance-payment advisory, here and on the info toast that announces it. */
-export const UPFRONT_PAYMENT_TITLE = 'Upfront Payment Required';
+export const UPFRONT_PAYMENT_TITLE = 'Upfront Payment Required (HRN)';
 
 export interface EligibilityRow {
   id: string;
@@ -73,7 +69,6 @@ export function buildEligibilityRows(
   /** False at Customer Verification (before a product is chosen): the HRN advance is a postpaid matter, so no HRN row yet. */
   includeHrn = true
 ): EligibilityRow[] {
-  const hrn = evaluateRule('BR-187', { hrnFlag });
   return [
     ...checks.map((check) => {
       // Active Lines has no row heading of its own: the cap message ("Qatari limit of 5 active
@@ -93,9 +88,7 @@ export function buildEligibilityRows(
             id: 'hrn',
             title: hrnFlag ? UPFRONT_PAYMENT_TITLE : 'Non-HRN new account',
             detail: hrnFlag
-              ? hrn.message
-                  ? `An advance payment of ${formatQar(hrnAdvanceQar({ nationality, personaId: usePersonaStore.getState().activePersonaId }))} is required at checkout.`
-                  : 'An advance payment is required at checkout.'
+              ? 'An advance payment is required at checkout.'
               : nationality
                 ? `${nationality} Citizen - not a high-risk nationality`
                 : 'Not a high-risk nationality',

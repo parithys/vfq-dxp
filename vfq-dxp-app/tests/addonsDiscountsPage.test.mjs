@@ -16,8 +16,8 @@ after(close);
 const discounts = JSON.parse(fs.readFileSync('public/mock-data/addons-discounts.json', 'utf8')).filter((d) => d.category === 'Discount');
 const TYPE_OF = { mada: 'MADA Discount', b2b2c: 'B2B2C Discount', retired: 'Retired Discount' };
 
-test('the page is named "Addons & Discounts" from one shared label, in the postpaid and prepaid extras steps', () => {
-  assert.equal(labels.ADDONS_DISCOUNTS_LABEL, 'Addons & Discounts');
+test('the page is named "Addons" from one shared label, in the postpaid and prepaid extras steps', () => {
+  assert.equal(labels.ADDONS_DISCOUNTS_LABEL, 'Addons');
   for (const f of ['src/capabilities/PlanSelection/postpaidStep.tsx', 'src/capabilities/PlanSelection/step.tsx']) {
     assert.match(fs.readFileSync(f, 'utf8'), /label: ADDONS_DISCOUNTS_LABEL/, f);
   }
@@ -51,5 +51,5 @@ test('Eligible Discounts always has one selection: No Discount when none is chos
   assert.match(panel, /onToggle=\{\(\) => onSelectDiscount\(d\.addonDiscountId\)\}/);       // a discount card selects it; it never clears itself
   assert.doesNotMatch(panel, /discountId === d\.addonDiscountId \? undefined/);
   const hook = fs.readFileSync('src/components/patterns/usePostpaidPlanAddons.ts', 'utf8');
-  assert.match(hook, /specialDiscountToPreselect\(discounts, customerBenefit\)/);           // the Special Discount selects itself
+  assert.match(hook, /specialDiscountToPreselect\(discounts\.filter\(\(d\) => d\.planId === selectedProductId\), customerBenefit\)/);           // the Special Discount selects itself
 });

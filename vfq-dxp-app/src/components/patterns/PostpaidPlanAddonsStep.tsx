@@ -1,18 +1,14 @@
 import { EmptyState } from '../primitives/EmptyState';
 import { defaultBillLimitQar } from '../../engines/postpaidPricing';
-import { addonChargeNowQar } from '../../engines/addonCategories';
 import { type CustomerBenefit } from '../../engines/customerBenefitEngine';
 import { BillLimitEditor } from '../domain/BillLimitEditor';
 import { PlanSearchBox } from './PlanSearchBox';
-import type { AddonPricing } from '../../engines/addonCategories';
 import { PlanTabStrip } from './PlanTabStrip';
 import { Select } from '../primitives/Select';
 import { PLAN_TYPE_FILTERS } from './postpaidPlanModel';
 import type { PlanTypeFilter } from './postpaidPlanModel';
 import { PlanGroupPanel } from './PlanGroupPanel';
 import { PostpaidAddonsPanel } from './PostpaidAddonsPanel';
-import { PostpaidDiscountsPanel } from './PostpaidDiscountsPanel';
-import { PostpaidMonthlySummary } from './PostpaidMonthlySummary';
 import { PlanDetailsDrawer } from './PlanDetailsDrawer';
 import { usePostpaidPlanAddons } from './usePostpaidPlanAddons';
 
@@ -37,8 +33,6 @@ interface PostpaidPlanAddonsStepProps {
   /** The credit limit the bill limit may not exceed. */
   billLimitMax?: number;
   /** The Paid / Free add-on filter, owned by the step's header (see postpaidExtrasStep). */
-  addonPricing?: AddonPricing;
-  onAddonPricingChange?: (pricing: AddonPricing) => void;
   /** Agent 360... no - Agent 360 doesn't apply here; this is BR-076's
    * eligibility-derived default (EligibilityGateStep), shown read-only so
    * the agent sees what limit this activation was pre-qualified against. */
@@ -79,8 +73,6 @@ export function PostpaidPlanAddonsStep({
   billLimit,
   onBillLimitChange,
   billLimitMax,
-  addonPricing,
-  onAddonPricingChange,
   customerBenefit,
   specialDiscountType,
   customerBenefits,
@@ -108,12 +100,6 @@ export function PostpaidPlanAddonsStep({
     selectedPlan,
     preBundled,
     selectionSource,
-    bundledItems,
-    selectedAddons,
-    discountsState,
-    retryDiscounts,
-    selectedDiscount,
-    charges,
   } = usePostpaidPlanAddons({
     selectedProductId,
     discountId,
@@ -211,6 +197,8 @@ export function PostpaidPlanAddonsStep({
                 onSelectProduct={selectPlan}
                 onDeselectProduct={onDeselectProduct}
                 setDetailPlan={setDetailPlan}
+                specialDiscountType={specialDiscountType}
+                discountPct={Math.abs(discounts.find((d) => d.addonDiscountId === discountId)?.price ?? 0)}
               />
             )}
 
@@ -238,8 +226,6 @@ export function PostpaidPlanAddonsStep({
                       billLimit={billLimit}
                       onBillLimitChange={onBillLimitChange}
                       billLimitMax={billLimitMax}
-                      addonPricing={addonPricing}
-                      onAddonPricingChange={onAddonPricingChange}
                       hideBillLimit
                     />
                   </div>
@@ -254,28 +240,7 @@ export function PostpaidPlanAddonsStep({
                 This plan is an offer: its add-ons and discounts are bundled, so there is nothing to choose here. Continue to review the monthly summary.
               </p>
             )}
-            {mode !== 'plan' && selectionSource === 'PLAN' && selectedPlan && (
-              <section
-                aria-label={`Eligible discounts for ${selectedPlan.name}`}
-                className="border-t border-[var(--field-card-border)] pt-6"
-              >
-                <div className="space-y-3">
-                  <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">
-                    Eligible Discounts
-                  </h4>
-                  <PostpaidDiscountsPanel
-                    selectedProductId={selectedProductId}
-                    preBundled={preBundled}
-                    discountId={discountId}
-                    onSelectDiscount={onSelectDiscount}
-                    discounts={discounts}
-                    discountsState={discountsState}
-                    onRetryDiscounts={retryDiscounts}
-                  />
-                </div>
-              </section>
-            )}
-            {/* The bill limit, after the add-ons and the eligible discounts, full width under a separator and without a box: it is a spending control for the
+            {/* The bill limit, after the add-ons, full width under a separator and without a box: it is a spending control for the
                 whole plan, not one of the add-ons. */}
             {mode === 'extras' && selectedPlan && selectionSource === 'PLAN' && !preBundled && (
               <div className="border-t border-[var(--field-card-border)] pt-6">
@@ -286,12 +251,6 @@ export function PostpaidPlanAddonsStep({
         )}
       </div>
 
-      {mode !== 'plan' && selectedPlan && charges && <PostpaidMonthlySummary
-          charges={charges}
-          selectedDiscount={selectedDiscount}
-          bundledItems={bundledItems}
-          addedAddons={selectionSource === 'PLAN' ? selectedAddons.map((a) => ({ name: addonChargeNowQar(a) !== a.mrcQAR ? `${a.name} (Months 1\u20133)` : a.name, mrcQAR: addonChargeNowQar(a) })) : []}
-        />}
 
       {/* Plan details, on demand. A drawer rather than a modal: it is reference
           material read while choosing, so it slides in beside the list instead
@@ -301,7 +260,7 @@ export function PostpaidPlanAddonsStep({
           particular is on every seeded plan and was displayed nowhere - the
           cards show data/voice/speed only, so the contract term the customer is
           signing up to was the one figure an agent could not see. */}
-      <PlanDetailsDrawer detailPlan={detailPlan} onClose={() => setDetailPlan(null)} selectedProductId={selectedProductId} onSelectProduct={selectPlan} />
+      <PlanDetailsDrawer detailPlan={detailPlan} onClose={() => setDetailPlan(null)} selectedProductId={selectedProductId} onSelectProduct={selectPlan} showPlanDetails={activeTab === 'specials'} />
     </div>
   );
 }

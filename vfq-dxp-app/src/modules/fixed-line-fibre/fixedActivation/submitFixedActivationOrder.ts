@@ -6,6 +6,7 @@ import { contactIdentityOrderFields } from '../../new-connection/contactIdentity
 import { saveCustomerSalutation } from '../../new-connection/saveCustomerSalutation';
 import { idScanAttachments } from '../../new-connection/idScanAttachments';
 import { COLLECTION_TEAM_ROLE, emailVerification, maskEmail, persistBillingAccount } from '../../../capabilities';
+import { orderTerms, primaryContactMobile } from '../../../capabilities';
 import { decisionRecord, needsCreditControl } from '../../../engines/connectionEligibility';
 import type { GuidedContactValue } from '../../../capabilities';
 import { assertEligibilityChecked } from '../../../engines/eligibilityGuard';
@@ -65,7 +66,7 @@ export async function submitFixedActivationOrder(
     idNumber: contact.idNumber,
     contactName: contact.moiResult?.name,
     contactEmail: contact.email,
-    contactPhone: contact.moiResult?.phone,
+    contactPhone: primaryContactMobile(contact),
     // The credit limit rules apply to a fixed-line account as to any other new account: the default for the customer, the agent's choice from the card.
     creditLimitQar: eligibility?.defaultCreditLimitQar,
     nationality: eligibility?.nationality,
@@ -97,7 +98,7 @@ export async function submitFixedActivationOrder(
     // A new customer's National Address as the NAS returned it: kept with the order, unchanged; the address the customer gave is `address`.
     nationalAddress: contact.moiResult?.nationalAddress,
     // The identity document captured at Customer Verification, as scanned or uploaded.
-    attachments: idScanAttachments(contact.idType, contact.qidScans),
+    attachments: idScanAttachments(contact.idType, contact.qidScans, { idNumber: contact.idNumber }),
     // Which home product was sold (Fibre, Fixed-Line, FWA, 5G Home); the service type below is what the installation uses.
     homeProduct: homeProductLabel(values.homeProduct as HomeProduct | undefined),
     serviceType: serviceTypeLabel(installation?.serviceType),
@@ -162,6 +163,7 @@ export async function submitFixedActivationOrder(
     customerEmail: contact.email,
     customerEmailDisplay: contact.moiResult?.isNewCustomer && !contact.moiResult?.createdByAgent && contact.email ? maskEmail(contact.email) : contact.email,
     customerEmailVerified: emailVerification(contact.email, contact.moiResult?.email).verified,
+    terms: orderTerms(values, 'postpaid'),
     service: 'fixed',
   };
 }

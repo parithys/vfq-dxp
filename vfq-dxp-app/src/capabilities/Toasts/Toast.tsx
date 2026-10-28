@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useNotificationStore } from '../../stores/notificationStore';
 import type { ToastBrand, ToastKind, ToastRow } from '../../stores/notificationStore';
 import { Icon } from '../../components/primitives/Icon';
-import { OoredooMark } from '../../components/primitives/OoredooMark';
 import { VodafoneMark } from '../../components/primitives/VodafoneMark';
 
 const CLOSE_ICON = 'M18 6L6 18 M6 6l12 12';
@@ -70,7 +69,8 @@ const rowToneClass: Record<NonNullable<ToastRow['tone']>, string> = {
 // An empty slot is no longer ambiguous now that "Active lines" is a labelled
 // row, which is what made the filler look necessary in the first place.
 function ToastBrandMark({ brand }: { brand: ToastBrand }) {
-  if (brand.operator !== 'vodafone') return <OoredooMark />;
+  // A competitor's customer shows no mark at all.
+  if (brand.operator !== 'vodafone') return null;
   return (
     <span className="flex items-center gap-2">
       <VodafoneMark className="w-4 h-4 shrink-0" />
@@ -267,18 +267,7 @@ export function ToastContainer() {
                               keeps its row colour and colour alone would not
                               distinguish it from the three values that are
                               only text. */}
-                          {row.to ? (
-                            <Link
-                              to={row.to}
-                              state={row.state}
-                              onClick={() => dismissToast(t.id)}
-                              className="text-link underline decoration-white/30 underline-offset-2 hover:decoration-current"
-                            >
-                              {row.value}
-                            </Link>
-                          ) : (
-                            row.value
-                          )}
+                          {row.value}
                           {/* Own line, at caption size and dimmed, so it
                               qualifies the value above without competing with
                               it for the row's visual weight. */}

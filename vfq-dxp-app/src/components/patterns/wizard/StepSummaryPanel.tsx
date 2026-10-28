@@ -51,6 +51,7 @@ export function StepSummaryPanel({
   onEdit,
   returnTo,
   milestoneSteps,
+  current,
   variant = 'aside',
 }: {
   /** Completed steps that declare a summary, in step order. */
@@ -61,65 +62,70 @@ export function StepSummaryPanel({
   /** Go back to a step. Absent when editing is not allowed. */
   onEdit?: (index: number) => void;
   /** Shown after going back to edit: jumps to the furthest step reached. */
-  returnTo?: { label: string; onReturn: () => void };
+  returnTo?: { label: string; onReturn: () => void; index: number };
   /** Keys of the steps that reached a journey milestone: their rows show a flag in place of the tick. */
   milestoneSteps?: ReadonlySet<string>;
+  /** The page the agent is on now: listed in step order with the completed ones, marked as current, showing what has been entered on it so far. */
+  current?: CompletedSummaryStep;
   /** 'aside': the fixed side panel. 'accordion': the collapsible block shown above the action buttons on small screens. */
   variant?: 'aside' | 'accordion';
 }) {
-  const [openOverride, setOpenOverride] = useState<Record<string, boolean>>({});
+  // Which details the agent has expanded, remembered only for the page they were on: moving to another page starts everything collapsed again.
+  const [expanded, setExpanded] = useState<{ page: string | undefined; open: Record<string, boolean> }>({ page: undefined, open: {} });
   const [accordionOpen, setAccordionOpen] = useState(false);
-  const lastKey = completed.at(-1)?.step.key;
-  const isOpen = (key: string) => openOverride[key] ?? key === lastKey;
+  const currentKey = current?.step.key;
+  const openOverride = expanded.page === currentKey ? expanded.open : {};
+  const setOpenOverride = (update: (o: Record<string, boolean>) => Record<string, boolean>) =>
+    setExpanded((e) => ({ page: currentKey, open: update(e.page === currentKey ? e.open : {}) }));
+  const isOpen = (key: string) => openOverride[key] ?? false;
 
-  const allFields = useMemo(() => completed.flatMap((c) => c.step.summary ?? []), [completed]);
+  const allFields = useMemo(() => [...completed, ...(current ? [current] : [])].flatMap((c) => c.step.summary ?? []), [completed, current]);
   const labels = useSummaryLabels(allFields);
 
-  const heading = `Summary`;
+  const heading = `Journey Summary`;
   const count = `${completed.length} of ${totalSteps} steps completed`;
-  const percent = totalSteps > 0 ? Math.min(100, Math.round((completed.length / totalSteps) * 100)) : 0;
 
-  const returnButton = returnTo ? (
-    <div className="px-4 py-3 border-b border-border-soft">
-      <button
-        type="button"
-        onClick={returnTo.onReturn}
-        className="w-full rounded-[var(--radius-button)] border border-[var(--accent-secondary)] bg-bg px-4 py-2 text-[var(--accent-secondary)] font-semibold text-[length:var(--fs-btn-compact)] hover:bg-surface-warm focus:outline-none focus-visible:shadow-[var(--focus-ring)]"
-      >
-        Return to {returnTo.label}
-      </button>
-    </div>
+  const fieldRows = (step: WizardStep, skipEmpty: boolean) =>
+    (step.summary ?? [])
+      .filter((f) => f.when?.(values) !== false)
+      .map((f) => ({ f, value: formatSummaryValue(f, f.value(values), f.labelFrom ? labels[sourceKey(f.labelFrom)] : undefined, (v) => (v === undefined || v === null || v === '' ? undefined : formatDate(v))) }))
+      .filter(({ value }) => !(skipEmpty && value.empty))
+      .map(({ f, value }) => <SummaryFieldRow key={f.key} label={f.label} value={value} />);
+
+  // Completed steps and the current page in step order. The current page is a name-only tinted band: no details, no Edit, no toggle.
+  const entries = [...completed.map((c) => ({ ...c, isCurrent: false })), ...(current ? [{ ...current, isCurrent: true }] : [])].sort((a, b) => a.index - b.index);
+  // After going back to edit, the furthest step reached keeps its place after the current page, as a name that goes straight to it.
+  const returnEntry = returnTo && !entries.some((e) => e.index === returnTo.index) ? returnTo : undefined;
+  const returnRow = returnEntry ? (
+    <StepSummarySection title={returnEntry.label} open={false} onToggle={() => undefined} onGo={returnEntry.onReturn}>
+      {null}
+    </StepSummarySection>
   ) : null;
-
   const body =
-    completed.length === 0 ? (
+    entries.length === 0 ? (
       <p className="px-4 py-6 text-muted text-[length:var(--fs-body)]">Your details will appear here as you complete each step.</p>
     ) : (
-      completed.map(({ index, step }) => (
-        <StepSummarySection
-          key={step.key}
-          title={step.label}
-          open={isOpen(step.key)}
-          onToggle={() => setOpenOverride((o) => ({ ...o, [step.key]: !isOpen(step.key) }))}
-          onEdit={onEdit ? () => onEdit(index) : undefined}
-          milestone={milestoneSteps?.has(step.key)}
-        >
-          {(step.summary ?? [])
-            .filter((f) => f.when?.(values) !== false)
-            .map((f) => (
-              <SummaryFieldRow
-                key={f.key}
-                label={f.label}
-                value={formatSummaryValue(f, f.value(values), f.labelFrom ? labels[sourceKey(f.labelFrom)] : undefined, (v) => (v === undefined || v === null || v === '' ? undefined : formatDate(v)))}
-              />
-            ))}
-        </StepSummarySection>
-      ))
+      entries.map(({ index, step, isCurrent }) => {
+        const rows = isCurrent ? [] : fieldRows(step, false);
+        return (
+          <StepSummarySection
+            key={step.key}
+            title={step.label}
+            open={isCurrent ? openOverride[step.key] ?? true : isOpen(step.key)}
+            onToggle={() => setOpenOverride((o) => ({ ...o, [step.key]: !(isCurrent ? o[step.key] ?? true : isOpen(step.key)) }))}
+            onEdit={onEdit && !isCurrent ? () => onEdit(index) : undefined}
+            milestone={!isCurrent && milestoneSteps?.has(step.key)}
+            current={isCurrent}
+          >
+            {rows.length > 0 ? rows : isCurrent ? null : <p className="py-2 text-muted text-[length:var(--fs-caption)]">Nothing entered on this page yet.</p>}
+          </StepSummarySection>
+        );
+      })
     );
 
   const live = (
     <span className="sr-only" aria-live="polite" role="status">
-      {completed.length === 0 ? 'No steps completed yet.' : `Summary updated: ${count}.`}
+      {completed.length === 0 ? 'No steps completed yet.' : `Summary updated: ${count}.`}{current ? ` Current step: ${current.step.label}.` : ''}
     </span>
   );
 
@@ -136,7 +142,7 @@ export function StepSummaryPanel({
           <span className="text-fg-2 text-[length:var(--fs-caption)]">{count}</span>
         </button>
         {live}
-        {accordionOpen && <div className="border-t border-border-soft max-h-96 overflow-y-auto">{returnButton}{body}</div>}
+        {accordionOpen && <div className="border-t border-border-soft max-h-96 overflow-y-auto">{body}{returnRow}</div>}
       </aside>
     );
   }
@@ -156,21 +162,13 @@ export function StepSummaryPanel({
           </span>
           <div className="min-w-0 flex-1">
             <h2 className="text-on-dark font-bold text-[length:var(--fs-h5)]">{heading}</h2>
-            <p className="text-on-dark-2 text-[length:var(--fs-caption)]">{count}</p>
           </div>
-          <span className="shrink-0 rounded-[var(--radius-pill)] bg-bg px-3 py-1 text-[var(--brand-plum)] font-bold text-[length:var(--fs-caption)] shadow-[var(--shadow-icon-tile)]">{percent}%</span>
-        </div>
-        <div className="mt-4 flex items-center gap-3">
-          <div className="h-2 flex-1 overflow-hidden rounded-[var(--radius-pill)] bg-[var(--on-dark-fill-3)]" role="progressbar" aria-label="Steps completed" aria-valuemin={0} aria-valuemax={totalSteps} aria-valuenow={completed.length}>
-            <div className="h-full rounded-[var(--radius-pill)] bg-[var(--summary-milestone)] transition-[width] duration-[var(--motion-slow)]" style={{ width: `${percent}%` }} />
-          </div>
-          <span className="shrink-0 text-on-dark-2 font-bold uppercase tracking-wide text-[length:var(--fs-micro)]">Progress</span>
         </div>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto">
         {live}
-        {returnButton}
         {body}
+        {returnRow}
       </div>
     </aside>
   );

@@ -1,6 +1,7 @@
 import type { GuidedContactValue } from '../../capabilities';
 import type { CustomerTypeValue } from '../../capabilities/CustomerType/customerTypeModel';
 import type { EligibilityResult } from '../../components/domain/eligibilityTypes';
+import { isNumberWaiver } from '../../engines/numberWaiver';
 import { SUPPORTING_ID_DISCOUNT_TYPES } from '../../components/patterns/postpaidPlanModel';
 
 /**
@@ -58,7 +59,6 @@ export function expectsApproval(values: Record<string, unknown>): boolean {
       : undefined;
   return (
     routesToApproval({ contact, eligibility: values.eligibility as EligibilityResult | undefined, customerType, discountType }) ||
-    values.numberWaiver === 'partial' ||
-    values.numberWaiver === 'full'
+    isNumberWaiver(values.numberWaiver)
   );
 }

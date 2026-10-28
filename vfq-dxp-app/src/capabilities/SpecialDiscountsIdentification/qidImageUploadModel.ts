@@ -1,5 +1,12 @@
 import { type IdVariant, type SpecimenIdentity } from './ScannedIdPreview';
 
+/**
+ * A completed capture (both sides, scan or upload) that is clear enough to read is accepted as it lands - no confirmation step. An unclear
+ * one is not: the agent rescans, and the rescan replaces it.
+ */
+export const isScanAccepted = (v: Pick<QidImageUploadValue, 'frontScanned' | 'backScanned' | 'clear'> | undefined): boolean =>
+  Boolean(v?.frontScanned && v.backScanned && v.clear !== false);
+
 export interface QidImageUploadValue {
   frontScanned?: boolean;
   backScanned?: boolean;
@@ -33,11 +40,7 @@ export interface QidImageUploadProps {
   identity?: SpecimenIdentity;
   /** Layout of the drawn capture - see ScannedIdPreview.variant (the B2B2C / Retired / MADA office ID cards). */
   variant?: IdVariant;
-  /** Adds Accept and Reject beside Retake once a scan is complete: Retake on the left, Accept + Reject grouped on the right. */
-  onAccept?: () => void;
-  onReject?: () => void;
-  /** The agent has accepted this scan (Accept shows as done and is disabled). */
-  accepted?: boolean;
+  /** A clear scan needs no confirmation: it is accepted and saved as soon as it completes; an unclear one is rescanned. */
   value: QidImageUploadValue;
   onChange: (value: QidImageUploadValue) => void;
   /**

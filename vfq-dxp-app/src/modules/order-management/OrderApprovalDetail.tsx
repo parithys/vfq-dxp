@@ -117,7 +117,7 @@ interface Order {
   newBillingProfileName?: string;
   billCardLast4?: string;
   dueTodayQAR?: number;
-  numberWaiver?: string;
+  numberWaiver?: number | string;
   numberWaivedQAR?: number;
   numberUpfrontChargeQAR?: number;
   monthlyRecurringQAR?: number;
@@ -407,7 +407,7 @@ function AttachmentsPanel({ attachments, order }: { attachments: OrderAttachment
                         <FileIcon doc={a} className="w-6 h-6" />
                         <span className="min-w-0">
                           <span className="block text-fg">{a.label}</span>
-                          {a.detail && <span className="block text-muted text-[length:var(--fs-caption)]">{a.detail}</span>}
+                          {(a.fileName ?? a.detail) && <span className="block text-muted text-[length:var(--fs-caption)] break-all">{a.fileName ?? a.detail}</span>}
                         </span>
                       </span>
                     ),
@@ -544,7 +544,7 @@ function OrderDetailsPanel({ order, lastUpdatedMs }: { order: Order; lastUpdated
             )}
             <dl className="grid grid-cols-1 gap-y-3 text-[length:var(--fs-body)]">
               <DetailRow label="Number Price" value={qar(order.numberPriceQAR)} />
-              {order.numberWaiver && <DetailRow label="Waive Off" value={`${order.numberWaiver === 'full' ? 'Full' : 'Partial'} - ${qar(order.numberWaivedQAR) ?? '-'} waived of ${qar(order.numberUpfrontChargeQAR) ?? '-'}`} />}
+              {order.numberWaiver && <DetailRow label="Waive Off" value={`${qar(order.numberWaivedQAR) ?? '-'} waived of ${qar(order.numberUpfrontChargeQAR) ?? '-'}`} />}
               <DetailRow label="One-Time Charges" value={qar(order.nrcTotalQAR)} />
               <DetailRow label="Order Total" value={qar(order.totalQAR)} />
             </dl>

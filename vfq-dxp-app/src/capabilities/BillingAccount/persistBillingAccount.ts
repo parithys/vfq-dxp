@@ -2,7 +2,7 @@ import type { EntityKind } from '../../engines/mockDataEngine';
 import type { JourneyAccountType } from '../../engines/creditLimit';
 import { creditLimitAuditRecord, creditLimitOptions, creditLimitPolicy, creditSegmentOf } from '../../engines/creditLimit';
 import { isHrn } from '../../engines/hrnConfiguration';
-import { ordinal, profilePatchFromEdit } from '../../components/patterns/billingAccountModel';
+import { DEFAULT_BILL_LANGUAGE, DEFAULT_BILL_TYPE, ordinal, profilePatchFromEdit } from '../../components/patterns/billingAccountModel';
 import type { BillingAccountValue } from '../../components/patterns/billingAccountModel';
 
 /** What the customer's billing account is for: decides the account's type. */
@@ -80,6 +80,10 @@ export async function persistBillingAccount(
     billingType: fresh.billingMode ?? 'Arrears',
     billingAddress: ctx.addressLine,
     billMedium: fresh.billMedia ?? 'Email',
+    billType: fresh.billType ?? DEFAULT_BILL_TYPE,
+    billLanguage: fresh.billLanguage ?? DEFAULT_BILL_LANGUAGE,
+    ...(fresh.vatRegistrationNumber?.trim() ? { vatRegistrationNumber: fresh.vatRegistrationNumber.trim() } : {}),
+    ...(fresh.vatRegistrationNumber?.trim() && fresh.vatExpiryDate?.trim() ? { vatExpiryDate: fresh.vatExpiryDate.trim() } : {}),
     billingSchedule: fresh.billingSchedule,
     autoPayStatus: fresh.cardToken ? 'Enrolled' : 'Not enrolled',
     paymentMethod: fresh.cardToken ? 'Card on file' : undefined,
@@ -87,9 +91,17 @@ export async function persistBillingAccount(
     collectionStatus: 'Good Standing',
     creditLimitQAR: limit,
     promiseToPayStatus: 'None',
-    billingContactName: ctx.contactName,
-    billingContactPhone: ctx.contactPhone,
-    billingContactEmail: ctx.contactEmail,
+    // The primary contact the agent picked; the customer's own details unless it is another contact from the account, whose record supplies theirs.
+    billingContactName: fresh.primaryContactName?.trim() || ctx.contactName,
+    billingContactPhone: fresh.primaryContactPhone !== undefined ? fresh.primaryContactPhone || undefined : ctx.contactPhone,
+    billingContactEmail: fresh.primaryContactEmail !== undefined ? fresh.primaryContactEmail || undefined : ctx.contactEmail,
+    ...(fresh.secondaryContactName?.trim()
+      ? {
+          secondaryContactName: fresh.secondaryContactName.trim(),
+          ...(fresh.secondaryContactPhone ? { secondaryContactPhone: fresh.secondaryContactPhone } : {}),
+          ...(fresh.secondaryContactEmail ? { secondaryContactEmail: fresh.secondaryContactEmail } : {}),
+        }
+      : {}),
     previousOutstandingQAR: 0,
   });
   // The account's credit limit, with its breakdown (default / agent's choice / Credit Control blank), and the audit-trail row for it.

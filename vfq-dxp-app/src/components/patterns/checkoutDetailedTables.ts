@@ -81,12 +81,11 @@ export function buildDetailedTables({
         ...(isStarNumber
           ? [{ label: 'Star Number Lock-In', value: starTier ? `${starTier.lockInDurationMonths} months` : 'To be confirmed' }]
           : []),
-        { label: 'Plan', value: plan?.name ?? '-' },
-        { label: 'Lock-In Period', value: plan?.commitmentMonths ? `${plan.commitmentMonths} months` : 'No lock-in' },
+        { label: 'Plan Name', value: plan?.name ?? '-' },
+        { label: 'Star Number Lock-In', value: plan?.commitmentMonths ? `${plan.commitmentMonths} months` : 'No lock-in' },
         { label: 'Add-Ons', value: addons.length ? addons.map((a) => `${a.name} (${formatQar(a.mrcQAR)}/mo)`).join(', ') : 'None' },
         { label: 'SIM Type', value: simType?.simType ?? '-' },
         ...(simType?.simType === 'Physical' ? [{ label: 'SIM Serial Number', value: simType.simSerial ?? '-' }] : []),
-        { label: 'ICCID', value: simType?.simIccid ?? '-' },
         ...(creditLimitQar !== undefined
           ? [
               { label: 'Credit Limit', value: `${formatQar(creditLimitQar)}`, boldLabel: true, agentOnly: true },
@@ -108,6 +107,8 @@ export function buildDetailedTables({
             ]
           : [{ label: 'Number Charge After Discount', value: q(numberChargeQar) }]),
         { label: 'Advance Payment', value: q(hrnAdvance) },
+        // The VAT contained in the number charge paid today (quoted figures are VAT-inclusive); the advance payment is a deposit, not a taxable charge.
+        { label: `VAT (${Math.round(VAT_RATE * 100)}%)`, value: q(Math.round((numberPayableQar - numberPayableQar / (1 + VAT_RATE)) * 100) / 100) },
         { label: 'Total Payable Today', value: q(dueTodayQar), boldLabel: true, boldValue: true },
       ],
     },

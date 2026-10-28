@@ -150,7 +150,7 @@ test('every journey that identifies the customer records the ID document it capt
     'src/modules/pre-to-post-migration/screens/submitPreToPostOrder.ts',
   ]) {
     const src = fsm.readFileSync(f, 'utf8');
-    assert.match(src, /idScanAttachments\(contact\??\.idType, contact\??\.qidScans\)/, `${f} records the ID document`);
+    assert.match(src, /idScanAttachments\(contact\??\.idType, contact\??\.qidScans, \{ idNumber: contact\??\.idNumber \}\)/, `${f} records the ID document`);
   }
 });
 
@@ -158,7 +158,7 @@ test('Customer Verification: what the agent may change follows how the capture c
   const m = await load('/src/components/patterns/idLookupModel.ts');
   assert.equal(m.captureModeOf(true, 0), 'upload');
   assert.equal(m.captureModeOf(true, 3), 'upload', 'an upload is an upload whatever the reader did before');
-  assert.deepEqual([1, 2, 3, 4, 5, 9].map((n) => m.captureModeOf(false, n)), ['ocr-blurred', 'ocr-clear', 'barcode', 'manual', 'manual', 'manual']);
+  assert.deepEqual([1, 2, 3, 4, 5, 9].map((n) => m.captureModeOf(false, n)), ['ocr-auto', 'ocr-auto', 'ocr-number', 'barcode', 'barcode', 'barcode']);
   // The demo's wrong read changes the expiry, and keeps it a date the field accepts.
   const wrong = m.misreadDate('30/11/2029');
   assert.notEqual(wrong, '30/11/2029');
@@ -220,4 +220,14 @@ test('a new customer\'s National Address from the NAS is carried with the identi
   for (const f of walk('src').filter((x) => /\.(ts|tsx)$/.test(x) && !allowed.test(x))) assert.doesNotMatch(read(f), /nationalAddress/, `${f} must not read the National Address`);
   // The Address step is not pre-filled from a registry for a new customer.
   assert.match(read('src/modules/new-connection/connectionSteps.tsx'), /isNewCustomer \? undefined/);
+});
+
+test('stored ID files get a contextual name: type, side, the number on the document and the day; an upload keeps its extension', () => {
+  const at = new Date('2026-10-27T12:00:00Z');
+  assert.deepEqual(fn('QID', both, { idNumber: '29303051200106', at }).map((a) => a.fileName), ['QID_Front_29303051200106_2026-10-27.jpg', 'QID_Back_29303051200106_2026-10-27.jpg']);
+  assert.equal(fn('Passport', { frontScanned: true }, { idNumber: 'N-123 456', at })[0].fileName, 'Passport_Front_N123456_2026-10-27.jpg');
+  assert.equal(fn('GCC ID', { frontScanned: true, source: 'upload', frontFile: 'My Scan.PDF' }, { idNumber: '1', at })[0].fileName, 'GCC-ID_Front_1_2026-10-27.pdf');
+  assert.equal(fn('Diplomatic ID', { backScanned: true }, { at })[0].fileName, 'Diplomatic-ID_Back_2026-10-27.jpg', 'no number: that part is left out');
+  const names = fn('QID', both, { idNumber: '1', at }).map((a) => a.fileName);
+  assert.equal(new Set(names).size, names.length, 'the two sides never share a name');
 });

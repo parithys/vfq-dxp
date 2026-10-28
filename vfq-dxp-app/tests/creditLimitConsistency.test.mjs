@@ -94,15 +94,17 @@ test('4. the agent\'s choice reaches checkout and the order; Pre-to-Post and eve
   assert.match(pre, /defaultCreditLimitFor\(qid\.moiResult\?\.nationality\)/);
 });
 
-test('5. the card honours the Credit Risk Exemption: the advance is shown only when the HRN fee is marked', () => {
+test('5. the card lists account type, segment and category, then the credit limit: the default for the segment, QAR 50 and locked for an HRN customer', () => {
   const html = (props) => renderToStaticMarkup(h(card.CreditLimitCard, { onChange() {}, selected: undefined, ...props }));
-  assert.match(html({ nationality: 'Kenyan', hrnFeeApplies: true }), /QAR 100 advance/);
-  const exempt = html({ nationality: 'Kenyan', hrnFeeApplies: false });
-  assert.ok(!/QAR 100 advance/.test(exempt));
-  assert.match(exempt, /HRN fee not marked/);
-  assert.match(html({ nationality: 'Qatari' }), /No advance payable/);
-  assert.match(html({ nationality: 'Egyptian', hrnFeeApplies: false }), /No advance payable/);
-  assert.match(read('src/capabilities/BillingAccount/step.tsx'), /hrnFeeApplies=\{eligibility\?\.requiresHrnAdvance\}/);
+  const expat = html({ nationality: 'Egyptian' });
+  for (const label of ['Account Type', 'Customer Segment', 'Customer Category', 'Credit Limit (QAR)']) assert.match(expat, new RegExp(label.replace(/[()]/g, '\\$&')));
+  assert.ok(!/Default Credit Limit|Amount Payable/.test(expat), 'the card no longer restates the default or the amount payable');
+  assert.match(expat, /<input[^>]*role="combobox"[^>]*value="QAR 1,000"/, 'an Expat starts on QAR 1,000, in a dropdown');
+  const hrn = html({ nationality: 'Kenyan' });
+  assert.ok(!/role="combobox"/.test(hrn), 'an HRN customer has no dropdown');
+  assert.match(hrn, /Credit Limit \(QAR\)<\/dt><dd[^>]*>QAR 50</, 'it is a plain row: QAR 50');
+  assert.ok(!/not allowed for an HRN customer/.test(hrn), 'and no explanation is shown');
+  assert.ok(!/role="combobox"/.test(html({ nationality: 'Egyptian', customerSegment: 'Royal' })), 'a protected segment cannot choose either');
 });
 
 test('6. the fixed-line journey follows the same rules: default, nationality and agent reach the account and its limit record', async () => {

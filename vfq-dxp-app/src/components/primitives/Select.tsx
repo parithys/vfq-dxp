@@ -25,7 +25,7 @@ interface SelectProps {
   /** For call sites with no visible `label` (e.g. a dense table-cell filter) -
    * gives the trigger an accessible name without rendering visible text. */
   'aria-label'?: string;
-  /** Adds a search box at the top of the dropdown that filters the options as the user types. */
+  /** Kept for existing callers. Every Select is searchable now: the field takes typing and the list narrows as the user types. */
   searchable?: boolean;
   /** Opens the option list above the field - for a select at the bottom of a panel, where a list below would be cut off. */
   openUp?: boolean;
@@ -35,6 +35,10 @@ interface SelectProps {
 
 const CHEVRON_DOWN = 'M6 9l6 6 6-6';
 
+// Every dropdown in the app is this one searchable combobox (the pattern of the Kahramaa Meter ID field): the field itself takes the typing,
+// the list narrows as the agent types, a chevron opens it, and there is no separate search box or search icon. Typing never changes the
+// value; only choosing a row does, and leaving the field with text that was not chosen puts the selected label back.
+//
 // A custom-positioned listbox, not a native <select>. Native <select> option
 // popups are rendered by the browser/OS and their placement relative to the
 // trigger can't be controlled via CSS - that's what produced the
@@ -58,7 +62,7 @@ export function Select({
   id,
   dark = false,
   'aria-label': ariaLabel,
-  searchable = false,
+  searchable: _searchable,
   openUp = false,
   tintedPanel = false,
 }: SelectProps) {
@@ -74,17 +78,23 @@ export function Select({
   const [highlighted, setHighlighted] = useState(0);
   const [query, setQuery] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const typeAhead = useRef({ text: '', at: 0 });
+  const triggerRef = useRef<HTMLInputElement>(null);
+  const skipFocusOpen = useRef(false);
+  // True from the first keystroke until the list closes: only then does the text in the field filter the list.
+  const [typing, setTyping] = useState(false);
 
   const selected = options.find((o) => o.value === value);
-  // Options shown in the open panel: filtered by the search box when searchable.
-  const shown = searchable && query.trim() ? options.filter((o) => o.label.toLowerCase().includes(query.trim().toLowerCase())) : options;
+  // Options shown in the open panel: narrowed by what was typed.
+  const shown = typing && query.trim() ? options.filter((o) => o.label.toLowerCase().includes(query.trim().toLowerCase())) : options;
 
   useEffect(() => {
     if (!open) return;
     const onClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setQuery('');
+        setTyping(false);
+      }
     };
     document.addEventListener('mousedown', onClickOutside);
     return () => document.removeEventListener('mousedown', onClickOutside);
@@ -99,7 +109,13 @@ export function Select({
   const close = (returnFocus: boolean) => {
     setOpen(false);
     setQuery('');
-    if (returnFocus) triggerRef.current?.focus();
+    setTyping(false);
+    if (returnFocus) {
+      // Focus comes back to the field without reopening the list its own onFocus would otherwise open.
+      skipFocusOpen.current = true;
+      triggerRef.current?.focus();
+      skipFocusOpen.current = false;
+    }
   };
 
   const commit = (optionValue: string | undefined) => {
@@ -111,12 +127,20 @@ export function Select({
   const openList = () => {
     setHighlighted(Math.max(0, options.findIndex((o) => o.value === value)));
     setQuery('');
+    setTyping(false);
     setOpen(true);
   };
 
-  // Keys shared by the trigger (plain select) and the search box (searchable select): focus never leaves the control that has it;
-  // the highlighted option is named through aria-activedescendant.
-  const navigate = (e: KeyboardEvent<HTMLElement>): boolean => {
+  // Keys on the field: focus never leaves it; the highlighted option is named through aria-activedescendant.
+  const onFieldKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (disabled) return;
+    if (!open) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter') {
+        e.preventDefault();
+        openList();
+      }
+      return;
+    }
     const last = shown.length - 1;
     switch (e.key) {
       case 'ArrowDown':
@@ -124,14 +148,6 @@ export function Select({
         break;
       case 'ArrowUp':
         setHighlighted((i) => Math.max(0, i - 1));
-        break;
-      case 'Home':
-        if (searchable) return false; // the caret moves inside the search box
-        setHighlighted(0);
-        break;
-      case 'End':
-        if (searchable) return false;
-        setHighlighted(Math.max(0, last));
         break;
       case 'PageDown':
         setHighlighted((i) => Math.min(last, i + 8));
@@ -149,39 +165,11 @@ export function Select({
         break;
       case 'Tab':
         close(false);
-        return false; // let focus move on
+        return; // let focus move on
       default:
-        return false;
+        return; // Home / End / characters: the caret and the text behave as in any field
     }
     e.preventDefault();
-    return true;
-  };
-
-  const onTriggerKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
-    if (disabled) return;
-    if (!open) {
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        openList();
-      }
-      return;
-    }
-    if (e.key === ' ') {
-      e.preventDefault();
-      commit(shown[highlighted]?.value);
-      return;
-    }
-    if (navigate(e)) return;
-    // Type-ahead on a plain select: printable keys jump to the next option starting with what was typed.
-    if (!searchable && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-      const now = Date.now();
-      const ta = typeAhead.current;
-      ta.text = now - ta.at > 700 ? e.key.toLowerCase() : ta.text + e.key.toLowerCase();
-      ta.at = now;
-      const from = ta.text.length === 1 ? highlighted + 1 : highlighted;
-      const hit = [...shown.slice(from), ...shown.slice(0, from)].findIndex((o) => o.label.toLowerCase().startsWith(ta.text));
-      if (hit >= 0) setHighlighted((from + hit) % shown.length);
-    }
   };
 
   const triggerClasses = dark
@@ -216,66 +204,68 @@ export function Select({
         </label>
       )}
       <div ref={containerRef} className="relative">
-        <button
-          type="button"
+        <input
+          type="text"
           id={selectId}
           disabled={disabled}
           role="combobox"
           ref={triggerRef}
+          autoComplete="off"
           aria-haspopup="listbox"
           aria-expanded={open}
           aria-controls={open ? listboxId : undefined}
-          aria-activedescendant={open && !searchable && shown.length > 0 ? optionId(highlighted) : undefined}
+          aria-autocomplete="list"
+          aria-activedescendant={open && shown.length > 0 ? optionId(highlighted) : undefined}
           aria-required={required || undefined}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
           aria-label={ariaLabel}
-          onClick={() => !disabled && (open ? close(false) : openList())}
-          onKeyDown={onTriggerKeyDown}
-          className={`w-full flex items-center justify-between gap-2 rounded-[var(--field-radius)] ${openUp ? 'focus-visible:rounded-t-none' : 'focus-visible:rounded-b-none'} ${open ? (openUp ? 'rounded-t-none' : 'rounded-b-none') : ''} border pl-3 pr-3 py-2 text-[length:var(--fs-body)] text-left
-            disabled:cursor-not-allowed
+          placeholder={placeholder}
+          // Closed: the chosen label. Open and typing: what was typed.
+          value={open && typing ? query : (selected?.label ?? '')}
+          onFocus={(e) => {
+            if (disabled || open || skipFocusOpen.current) return;
+            openList();
+            e.currentTarget.select();
+          }}
+          onClick={() => !disabled && !open && openList()}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setTyping(true);
+            setHighlighted(0);
+            setOpen(true);
+          }}
+          onKeyDown={onFieldKeyDown}
+          className={`w-full truncate rounded-[var(--field-radius)] ${openUp ? 'focus-visible:rounded-t-none' : 'focus-visible:rounded-b-none'} ${open ? (openUp ? 'rounded-t-none' : 'rounded-b-none') : ''} border pl-3 pr-9 py-2 text-[length:var(--fs-body)] text-left
+            ${dark ? 'placeholder:text-on-dark-4' : 'placeholder:text-muted'}
+            disabled:cursor-not-allowed disabled:placeholder:text-[var(--field-label-disabled)] disabled:text-[var(--field-label-disabled)]
             focus:outline-none
             ${triggerClasses}
             ${className}`}
+        />
+        <button
+          type="button"
+          tabIndex={-1}
+          disabled={disabled}
+          aria-label={open ? 'Close list' : 'Open list'}
+          onClick={() => {
+            if (open) return close(false);
+            openList();
+            triggerRef.current?.focus();
+          }}
+          className="absolute right-3 top-1/2 -translate-y-1/2 disabled:cursor-not-allowed"
         >
-          <span className={`truncate ${disabled ? 'text-[var(--field-label-disabled)]' : !selected ? (dark ? 'text-on-dark-4' : 'text-muted') : ''}`}>
-            {selected ? selected.label : (placeholder ?? '')}
-          </span>
           <Icon
             path={CHEVRON_DOWN}
-            className={`w-4 h-4 shrink-0 ${
+            className={`w-4 h-4 shrink-0 transition-transform ${open ? 'rotate-180' : ''} ${
               dark ? 'text-on-dark-3' : disabled ? 'text-muted' : selected ? 'text-[var(--field-icon-active)]' : 'text-muted'
             }`}
           />
         </button>
 
-        {/* Square on the edge that meets the field, rounded on the far edge, so the panel reads as attached to it (the open or focused trigger squares off its matching edge, and the shared border is drawn once). */}
+        {/* Square on the edge that meets the field, rounded on the far edge, so the panel reads as attached to it (the open or focused field squares off its matching edge, and the shared border is drawn once). */}
         {open && (
-          <div className={`absolute z-[var(--z-popover)] ${openUp ? 'bottom-full rounded-t-[var(--field-radius)] rounded-b-none border-b-0' : 'top-full rounded-b-[var(--field-radius)] rounded-t-none border-t-0'} left-0 right-0 border shadow-raised overflow-hidden ${panelClasses}`}>
-          {searchable && (
-            <div className="p-2 border-b border-border-soft">
-              <input
-                autoFocus
-                type="text"
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value);
-                  setHighlighted(0);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === 'Escape' || e.key === 'Tab' || e.key.startsWith('Arrow') || e.key.startsWith('Page')) navigate(e);
-                }}
-                role="combobox"
-                aria-expanded
-                aria-controls={listboxId}
-                aria-autocomplete="list"
-                aria-activedescendant={shown.length > 0 ? optionId(highlighted) : undefined}
-                placeholder="Search…"
-                aria-label="Search options"
-                className="w-full rounded-[var(--field-radius)] border border-[var(--field-border)] bg-bg px-3 py-2 text-[length:var(--fs-body)] text-[var(--color-field-text-filled)] focus:outline-none focus-visible:border-[var(--field-focus-border)]"
-              />
-            </div>
-          )}
+          <div className={`absolute z-[var(--z-popover)] ${openUp ? 'bottom-full rounded-t-[var(--field-radius)] rounded-b-none border-b-0' : 'top-full rounded-b-[var(--field-radius)] rounded-t-none border-t-0'} left-0 right-0 border shadow-raised overflow-hidden ${panelClasses}`} onMouseDown={(e) => e.preventDefault()}>
           <ul
             id={listboxId}
             role="listbox"
@@ -291,7 +281,7 @@ export function Select({
                 onMouseEnter={() => setHighlighted(i)}
                 onClick={() => commit(opt.value)}
                 className={`px-4 py-3 text-[length:var(--fs-body)] cursor-pointer ${optionClasses} ${
-                  i === highlighted ? `${dark ? 'bg-on-dark-fill-2' : tintedPanel ? 'bg-bg' : 'bg-surface'} ring-2 ring-inset ring-[var(--focus-outline)]` : ''
+                  i === highlighted ? `${dark ? 'bg-on-dark-fill-2' : 'bg-[var(--field-focus-bg)]'}` : ''
                 }`}
               >
                 {opt.label}

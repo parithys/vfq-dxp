@@ -233,6 +233,99 @@
     "planClass": "Postpaid Voice Plans"
   },
   {
+    "productId": "PROD-146",
+    "name": "Postpaid Max Plus",
+    "type": "Postpaid Plan",
+    "mrcQAR": 220,
+    "originalMrcQAR": 280,
+    "promoMonths": 4,
+    "dataAllowanceGB": 100,
+    "minutesAllowance": "Unlimited local minutes",
+    "speedTier": "5G Ready",
+    "commitmentMonths": 3,
+    "offer": true,
+    "fup": [
+      "First 100 GB at full 5G speed and then unlimited data at the speed of 1Mbps",
+      "QR 60 Discount on plan fee will be applicable for first 4 months",
+      "Local mins FUP: 10000 / monthly",
+      "This promo is valid starting from 2 August 2026 till 3 November 2026."
+    ],
+    "features": [
+      "100GB full speed local data",
+      "Unlimited local minutes",
+      "300 SMS",
+      "Up to 300 international minutes"
+    ],
+    "benefits": [
+      "Free Star Number worth QAR 4,500",
+      "Free Vodafone My Book"
+    ],
+    "_note": "Offers-tab plan added 2026-10-27 so the Offers tab always lists exactly six offers for the demo. Name, prices, data and benefit values are DEMO values following the Max offer's pattern - no such offer is evidenced in the corpus; needs VFQ Business confirmation.",
+    "planClass": "Postpaid Voice Plans"
+  },
+  {
+    "productId": "PROD-147",
+    "name": "Postpaid Max Pro",
+    "type": "Postpaid Plan",
+    "mrcQAR": 290,
+    "originalMrcQAR": 370,
+    "promoMonths": 4,
+    "dataAllowanceGB": 150,
+    "minutesAllowance": "Unlimited local minutes",
+    "speedTier": "5G Ready",
+    "commitmentMonths": 3,
+    "offer": true,
+    "fup": [
+      "First 150 GB at full 5G speed and then unlimited data at the speed of 1Mbps",
+      "QR 80 Discount on plan fee will be applicable for first 4 months",
+      "Local mins FUP: 10000 / monthly",
+      "This promo is valid starting from 2 August 2026 till 3 November 2026."
+    ],
+    "features": [
+      "150GB full speed local data",
+      "Unlimited local minutes",
+      "300 SMS",
+      "Up to 300 international minutes"
+    ],
+    "benefits": [
+      "Free Star Number worth QAR 5,500",
+      "Free Vodafone My Book"
+    ],
+    "_note": "Offers-tab plan added 2026-10-27 so the Offers tab always lists exactly six offers for the demo. Name, prices, data and benefit values are DEMO values following the Max offer's pattern - no such offer is evidenced in the corpus; needs VFQ Business confirmation.",
+    "planClass": "Postpaid Voice Plans"
+  },
+  {
+    "productId": "PROD-148",
+    "name": "Postpaid Max Elite",
+    "type": "Postpaid Plan",
+    "mrcQAR": 380,
+    "originalMrcQAR": 480,
+    "promoMonths": 4,
+    "dataAllowanceGB": 200,
+    "minutesAllowance": "Unlimited local minutes",
+    "speedTier": "5G Ready",
+    "commitmentMonths": 3,
+    "offer": true,
+    "fup": [
+      "First 200 GB at full 5G speed and then unlimited data at the speed of 1Mbps",
+      "QR 100 Discount on plan fee will be applicable for first 4 months",
+      "Local mins FUP: 10000 / monthly",
+      "This promo is valid starting from 2 August 2026 till 3 November 2026."
+    ],
+    "features": [
+      "200GB full speed local data",
+      "Unlimited local minutes",
+      "300 SMS",
+      "Up to 300 international minutes"
+    ],
+    "benefits": [
+      "Free Star Number worth QAR 7,500",
+      "Free Vodafone My Book"
+    ],
+    "_note": "Offers-tab plan added 2026-10-27 so the Offers tab always lists exactly six offers for the demo. Name, prices, data and benefit values are DEMO values following the Max offer's pattern - no such offer is evidenced in the corpus; needs VFQ Business confirmation.",
+    "planClass": "Postpaid Voice Plans"
+  },
+  {
     "productId": "PROD-110",
     "name": "Postpaid Unlimited VIP",
     "type": "Postpaid Plan",
@@ -583,6 +676,78 @@
     ],
     "_eligibilityNote": "Offered only to customers of this nationality (2026-10-25). The plan was supplied by name only ('... India Promotion'); the nationality is read from that name and needs the business's confirmation. The BIA plans (PROD-134, PROD-140) name no nationality here and stay open to all.",
     "planClass": "Postpaid Voice Plans"
+  },
+  {
+    "productId": "PROD-142",
+    "name": "Postpaid Family Share 150",
+    "type": "Postpaid Plan",
+    "mrcQAR": 150,
+    "dataAllowanceGB": 40,
+    "minutesAllowance": "500 local minutes",
+    "speedTier": "5G Ready",
+    "commitmentMonths": 3,
+    "features": [
+      "40GB full speed local data, shared across the family",
+      "500 local minutes",
+      "300 SMS",
+      "100 international minutes"
+    ],
+    "_note": "Family Plan category (2026-10-27), added on request for the Special Offers tab. Names, prices, data and minutes are DEMO values following the Essential/Max/Unlimited tiers - no Family plan is evidenced in the corpus; needs VFQ Business confirmation.",
+    "planClass": "Postpaid Family Plans"
+  },
+  {
+    "productId": "PROD-143",
+    "name": "Postpaid Family Share 250",
+    "type": "Postpaid Plan",
+    "mrcQAR": 250,
+    "dataAllowanceGB": 100,
+    "minutesAllowance": "Unlimited local minutes",
+    "speedTier": "5G Ready",
+    "commitmentMonths": 3,
+    "features": [
+      "100GB full speed local data, shared across the family",
+      "Unlimited local minutes",
+      "500 SMS",
+      "200 international minutes"
+    ],
+    "_note": "Family Plan category (2026-10-27), added on request for the Special Offers tab. Names, prices, data and minutes are DEMO values following the Essential/Max/Unlimited tiers - no Family plan is evidenced in the corpus; needs VFQ Business confirmation.",
+    "planClass": "Postpaid Family Plans"
+  },
+  {
+    "productId": "PROD-144",
+    "name": "Postpaid Family Share 400",
+    "type": "Postpaid Plan",
+    "mrcQAR": 400,
+    "dataAllowanceGB": 200,
+    "minutesAllowance": "Unlimited local minutes",
+    "speedTier": "5G Ready",
+    "commitmentMonths": 3,
+    "features": [
+      "200GB full speed local data, shared across the family",
+      "Unlimited local minutes",
+      "Unlimited SMS",
+      "300 international minutes"
+    ],
+    "_note": "Family Plan category (2026-10-27), added on request for the Special Offers tab. Names, prices, data and minutes are DEMO values following the Essential/Max/Unlimited tiers - no Family plan is evidenced in the corpus; needs VFQ Business confirmation.",
+    "planClass": "Postpaid Family Plans"
+  },
+  {
+    "productId": "PROD-145",
+    "name": "Postpaid Family Share 600",
+    "type": "Postpaid Plan",
+    "mrcQAR": 600,
+    "dataAllowanceGB": null,
+    "minutesAllowance": "Unlimited local",
+    "speedTier": "5G Ready",
+    "commitmentMonths": 3,
+    "features": [
+      "Unlimited local data, shared across the family",
+      "Unlimited local minutes & SMS",
+      "400 international minutes",
+      "Roaming: 300 minutes & SMS and 50GB data"
+    ],
+    "_note": "Family Plan category (2026-10-27), added on request for the Special Offers tab. Names, prices, data and minutes are DEMO values following the Essential/Max/Unlimited tiers - no Family plan is evidenced in the corpus; needs VFQ Business confirmation.",
+    "planClass": "Postpaid Family Plans"
   },
   {
     "productId": "PROD-304",
@@ -1151,5 +1316,83 @@
     "pricingModel": "intro-discount",
     "introPriceQAR": 8,
     "_note": "SAMPLE catalogue entry (2026-10-26): one example of each pricing model so the Local Data and Local Calls tabs show every case. Replace with the real add-on, its plans and its prices."
+  },
+  {
+    "productId": "PROD-250",
+    "name": "Weekend Data Pass",
+    "type": "Add-on",
+    "mrcQAR": 5,
+    "description": "2 GB data every week",
+    "addonCategory": "Local Data",
+    "addonStatus": "Demo Only",
+    "pricing": "paid",
+    "pricingModel": "standard",
+    "billingFrequency": "weekly",
+    "_note": "Demo add-on so every billing frequency is represented (weekly, one-time). billingFrequency: absent = monthly recurring."
+  },
+  {
+    "productId": "PROD-251",
+    "name": "Weekly Minutes",
+    "type": "Add-on",
+    "mrcQAR": 8,
+    "description": "100 local minutes every week",
+    "addonCategory": "Local Calls",
+    "addonStatus": "Demo Only",
+    "pricing": "paid",
+    "pricingModel": "standard",
+    "billingFrequency": "weekly",
+    "_note": "Demo add-on so every billing frequency is represented (weekly, one-time). billingFrequency: absent = monthly recurring."
+  },
+  {
+    "productId": "PROD-252",
+    "name": "Weekly Roaming Pass",
+    "type": "Add-on",
+    "mrcQAR": 15,
+    "description": "1 GB roaming data every week",
+    "addonCategory": "Roaming",
+    "addonStatus": "Demo Only",
+    "pricing": "paid",
+    "pricingModel": "standard",
+    "billingFrequency": "weekly",
+    "_note": "Demo add-on so every billing frequency is represented (weekly, one-time). billingFrequency: absent = monthly recurring."
+  },
+  {
+    "productId": "PROD-253",
+    "name": "Data Top-up",
+    "type": "Add-on",
+    "mrcQAR": 30,
+    "description": "10 GB data, added once",
+    "addonCategory": "Local Data",
+    "addonStatus": "Demo Only",
+    "pricing": "paid",
+    "pricingModel": "standard",
+    "billingFrequency": "one-time",
+    "_note": "Demo add-on so every billing frequency is represented (weekly, one-time). billingFrequency: absent = monthly recurring."
+  },
+  {
+    "productId": "PROD-254",
+    "name": "International Minutes Top-up",
+    "type": "Add-on",
+    "mrcQAR": 25,
+    "description": "60 international minutes, added once",
+    "addonCategory": "International Calls",
+    "addonStatus": "Demo Only",
+    "pricing": "paid",
+    "pricingModel": "standard",
+    "billingFrequency": "one-time",
+    "_note": "Demo add-on so every billing frequency is represented (weekly, one-time). billingFrequency: absent = monthly recurring."
+  },
+  {
+    "productId": "PROD-255",
+    "name": "Number Change Service",
+    "type": "Add-on",
+    "mrcQAR": 50,
+    "description": "One-off change of number",
+    "addonCategory": "Others",
+    "addonStatus": "Demo Only",
+    "pricing": "paid",
+    "pricingModel": "standard",
+    "billingFrequency": "one-time",
+    "_note": "Demo add-on so every billing frequency is represented (weekly, one-time). billingFrequency: absent = monthly recurring."
   }
 ]

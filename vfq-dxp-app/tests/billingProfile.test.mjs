@@ -152,3 +152,94 @@ test('Continue passes over the Billing Profile for every customer, including a n
   assert.equal(step.autoPass({ billingAccount: { creatingNew: true } }), true, 'a new account no longer stops the journey');
   assert.equal(step.autoPass({ billingAccount: { selectedProfileId: 'BILL-7001' } }), true);
 });
+
+test('a new account records the bill type and language (Detailed / English unless changed) and the optional VAT details; the VAT expiry must be a real DD/MM/YYYY date', async () => {
+  const model = await load('/src/components/patterns/billingAccountModel.ts');
+  const { persistBillingAccount } = await load('/src/capabilities/BillingAccount/persistBillingAccount.ts');
+  assert.deepEqual(model.BILL_TYPES.map((o) => o.value), ['Detailed', 'Summary']);
+  assert.deepEqual(model.BILL_LANGUAGES.map((o) => o.value), ['English', 'Arabic']);
+  assert.equal(model.DEFAULT_BILL_TYPE, 'Detailed');
+  assert.equal(model.DEFAULT_BILL_LANGUAGE, 'English');
+  const save = async (newAccount) => {
+    const created = [];
+    await persistBillingAccount({ creatingNew: true, newAccount }, { createRecord: async (kind, rec) => void created.push({ kind, rec }), kind: 'Consumer Mobile Postpaid', customerId: 'C1', creditLimitQar: 1000, nationality: 'Egyptian', agentId: 'USR-1' });
+    return created.find((c) => c.kind === 'billing-profiles').rec;
+  };
+  const plain = await save({});
+  assert.equal(plain.billType, 'Detailed');
+  assert.equal(plain.billLanguage, 'English');
+  assert.ok(!('vatRegistrationNumber' in plain) && !('vatExpiryDate' in plain), 'no VAT details unless entered');
+  const chosen = await save({ billType: 'Summary', billLanguage: 'Arabic', vatRegistrationNumber: ' VAT-1 ', vatExpiryDate: '31/12/2030' });
+  assert.deepEqual([chosen.billType, chosen.billLanguage, chosen.vatRegistrationNumber, chosen.vatExpiryDate], ['Summary', 'Arabic', 'VAT-1', '31/12/2030']);
+  for (const ok of [undefined, '', '29/02/2028']) assert.equal(model.isValidVatExpiry(ok), true, String(ok));
+  for (const bad of ['31/02/2030', '2030-12-31', '1/1/2030', 'soon']) assert.equal(model.isValidVatExpiry(bad), false, bad);
+  const valid = { creatingNew: true, newAccount: { primaryContactId: 'C', preferredInvoiceRecipient: 'Primary Contact', cardToken: 'T', profileName: 'P' } };
+  assert.equal(model.isBillingAccountValid(valid), true);
+  assert.equal(model.isBillingAccountValid({ ...valid, newAccount: { ...valid.newAccount, vatExpiryDate: '31/02/2030' } }), false, 'a bad VAT date blocks the step');
+});
+
+test('the billing contacts come from the account: the chosen primary contact\'s own record supplies their details, an optional secondary contact is saved by name with theirs, and the customer\'s own details are kept when they are the primary', async () => {
+  const { persistBillingAccount } = await load('/src/capabilities/BillingAccount/persistBillingAccount.ts');
+  const run = async (newAccount) => {
+    const created = [];
+    await persistBillingAccount({ creatingNew: true, newAccount }, { createRecord: async (kind, rec) => void created.push({ kind, rec }), kind: 'Consumer Mobile Postpaid', customerId: 'CUST-1', contactName: 'Ahmed Customer', contactEmail: 'ahmed@example.qa', contactPhone: '+97455512001', creditLimitQar: 1000, nationality: 'Egyptian', agentId: 'USR-1' });
+    assert.ok(!created.some((c) => c.kind === 'customer-contacts'), 'no contact is created: they are chosen from those on the account');
+    return created.find((c) => c.kind === 'billing-profiles').rec;
+  };
+  const own = await run({ primaryContactId: 'CTC-1', primaryContactName: 'Ahmed Customer' });
+  assert.deepEqual([own.billingContactName, own.billingContactEmail, own.billingContactPhone], ['Ahmed Customer', 'ahmed@example.qa', '+97455512001'], 'the customer is the primary: their own verified details');
+  assert.ok(!('secondaryContactName' in own), 'a secondary contact is optional');
+  const other = await run({ primaryContactId: 'CTC-2', primaryContactName: 'Mariam Al-Sulaiti', primaryContactPhone: '+97455512099', primaryContactEmail: '' });
+  assert.deepEqual([other.billingContactName, other.billingContactEmail, other.billingContactPhone], ['Mariam Al-Sulaiti', undefined, '+97455512099'], 'another contact: their record, and never the customer\'s email');
+  const both = await run({ primaryContactId: 'CTC-1', primaryContactName: 'Ahmed Customer', secondaryContactId: 'CTC-2', hasSecondaryContact: true, secondaryContactName: 'Mariam Al-Sulaiti', secondaryContactPhone: '+97455512099' });
+  assert.deepEqual([both.secondaryContactName, both.secondaryContactPhone, 'secondaryContactEmail' in both], ['Mariam Al-Sulaiti', '+97455512099', false]);
+});
+
+test('the Billing step offers a secondary contact only when the account has more than one contact, and picks a lone contact for the agent', () => {
+  const src = fs.readFileSync('src/components/patterns/BillingAccountStep.tsx', 'utf8');
+  assert.match(src, /contactOptions\.length > 1/, 'secondary contacts are offered from the account\'s other contacts');
+  assert.match(src, /needsDefaultPrimary/, 'a lone (or the customer\'s own) contact is selected by default');
+  assert.doesNotMatch(src, /label="First Name"/, 'no contact name is typed here');
+});
+
+test('plans on the Special Offers tab are named after the Special Discount they are offered under, once', async () => {
+  const { specialOfferPlanName } = await load('/src/components/patterns/postpaidPlanModel.ts');
+  assert.equal(specialOfferPlanName('Postpaid Plus Essential Promotion', 'retired'), 'Retiree Postpaid Plus Essential Promotion');
+  assert.equal(specialOfferPlanName('Postpaid Plus Essential Pakistan Promotion', 'b2b2c'), 'Consumer B2B2C Postpaid Plus Essential Pakistan Promotion');
+  assert.equal(specialOfferPlanName('Postpaid Plus Essential Promotion', 'mada'), 'MADA Postpaid Plus Essential Promotion');
+  assert.equal(specialOfferPlanName('Retiree Postpaid Plus', 'retired'), 'Retiree Postpaid Plus', 'not repeated');
+  assert.equal(specialOfferPlanName('Postpaid Plus', 'none'), 'Postpaid Plus');
+  assert.equal(specialOfferPlanName('Postpaid Plus', undefined), 'Postpaid Plus');
+});
+
+test('a held Qnomy ticket is closed once - by Finish, Done & Exit or Create Activity - and the next customer can then be called', async () => {
+  const { closeHeldQnomyTicket } = await load('/src/engines/qnomyRelease.ts');
+  const { useQnomyQueueStore } = await load('/src/stores/qnomyQueueStore.ts');
+  const { useEntityStore } = await load('/src/stores/entityStore.ts');
+  const writes = [];
+  useEntityStore.setState({ updateRecord: async (kind, idField, id, patch) => void writes.push({ kind, id, patch }) });
+  assert.equal(await closeHeldQnomyTicket(), false, 'no ticket held: nothing to close');
+  useQnomyQueueStore.setState({ assignedQTicketId: 'QTK-1', kioskMobileNumber: '+97455512001', awaitingNext: false, customersServed: 0 });
+  assert.equal(await closeHeldQnomyTicket(), true);
+  const q = useQnomyQueueStore.getState();
+  assert.deepEqual([q.assignedQTicketId, q.kioskMobileNumber, q.awaitingNext, q.customersServed], [null, null, true, 1]);
+  assert.deepEqual([writes[0].kind, writes[0].id, writes[0].patch.status, writes[0].patch.agentInDxpSessionId], ['qtickets', 'QTK-1', 'Completed', null]);
+  assert.equal(await closeHeldQnomyTicket(), false, 'a second action on the same page does not close or count it again');
+  assert.equal(writes.length, 1);
+  for (const f of ['src/components/patterns/ActivationCompleteScreen.tsx', 'src/navigation/SessionReferenceNumbers.tsx']) assert.match(fs.readFileSync(f, 'utf8'), /closeHeldQnomyTicket\(\)/, f);
+});
+
+test('a new customer\'s NAS mobile is offered as the Personal Mobile, masked like the email (first and last digit, fixed stars); an existing customer\'s is not, and an edit shows as typed', async () => {
+  const m = await load('/src/components/patterns/guidedContactModel.ts');
+  assert.equal(m.maskMobile('+97455512345'), '5******5');
+  assert.equal(m.maskMobile('55512345'), '5******5');
+  assert.equal(m.maskMobile(''), '');
+  const nas = { isNewCustomer: true, mobile: '+97455512345', name: 'N', dob: '', nationality: '' };
+  assert.equal(m.identityFromMoi(nas).personalMobile, '+97455512345');
+  assert.equal(m.identityFromMoi({ ...nas, isNewCustomer: false }).personalMobile, undefined);
+  assert.equal(m.identityFromMoi({ ...nas, createdByAgent: true }).personalMobile, undefined);
+  assert.equal(m.displayedMobile({ personalMobile: '+97455512345', moiResult: nas }), '5******5', 'still the NAS number: masked');
+  assert.equal(m.displayedMobile({ personalMobile: '+97466000000', moiResult: nas }), undefined, 'typed over: shown as typed');
+  const records = JSON.parse(fs.readFileSync('public/mock-data/nas-records.json', 'utf8'));
+  assert.ok(records.every((r) => /^\+974\d{8}$/.test(r.mobile)), 'every NAS record carries a sample Qatar mobile');
+});

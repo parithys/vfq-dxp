@@ -31,7 +31,7 @@ export function WizardFooter({
   onAbandonStep: (opts?: { hideKeepWorking?: boolean }) => void;
 }) {
   return (
-        <div className="flex items-center justify-between mt-6 pt-6 border-t border-border-soft">
+        <div className="flex items-center justify-between mt-6">
           <div className="flex items-center gap-3">
             {/* Locked (2026-09-28): Back disappears entirely alongside the
                 rail going unclickable - "disable/remove Back navigation".

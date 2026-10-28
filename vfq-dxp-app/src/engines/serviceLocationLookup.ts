@@ -12,6 +12,7 @@ export interface ServiceLocationFields {
   buildingNo?: string;
   aptFlatUnit?: string;
   area?: string;
+  poBox?: string;
   kidLocationId?: string;
   vodafoneId?: string;
 }
@@ -26,6 +27,7 @@ interface ServicePoint {
   building?: string;
   addressLine?: string;
   area?: string;
+  poBox?: string;
 }
 interface SavedAddress {
   kahramaaId?: string;
@@ -60,6 +62,7 @@ function fromServicePoint(p: ServicePoint, vodafoneId: string | undefined, withU
     buildingNo: lastNumber(p.building),
     aptFlatUnit: withUnit ? unitOf(p.addressLine) : undefined,
     area: p.area,
+    poBox: p.poBox,
     kidLocationId: p.id,
     vodafoneId,
   });
@@ -132,4 +135,45 @@ export async function lookupServiceLocation(query: { kid?: string; vodafoneId?: 
     };
   }
   return { found: false };
+}
+
+/** One row of a Kahramaa Meter ID / Vodafone Premise ID dropdown: the ID, and what it points at. */
+export interface ServiceLocationOption {
+  value: string;
+  detail: string;
+}
+
+/**
+ * The IDs the lookup above can resolve, for a searchable dropdown: every Kahramaa Meter ID it finds a record for (a service point,
+ * a customer's saved address or a KID address record) and every Vodafone Premise ID that names one premise (carried by a service
+ * point, or mapped to exactly one KID). An ID the lookup could not resolve is not offered, so choosing a row always fills the address.
+ */
+export async function listServiceLocationOptions(): Promise<{ kids: ServiceLocationOption[]; vodafoneIds: ServiceLocationOption[] }> {
+  const [points, saved, kidRecords, vfids] = await Promise.all([
+    mockDataEngine.list<ServicePoint>('kid-service-points'),
+    mockDataEngine.list<SavedAddress>('addresses'),
+    mockDataEngine.list<KidAddressRecord>('kid-address-records'),
+    mockDataEngine.list<VodafoneId>('vodafone-ids'),
+  ]);
+  const formatOf = (vfid: string | undefined) => vfids.find((v) => vfidKey(v.format) === vfidKey(vfid))?.format ?? vfid;
+  const describe = (parts: (string | undefined)[]) => parts.filter(Boolean).join(', ');
+
+  const kids = new Map<string, ServiceLocationOption>();
+  const addKid = (id: string | undefined, detail: string) => {
+    if (id && !kids.has(norm(id))) kids.set(norm(id), { value: id.trim(), detail });
+  };
+  for (const p of points) addKid(p.id, describe([p.addressLine ?? describe([p.zone && `Zone ${p.zone}`, p.street, p.building]), p.area]));
+  for (const a of saved) addKid(a.kahramaaId, describe([a.zone && `Zone ${a.zone}`, a.streetNo && `Street ${a.streetNo}`, a.buildingNo && `Building ${a.buildingNo}`, a.city]));
+  for (const r of kidRecords) addKid(r.kahramaaId, describe([r.addressLine, r.area]));
+
+  const vodafoneIds = new Map<string, ServiceLocationOption>();
+  for (const p of points) {
+    if (p.vfid && !vodafoneIds.has(vfidKey(p.vfid))) vodafoneIds.set(vfidKey(p.vfid), { value: formatOf(p.vfid) ?? p.vfid, detail: describe([p.addressLine, p.area]) });
+  }
+  for (const v of vfids) {
+    if (v.mappedKidIds.length === 1 && !vodafoneIds.has(vfidKey(v.format))) {
+      vodafoneIds.set(vfidKey(v.format), { value: v.format, detail: kids.get(norm(v.mappedKidIds[0]))?.detail ?? v.mappedKidIds[0] });
+    }
+  }
+  return { kids: [...kids.values()], vodafoneIds: [...vodafoneIds.values()] };
 }

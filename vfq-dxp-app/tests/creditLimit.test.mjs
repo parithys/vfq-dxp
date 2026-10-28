@@ -54,7 +54,7 @@ test('3. the customer category is HRN or Non-HRN, from the nationality MOI retur
   assert.equal(cl.customerCategoryOf(undefined), 'Non-HRN');
 });
 
-test('4. default credit limit: Expat 1000, Qatari 4000, HRN 50; the amount payable is shown', () => {
+test('4. default credit limit: Expat 1000, Qatari 4000, HRN 50; the amount payable is still computed (checkout shows it)', () => {
   assert.equal(cl.defaultCreditLimitFor('Qatari'), 4000);
   assert.equal(cl.defaultCreditLimitFor('Egyptian'), 1000);
   assert.equal(cl.defaultCreditLimitFor('Pakistani'), 50);
@@ -66,7 +66,6 @@ test('4. default credit limit: Expat 1000, Qatari 4000, HRN 50; the amount payab
   assert.equal(cl.payableAtActivationQar('Kenyan'), 100, 'an HRN customer pays the advance');
   assert.equal(cl.payableAtActivationQar('Qatari'), 0);
   assert.equal(cl.payableAtActivationQar('Indian'), 0);
-  assert.match(read('src/components/patterns/CreditLimitCard.tsx'), /Amount Payable/);
 });
 
 test('5. only the limits that apply to the segment are offered; the agent chooses; HRN has no choice', () => {
@@ -78,8 +77,7 @@ test('5. only the limits that apply to the segment are offered; the agent choose
   assert.deepEqual(cl.creditLimitOptions(undefined), cl.creditLimitOptions('Egyptian'));
   for (const v of cl.CREDIT_LIMIT_PRESETS_QAR) assert.equal(Number.isInteger(v), true);
   const card = read('src/components/patterns/CreditLimitCard.tsx');
-  assert.match(card, /disabled=\{!policy\.editable\}/, 'HRN and protected segments: the selector is locked');
-  assert.match(card, /not allowed for an HRN customer/);
+  assert.match(card, /policy\.editable \?/, 'HRN and protected segments: no selector, the limit is shown as text');
   assert.match(read('src/capabilities/BillingAccount/step.tsx'), /<CreditLimitCard/);
 });
 

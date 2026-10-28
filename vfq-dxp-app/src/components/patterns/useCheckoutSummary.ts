@@ -1,4 +1,4 @@
-import { addonChargeNowQar } from '../../engines/addonCategories';
+import { addonChargeNowQar, addonOneTimeQar } from '../../engines/addonCategories';
 import { chargeAfterWaiverQar, waivedQar, type NumberWaiver } from '../../engines/numberWaiver';
 import { hrnAdvanceQar } from '../../engines/hrnConfiguration';
 import { usePersonaStore } from '../../stores/personaStore';
@@ -95,7 +95,8 @@ export function useCheckoutSummary({
   // Waive Off (Number Selection) takes all or half of the number's upfront charge off what is paid today.
   const numberWaivedQar = waivedQar(numberChargeQar, numberWaiver);
   const numberPayableQar = chargeAfterWaiverQar(numberChargeQar, numberWaiver);
-  const dueTodayQar = numberPayableQar + hrnAdvance;
+  // A one-time add-on is paid at activation, with the number charge and the HRN advance.
+  const dueTodayQar = numberPayableQar + hrnAdvance + addons.reduce((sum, a) => sum + addonOneTimeQar(a), 0);
   // "Maximum Bill Limit equals account Credit Limit" (business-rules.json).
   // This journey dropped its Bill Limit editor on 2026-09-25, so there is no
   // agent-set value to show - what the customer must be told is the cap, which

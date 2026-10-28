@@ -1,5 +1,5 @@
 {
-  "_comment": "Document types for Additional Documents, and when each applies. Edit here - no code change. appliesTo dimensions (all given must match; omit one for no restriction; an empty list means never): journeys, personas (role ids), products (postpaid|prepaid|mnp|fixed-line), idTypes, segments (customer segment, matched by prefix: 'Enterprise' matches 'Enterprise (EBU)'), conditions (all must hold). Conditions are computed from the journey draft: number-waiver, minor-applicant, special-discount:mada|b2b2c|retired, actual-user-other, manual-caf, upfront-payment. requiredWhen (conditions) makes the document required, asked for as its own card. basis says where each rule comes from; 'assumed' rules need business confirmation.",
+  "_comment": "Document types for Additional Documents, and when each applies. Edit here - no code change. appliesTo dimensions (all given must match; omit one for no restriction; an empty list means never): journeys, personas (role ids), products (postpaid|prepaid|mnp|fixed-line), idTypes, segments (customer segment, matched by prefix: 'Enterprise' matches 'Enterprise (EBU)'), conditions (all must hold). Conditions are computed from the journey draft: number-waiver, minor-applicant, special-discount:mada|b2b2c|retired, actual-user-other, manual-caf, upfront-payment, vat-registration. requiredWhen (conditions) makes the document required, asked for as its own card. basis says where each rule comes from; 'assumed' rules need business confirmation.",
   "types": [
     {
       "id": "qid",
@@ -329,6 +329,20 @@
       ],
       "reason": "The applicant is under 18: the order is accepted only with the court order that allows it.",
       "basis": "From the journey's own rules."
+    },
+    {
+      "id": "vat-document",
+      "label": "VAT Document",
+      "appliesTo": {
+        "conditions": [
+          "vat-registration"
+        ]
+      },
+      "requiredWhen": [
+        "vat-registration"
+      ],
+      "reason": "A VAT registration number was entered on the billing account: the VAT document must be attached.",
+      "basis": "Business requirement (2026-10-28): a VAT Registration Number makes the VAT document mandatory."
     }
   ]
 }

@@ -202,11 +202,13 @@ export function GuidedActivationWizard({
   const summaryProps = {
     // Page-level saving replaces milestone saving: a finished, saved page is the green tick, so no step row is flagged.
     completed: completedSummarySteps,
+    // The page the agent is on, shown (marked as current) among the completed ones.
+    current: currentStep ? { step: currentStep, index: currentIndex } : undefined,
     totalSteps: activeSteps.length,
     values: draft.values,
     onEdit: isLocked ? undefined : goToStep,
-    // After going back to edit, one click returns to the furthest step reached.
-    returnTo: !isLocked && currentIndex < maxReached && activeSteps[maxReached] ? { label: activeSteps[maxReached].label, onReturn: () => goToStep(maxReached) } : undefined,
+    // After going back to edit, the furthest step reached stays listed and one click returns to it.
+    returnTo: !isLocked && currentIndex < maxReached && activeSteps[maxReached] ? { label: activeSteps[maxReached].label, onReturn: () => goToStep(maxReached), index: maxReached } : undefined,
   };
 
   if (isCustomerFacing) {

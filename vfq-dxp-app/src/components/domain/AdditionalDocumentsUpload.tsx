@@ -1,6 +1,6 @@
+import { formatBytes as formatSize } from '../../lib/format';
 import { Tooltip } from '../primitives/Tooltip';
 import { IconButton } from '../primitives/IconButton';
-import { formatBytes as formatSize } from '../../lib/format';
 import { useEffect, useRef, useState } from 'react';
 import { Input } from '../primitives/Input';
 import { Select } from '../primitives/Select';
@@ -10,14 +10,6 @@ import { UPLOAD_RULES, uploadFileProblem } from './documentUploadRules';
 import { documentFileOf, forgetDocumentFile, readFileAsDataUrl, rememberDocumentFile } from '../../lib/documentFileStore';
 import type { DocumentRequirement, JourneyDocument } from '../../engines/journeyDocuments';
 
-/** What the section holds and how it was captured: "Identity documents scanned during verification". */
-const groupNote = (name: string, how: string): string =>
-  ({
-    'Customer Verification': `Identity documents ${how} during verification`,
-    'Special Discounts': `Evidence ${how} for the discount on this order`,
-    'CAF & Signature': 'The signed application form',
-    'Additional Documents': 'Documents attached here',
-  })[name] ?? 'Documents on this order';
 type FileType = 'PDF' | 'PNG' | 'JPG' | 'IMG' | 'DOC';
 /** The kind of file, from its name or, when it has none, from the content held. */
 function fileTypeOf(fileName: string | undefined, dataUrl: string | undefined): FileType {
@@ -29,37 +21,6 @@ function fileTypeOf(fileName: string | undefined, dataUrl: string | undefined): 
   if (mime === 'application/pdf') return 'PDF';
   if (mime.startsWith('image/')) return mime === 'image/png' ? 'PNG' : mime === 'image/jpeg' ? 'JPG' : 'IMG';
   return 'DOC';
-}
-
-/** Size in bytes of a data URL's content, or undefined when it cannot be read. */
-function byteSizeOf(dataUrl: string | undefined): number | undefined {
-  const m = dataUrl ? /^data:[^,]*?(;base64)?,(.*)$/s.exec(dataUrl) : null;
-  if (!m) return undefined;
-  if (m[1]) return Math.floor((m[2].length * 3) / 4) - (m[2].endsWith('==') ? 2 : m[2].endsWith('=') ? 1 : 0);
-  try {
-    return new TextEncoder().encode(decodeURIComponent(m[2])).length;
-  } catch {
-    return undefined;
-  }
-}
-
-/** Pages: a PDF's own page objects; an image is one page; anything else is unknown (shown without). */
-function pageCountOf(type: FileType, dataUrl: string | undefined): number | undefined {
-  if (type === 'PNG' || type === 'JPG' || type === 'IMG') return 1;
-  if (type !== 'PDF' || !dataUrl) return undefined;
-  const m = /;base64,(.*)$/s.exec(dataUrl);
-  if (!m) return undefined;
-  try {
-    const n = (atob(m[1]).match(/\/Type\s*\/Page(?![s\w])/g) ?? []).length;
-    return n > 0 ? n : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-/** "1.2 MB · 1 page", from what is known of the file: size, then pages. */
-function factsOf(sizeBytes: number | undefined, pages: number | undefined): string {
-  return [sizeBytes !== undefined ? formatSize(sizeBytes) : undefined, pages !== undefined ? `${pages} page${pages === 1 ? '' : 's'}` : undefined].filter(Boolean).join(' · ');
 }
 
 /** A page with a folded corner and the file type on it - PDFs in the brand red, images in blue, anything else neutral. */
@@ -123,15 +84,9 @@ const MAX_DOCUMENTS = 10;
 const RULES = UPLOAD_RULES.supporting;
 
 const TRASH = 'M3 6h18 M8 6V4h8v2 M19 6l-1 14H6L5 6 M10 11v6 M14 11v6';
-const GROUP_ICON: Record<string, string> = {
-  'Customer Verification': 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z M9 12l2 2 4-4',
-  'Special Discounts': 'M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z M7 7h.01',
-  'CAF & Signature': 'M3 18c2-6 3.5-11 5.5-11S9 15 11 15s2-5 4-5 1.5 5 3 5 2.5-2 3-3',
-};
 const DOC = 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6';
 const EYE = 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z';
 const UPLOAD = 'M12 16V4 M7 9l5-5 5 5 M4 20h16';
-const DOWNLOAD = 'M12 4v11 M7 10l5 5 5-5 M4 20h16';
 
 /** A data URL as an object URL: browsers will not open a data: URL as a page, but they open a blob. */
 function blobUrlOf(dataUrl: string): string | undefined {
@@ -146,21 +101,10 @@ function openDocument(dataUrl: string): void {
   if (url) window.open(url, '_blank', 'noopener');
 }
 
-function downloadDocument(dataUrl: string, name: string): void {
-  const url = blobUrlOf(dataUrl);
-  if (!url) return;
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = name;
-  a.click();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
 const fileNameOf = (d: JourneyDocument): string => d.fileName ?? `${d.label.replace(/[^\w]+/g, '-').toLowerCase()}.${/^data:image\/png/.test(d.dataUrl ?? '') ? 'png' : /^data:image\/jpe?g/.test(d.dataUrl ?? '') ? 'jpg' : /^data:application\/pdf/.test(d.dataUrl ?? '') ? 'pdf' : 'svg'}`;
 
 // Additional Documents: the end of the journey, after the CAF is signed. It holds (1) what this order requires the agent to attach, decided by
-// its scenario and the role - asked for here and nowhere earlier; (2) every document the journey holds, consolidated, each one viewable and
-// downloadable; and (3) anything else the agent wants to attach, labelled by type. No signature is needed for any of it.
+// its scenario and the role - asked for here and nowhere earlier; (2) every document the journey holds, consolidated, each one viewable; and (3) anything else the agent wants to attach, labelled by type. No signature is needed for any of it.
 export function AdditionalDocumentsUpload({
   documents,
   onChange,
@@ -176,9 +120,6 @@ export function AdditionalDocumentsUpload({
   // The file chosen or dropped but not uploaded yet.
   const [staged, setStaged] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
-  // Sections the agent has collapsed: only the header and the document count stay.
-  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
-  const toggleSection = (key: string) => setCollapsed((c) => { const n = new Set(c); if (n.has(key)) n.delete(key); else n.add(key); return n; });
   // A type picked with no file yet is an unfinished upload: the caller blocks Continue until it is uploaded.
   useEffect(() => {
     onPendingChange?.(Boolean(label.trim() || staged));
@@ -289,16 +230,12 @@ export function AdditionalDocumentsUpload({
     <div className={`card ${whiteBackground ? '' : 'bg-surface'} p-4 space-y-4`}>
       <div>
         <h4 className="text-fg font-bold text-[length:var(--fs-body)]">Additional Documents</h4>
-        <p className="text-muted text-[length:var(--fs-caption)]">
-          {requirements.length > 0 ? 'The documents this order needs are asked for here. ' : 'Optional - '}
-          Label and attach anything else this order needs. No signature required. Up to {maxDocuments} files, {RULES.maxLabel} each.
-        </p>
       </div>
 
       {missing.length > 0 && (
         <section aria-label="Required documents" className="space-y-3">
           <input ref={requiredFileRef} type="file" accept={RULES.accept} className="sr-only" aria-hidden tabIndex={-1} onChange={(e) => void handleRequiredFile(e.target.files?.[0])} />
-          <p role="status" className="text-[var(--warn-text)] text-[length:var(--fs-caption)]">
+          <p role="status" className="sr-only">
             {missing.length === 1 ? '1 required document is still to be uploaded.' : `${missing.length} required documents are still to be uploaded.`}
           </p>
           {missing.map((r) => (
@@ -324,76 +261,11 @@ export function AdditionalDocumentsUpload({
       )}
 
       <div className="@container">
-        <div className="grid grid-cols-1 items-start gap-4 @2xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-        {rows.length > 0 && (
-          <section aria-label="Journey documents" className="@container card overflow-hidden">
-            <header className="flex items-center gap-3 border-b border-border-soft px-4 py-3">
-              <span aria-hidden className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-circle)] bg-accent text-accent-on font-bold text-[length:var(--fs-caption)]">01</span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-fg font-semibold text-[length:var(--fs-body)]">Journey Documents</span>
-                <span className="block text-muted text-[length:var(--fs-caption)]">Scanned and uploaded earlier in the journey</span>
-              </span>
-              <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-[var(--radius-button)] bg-surface px-2 text-fg font-medium text-[length:var(--fs-caption)]" aria-label={`${rows.length} ${rows.length === 1 ? 'document' : 'documents'}`}>{rows.length}</span>
-            </header>
-            <div className="space-y-3 p-4">
-          {sections.map((g) => (
-            <section key={g.key} aria-label={`${g.title} documents`} className="card overflow-hidden">
-              <header className={`flex items-center gap-3 px-4 py-3 ${collapsed.has(g.key) ? '' : 'border-b border-border-soft'}`}>
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-button)] border border-[var(--danger-border)] bg-tone-accent text-accent">
-                  <Icon path={GROUP_ICON[g.name] ?? DOC} className="w-4 h-4" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-fg font-semibold text-[length:var(--fs-body)]">{g.title}</span>
-                  <span className="block text-muted text-[length:var(--fs-caption)]">{groupNote(g.name, g.how)}</span>
-                </span>
-                <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-[var(--radius-button)] bg-surface px-2 text-fg font-medium text-[length:var(--fs-caption)]" aria-label={`${g.items.length} ${g.items.length === 1 ? 'document' : 'documents'}`}>{g.items.length}</span>
-                <Tooltip content={collapsed.has(g.key) ? 'Expand' : 'Collapse'} placement="bottom">
-                  <IconButton
-                    bordered
-                    icon={collapsed.has(g.key) ? 'M6 9l6 6 6-6' : 'M18 15l-6-6-6 6'}
-                    label={`${collapsed.has(g.key) ? 'Expand' : 'Collapse'} ${g.title}`}
-                    aria-expanded={!collapsed.has(g.key)}
-                    className="rounded-[var(--radius-pill)] border-border-soft! text-fg-2! enabled:hover:bg-surface"
-                    onClick={() => toggleSection(g.key)}
-                  />
-                </Tooltip>
-              </header>
-              <div className="px-4 py-4" hidden={collapsed.has(g.key)}>
-                    <ul className="grid grid-cols-1 gap-3 @md:grid-cols-2">
-                      {g.items.map((d) => {
-                        const held = d.dataUrl ?? (d.fileId ? documentFileOf(d.fileId)?.dataUrl : undefined);
-                        // A capture the reader kept no image of (the demo scanner) opens as a labelled specimen, never as someone's document.
-                        const dataUrl = held ?? (d.source.endsWith('Scanned') ? scanSpecimen(d.label) : undefined);
-                        const name = d.fileName ?? fileNameOf(d);
-                        return (
-                          <li key={d.id} className="flex items-center gap-3 rounded-[var(--radius-card)] border border-border-soft bg-surface px-3 py-3">
-                            <FileTypeIcon type={fileTypeOf(d.fileName, dataUrl)} />
-                            <span className="min-w-0 flex-1">
-                              <span className="block text-fg font-semibold text-[length:var(--fs-body)] truncate">{g.items.length > 1 || g.kind !== d.label ? sideOf(d.label) : d.label}</span>
-                              <span className="block text-muted text-[length:var(--fs-caption)] truncate">{name}</span>
-                              <span className="block text-muted text-[length:var(--fs-caption)] truncate">{factsOf(d.sizeBytes ?? byteSizeOf(dataUrl), pageCountOf(fileTypeOf(d.fileName, dataUrl), dataUrl))}</span>
-                            </span>
-                            <Tooltip content={dataUrl ? `View ${d.label}` : 'No copy of this document is held'} placement="bottom">
-                              <IconButton bordered icon={EYE} label={`View ${d.label}`} className="rounded-[var(--radius-pill)] border-border-soft! text-fg-2! enabled:hover:bg-surface" disabled={!dataUrl} onClick={() => dataUrl && openDocument(dataUrl)} />
-                            </Tooltip>
-                            <Tooltip content={dataUrl ? `Download ${d.label}` : 'No copy of this document is held'} placement="bottom">
-                              <IconButton bordered icon={DOWNLOAD} label={`Download ${d.label}`} className="rounded-[var(--radius-pill)] border-border-soft! text-fg-2! enabled:hover:bg-surface" disabled={!dataUrl} onClick={() => dataUrl && downloadDocument(dataUrl, name)} />
-                            </Tooltip>
-                            {d.removable && d.fileId && <IconButton tone="danger" icon={TRASH} label={`Remove ${d.fileName ?? d.label}`} onClick={() => remove(d.fileId!)} />}
-                          </li>
-                        );
-                      })}
-                    </ul>
-              </div>
-            </section>
-          ))}
-            </div>
-          </section>
-        )}
+        <div className="grid grid-cols-1 items-start gap-4 @2xl:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
         {noTypesToOffer ? null : !atLimit ? (
           <section aria-label="Upload new documents" className="card overflow-hidden">
             <header className="flex items-center gap-3 border-b border-border-soft px-4 py-3">
-              <span aria-hidden className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-circle)] bg-accent text-accent-on font-bold text-[length:var(--fs-caption)]">02</span>
+              <span aria-hidden className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-circle)] bg-accent text-accent-on font-bold text-[length:var(--fs-caption)]">01</span>
               <span className="min-w-0 flex-1">
                 <span className="block text-fg font-semibold text-[length:var(--fs-body)]">Upload New Documents</span>
                 <span className="block text-muted text-[length:var(--fs-caption)]">Add Optional Supporting Files</span>
@@ -465,6 +337,39 @@ export function AdditionalDocumentsUpload({
           </section>
         ) : (
           <p className="text-muted text-[length:var(--fs-caption)]">Maximum of {maxDocuments} documents reached. Remove one to upload another.</p>
+        )}
+        {rows.length > 0 && (
+          // One flat list of every document scanned or uploaded earlier in the journey: no container per document or per group.
+          <section aria-label="Journey documents" className="space-y-1">
+            <h5 className="text-fg font-semibold text-[length:var(--fs-body)]">Journey Documents <span className="text-muted font-normal text-[length:var(--fs-caption)]">({rows.length})</span></h5>
+            <ul className="divide-y divide-border-soft">
+              {sections.flatMap((g) =>
+                g.items.map((d) => {
+                  const held = d.dataUrl ?? (d.fileId ? documentFileOf(d.fileId)?.dataUrl : undefined);
+                  // A capture the reader kept no image of (the demo scanner) opens as a labelled specimen, never as someone's document.
+                  const dataUrl = held ?? (d.source.endsWith('Scanned') ? scanSpecimen(d.label) : undefined);
+                  const name = d.fileName ?? fileNameOf(d);
+                  // The document, then which side when the group holds several.
+                  // Only the document, not the journey step it came from ("QID Document - Front", not "Customer Verification: QID Document - Front").
+                  const docTitle = g.title.includes(': ') ? g.title.slice(g.title.indexOf(': ') + 2) : g.title;
+                  const title = g.items.length > 1 || g.kind !== d.label ? `${docTitle} - ${sideOf(d.label)}` : docTitle;
+                  return (
+                    <li key={d.id} className="flex items-center gap-3 py-3">
+                      <FileTypeIcon type={fileTypeOf(d.fileName, dataUrl)} />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-fg font-semibold text-[length:var(--fs-body)] truncate">{title}</span>
+                        <span className="block text-muted text-[length:var(--fs-caption)] truncate">{name}</span>
+                      </span>
+                      <Tooltip content={dataUrl ? `View ${d.label}` : 'No copy of this document is held'} placement="bottom">
+                        <IconButton bordered icon={EYE} label={`View ${d.label}`} className="rounded-[var(--radius-pill)] border-border-soft! text-fg-2! enabled:hover:bg-surface" disabled={!dataUrl} onClick={() => dataUrl && openDocument(dataUrl)} />
+                      </Tooltip>
+                      {d.removable && d.fileId && <IconButton tone="danger" icon={TRASH} label={`Remove ${d.fileName ?? d.label}`} onClick={() => remove(d.fileId!)} />}
+                    </li>
+                  );
+                })
+              )}
+            </ul>
+          </section>
         )}
         </div>
       </div>

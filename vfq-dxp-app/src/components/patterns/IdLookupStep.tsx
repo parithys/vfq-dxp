@@ -62,9 +62,13 @@ interface IdLookupStepProps {
   allowNewCustomer?: boolean;
   /**
    * Scan -> verify -> Fetch (2026-09-30), OPT-IN for the same reason as
-   * autoDetectIdType. The scan populates the QID number AND expiry date as
-   * editable fields and does NOT call MOI; the agent compares them with the
-   * physical card and presses Fetch, which submits both for validation.
+   * autoDetectIdType. What the agent does depends on the pass over the reader
+   * (see CaptureMode): the first scan and Retake 1 read the number and expiry
+   * and call MOI by themselves; Retake 2 reads the number and the agent types
+   * the expiry; Retake 3 onwards fills the number from the barcode button and
+   * the agent types the expiry. Where the agent types, they press Fetch. Once
+   * MOI has answered, the number and expiry are shown (read-only) with the
+   * validated identity rather than as fields of their own.
    */
   verifyThenFetch?: boolean;
   /**
@@ -130,6 +134,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
     captureMode,
     handleScanAttempt,
     handleDemoScan,
+    handleBarcodeScan,
     handleKeyDown,
   } = useIdLookup({ value, onChange, allowedIdTypes, autoDetectIdType, verifyThenFetch, asNewCustomer, asCustomerId, unbound, scanAsCustomerId, manualEntry, allowNewCustomer });
 
@@ -170,8 +175,8 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
   // fails - and the failure message says what the agent can do about it
   // without mentioning attempts.
   // verifyThenFetch: what the agent may change depends on how the capture came in - see CaptureMode.
-  const numberLocked = captureMode === 'ocr-blurred' || captureMode === 'ocr-clear' || captureMode === 'barcode';
-  const expiryLocked = captureMode === 'ocr-blurred' || captureMode === 'ocr-clear';
+  const numberLocked = captureMode === 'ocr-auto' || captureMode === 'ocr-number';
+  const expiryLocked = captureMode === 'ocr-auto';
 
   const scannerBlock = effectiveScannable && (
     <IdScannerPanel
@@ -212,13 +217,18 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
     />
   );
 
-  // An upload and the typed-entry pass show the fields empty, for the agent to fill: no number is read for them.
-  const typedCapture = captureMode === 'upload' || captureMode === 'manual';
-  const numberBlock = typeChosen && (!effectiveScannable || (scanComplete && Boolean(value.idNumber)) || manualEntryUnlocked || typedCapture) && (
+  // An upload and the barcode passes show the fields empty, for the agent to fill: no number is read off the card for them.
+  const typedCapture = captureMode === 'upload' || captureMode === 'barcode';
+  // verifyThenFetch: once MOI has answered, the number and expiry live in the validated data, so they are not repeated as fields.
+  // A clear read (first scan, Retake 1) goes straight to MOI, so its number and expiry are never shown as fields - not while MOI is being
+  // called either, or they would flash up and vanish. They appear only if the lookup comes back with a problem the agent must see.
+  const autoLookupClean = captureMode === 'ocr-auto' && !notFound && !reconciliation && !linkProblem && !ownerMismatch;
+  const numberBlock = typeChosen && !(verifyThenFetch && (value.moiResult || autoLookupClean)) && (!effectiveScannable || (scanComplete && Boolean(value.idNumber)) || manualEntryUnlocked || typedCapture) && (
     <QidNumberField
       idType={idType}
       inputRef={numberInputRef}
       barcodeNumber={idType === 'QID' ? contextIdentity?.idNo : undefined}
+      onBarcodeScan={captureMode === 'barcode' ? handleBarcodeScan : undefined}
       value={value.idNumber ?? ''}
       onChange={(idNumber: string) => {
         setNotFound(false);
@@ -242,6 +252,8 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
         verifyThenFetch && effectiveScannable && (scanComplete || manualEntryUnlocked) ? (
           <Input
             label="Expiry Date"
+            // Fetch stays disabled until it is filled (fetchDisabled below), so it is mandatory.
+            required
             value={value.scannedExpiry ?? ''}
             placeholder="DD/MM/YYYY"
             inputMode="numeric"
@@ -279,12 +291,12 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
             ? 'Checking the MOI registry…'
             : value.moiResult
               ? undefined // validated: the "verify, then Fetch" prompt has been acted on
-              : captureMode === 'upload' || captureMode === 'manual'
+              : captureMode === 'upload'
                 ? 'Enter the ID number and expiry date from the document, then select Fetch.'
                 : captureMode === 'barcode'
-                  ? 'ID number read from the barcode. Enter the expiry date from the document, then select Fetch.'
-                  : verifyThenFetch
-                    ? 'Read from the scanned document - verify with the original document, then select Fetch.'
+                  ? 'Select the barcode icon to scan the ID number, enter the expiry date from the document, then select Fetch.'
+                  : captureMode === 'ocr-number'
+                    ? 'ID number read from the scanned document. Enter the expiry date from the document, then select Fetch.'
                     : 'Read from the scanned document.'
           : undefined
       }
@@ -381,6 +393,7 @@ export function IdLookupStep({ value = {}, onChange, showMoiDetails = true, allo
         <MoiResultPanel
           moiResult={value.moiResult}
           idType={value.idType}
+          idNumber={verifyThenFetch ? value.idNumber : undefined}
           hideDocumentType={verifyThenFetch}
           statusText={value.moiResult.moiUpdateTime ? `MOI validated at ${formatDateTime(value.moiResult.moiUpdateTime)}` : 'MOI validated'}
         />

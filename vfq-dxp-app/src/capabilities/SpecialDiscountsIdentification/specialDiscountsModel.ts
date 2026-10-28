@@ -9,7 +9,7 @@ export interface SpecialDiscountsValue {
   /** B2B2C: the employee's ID number at the partner company. Optional. */
   idNumber?: string;
   officeId?: QidImageUploadValue;
-  /** The agent has reviewed and accepted the supporting document (scanned or uploaded). Cleared by any retake or new upload. */
+  /** The supporting document (scanned or uploaded) is accepted automatically once it is complete and clear; recomputed on every retake or new upload. */
   officeAccepted?: boolean;
   /** The supporting document was uploaded instead of scanned (file name and size only). */
   /** The agent rejected the benefit: the customer continues as Standard, and an employer on the MOI record no longer makes the order B2B2C. */
@@ -39,7 +39,7 @@ export const isCompanySupported = (c: CompanySelection | undefined) => Boolean(c
 export function isCustomerTypeValid(v: SpecialDiscountsValue | undefined): boolean {
   if (!v?.type) return false;
   if (v.type === 'none') return true;
-  // Evidence is a scanned OR an uploaded supporting document, and the agent must have accepted it.
+  // Evidence is a scanned OR an uploaded supporting document, and it must be clear (accepted automatically).
   const scanned = Boolean(v.officeId?.frontScanned && v.officeId?.backScanned && v.officeAccepted);
   // Retired and MADA: the supporting document, accepted by the agent - nothing is sent to any government system. B2B2C: the company is the only
   // requirement; the ID number and the ID scan/upload are optional.

@@ -117,7 +117,6 @@ export function InstallationAddressStep({ values, setValue }: { values: Values; 
         }}
         idNumber={contact?.idNumber}
         nationality={(values.eligibility as EligibilityResult | undefined)?.nationality}
-        hideFibreReadiness
       />
     </div>
   );

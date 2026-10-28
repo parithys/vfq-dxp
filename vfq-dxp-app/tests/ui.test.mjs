@@ -139,7 +139,6 @@ test('guard: every hand-written <button> declares a type (so it never submits a 
 const NON_DATA_TABLES = [
   'capabilities/CrossSellOffers/OfferDetailsDrawer.tsx',
   'components/patterns/CheckoutSummaryTables.tsx',
-  'components/patterns/PostpaidMonthlySummary.tsx',
   'components/patterns/PrepaidPlanStep.tsx',
 ];
 test('guard: data tables use DataTable - a raw <table> is only for the allow-listed key-value / legal tables', () => {
@@ -221,13 +220,15 @@ test('idCaptureOptions: reader on web, upload on tablet, upload when there is no
 
 // Special Discounts Identification is an independent copy of the Mobile Postpaid Special Discounts section: it imports none of the shared
 // identification / customer-type parts or the device rule, and always offers both capture actions.
-test('Special Discounts Identification is decoupled from Customer Verification', async () => {
+test('Special Discounts Identification is decoupled from Customer Verification (it has its own capture rule, which reads the device since 2026-10-27)', async () => {
   const dir = 'src/capabilities/SpecialDiscountsIdentification';
-  const shared = /from '(?:\.\.\/)+(?:components\/(?:patterns|domain)\/(?:IdFileUpload|PassportScanSections|QidImageUpload|QidInput|ScannedIdPreview|idUploadModel|qidImageUploadModel|GuidedContactStep|IdLookupStep|useIdLookup|CompanySearchInput)|capabilities\/(?:CustomerIdentification|CustomerType))'|lib\/deviceType/;
-  for (const f of fs.readdirSync(dir).filter((n) => /\.tsx?$/.test(n))) assert.ok(!shared.test(fs.readFileSync(path.join(dir, f), 'utf8')), `${f} reaches into a shared part or the device rule`);
+  const shared = /from '(?:\.\.\/)+(?:components\/(?:patterns|domain)\/(?:IdFileUpload|PassportScanSections|QidImageUpload|QidInput|ScannedIdPreview|idUploadModel|qidImageUploadModel|GuidedContactStep|IdLookupStep|useIdLookup|CompanySearchInput)|capabilities\/(?:CustomerIdentification|CustomerType))'/;
+  for (const f of fs.readdirSync(dir).filter((n) => /\.tsx?$/.test(n))) assert.ok(!shared.test(fs.readFileSync(path.join(dir, f), 'utf8')), `${f} reaches into a shared part`);
   const { idCaptureOptions } = await load('/src/capabilities/SpecialDiscountsIdentification/idUploadModel.ts');
-  assert.deepEqual(idCaptureOptions(true), { scan: true, upload: true });
-  assert.deepEqual(idCaptureOptions(false), { scan: false, upload: true });
+  assert.deepEqual(idCaptureOptions(true, 'web'), { scan: true, upload: false });
+  assert.deepEqual(idCaptureOptions(true, 'tablet'), { scan: true, upload: true });
+  assert.deepEqual(idCaptureOptions(false, 'web'), { scan: false, upload: true }, 'no reader: upload stays on the web');
+  assert.deepEqual(idCaptureOptions(false, 'tablet'), { scan: false, upload: true });
   const m = await load('/src/capabilities/SpecialDiscountsIdentification/specialDiscountsModel.ts');
   assert.deepEqual(m.TYPE_OPTIONS.map((o) => o.label), ['Standard Customer', 'Consumer B2B2C', 'Retiree', 'MADA']);
 });

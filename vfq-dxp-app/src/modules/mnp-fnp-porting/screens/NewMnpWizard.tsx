@@ -8,7 +8,7 @@ import { NewConnectionWizard } from '../../new-connection/NewConnectionWizard';
 //
 // Evidence behind the steps (kept from the standalone wizard):
 //
-// Postpaid (UJ-069 "MNP Postpaid Port-In (Desktop, Ooredoo to Vodafone)," high confidence): Contact -> Address -> Billing -> SIM
+// Postpaid (UJ-069 "MNP Postpaid Port-In (Desktop, Other Operator to Vodafone)," high confidence): Contact -> Address -> Billing -> SIM
 // Serial -> Plan (Bill Limit) -> Donor Details -> Donor Attachment -> CAF -> Activity -> Submit.
 //
 // Prepaid (UJ-010 "MNP Prepaid," module-hierarchy's "MNP prepaid port-in (tablet)"): Contact -> Address -> SIM Serial -> Plan (prepaid

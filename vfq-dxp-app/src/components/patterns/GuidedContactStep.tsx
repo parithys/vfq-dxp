@@ -7,8 +7,7 @@ import { IdentityDetailsCard, identityFacts } from '../../capabilities/CustomerI
 import { Input } from '../primitives/Input';
 import { PhoneNumberInput } from '../primitives/PhoneNumberInput';
 import { Select } from '../primitives/Select';
-import { SYNTHETIC_CLASS } from '../../data/synthetic/syntheticMarker';
-import { isValidAltPhone, isValidEmail, emailVerification, maskEmail, identityFromMoi } from './guidedContactModel';
+import { isValidAltPhone, isValidEmail, emailVerification, displayedEmail, displayedMobile, identityFromMoi } from './guidedContactModel';
 import type { GuidedContactValue } from './guidedContactModel';
 
 
@@ -164,6 +163,15 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
               Document Type is omitted under verifyThenFetch (the agent already chose it). Sponsor and Occupation
               are captured but not shown here: they are visible in Customer 360 only. */}
           <IdentityDetailsCard
+            lastRowExtra={
+              <Select
+                label="Salutation"
+                placeholder="Select salutation"
+                value={value.salutation ?? ''}
+                onChange={(e) => onChange({ ...value, salutation: e.target.value || undefined })}
+                options={salutationOptions}
+              />
+            }
             status={
               verifyThenFetch && value.moiResult.moiUpdateTime
                 ? `MOI validated at ${formatDateTime(value.moiResult.moiUpdateTime)}`
@@ -171,7 +179,7 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
             }
             facts={identityFacts(
               { ...value, idTypeLabel: value.idType ? idTypeLabel(value.idType) : '', companyName: value.companyName },
-              { showDocumentType: !verifyThenFetch }
+              { showDocumentType: !verifyThenFetch, idType: verifyThenFetch ? value.idType : undefined }
             )}
           />
 
@@ -181,43 +189,7 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
                 phone) share a row with the one preference field evidenced
                 alongside them - see isValidEmail's header note: "Email/Alt
                 Phone/Language ... are agent-entered". */}
-            {/* Salutation (optional, saved to the customer profile) and the language the customer prefers, side by side. */}
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <Select
-                label="Salutation"
-                placeholder="Select salutation"
-                value={value.salutation ?? ''}
-                onChange={(e) => onChange({ ...value, salutation: e.target.value || undefined })}
-                options={salutationOptions}
-              />
-              {/* Evidenced agent-entered field - `language` has held a slot on
-                  GuidedContactValue since this step's interface was written,
-                  but nothing rendered it until 2026-09-28. Defaults to
-                  English, matching every other Language control in the app
-                  (Base Management's Contact step).
-
-                  Options expanded 2026-09-28 from English/Arabic to also
-                  offer Hindi, Malayalam and Filipino, matching Qatar's expat
-                  customer base. English/Arabic/Hindi/Malayalam are the four
-                  languages the CRM's actual SMS notification templates are
-                  evidenced in (sms-templates - Locale codes
-                  ENU/ARA/HIN/MAL); Filipino has no such template evidence but
-                  was requested explicitly for this field, so it is included
-                  as a demo-catalogue addition rather than an evidenced one. */}
-              <Select
-                label={verifyThenFetch ? 'Preferred Language' : 'Notification Language'}
-                value={value.language ?? 'English'}
-                onChange={(e) => onChange({ ...value, language: e.target.value })}
-                options={[
-                  { value: 'English', label: 'English' },
-                  { value: 'Arabic', label: 'Arabic' },
-                  { value: 'Hindi', label: 'Hindi' },
-                  { value: 'Malayalam', label: 'Malayalam' },
-                  { value: 'Filipino', label: 'Filipino' },
-                ]}
-              />
-            </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               {/* Verification state rides INSIDE the field as a tick on its
                   right edge (2026-09-27), replacing the badge that sat
                   underneath. The badge was as wide as the input and read as a
@@ -228,18 +200,15 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
                 label="Personal Email ID"
                 type="email"
                 required
-                // New customer: the address comes from NAS and is shown masked
-                // (read-only - the stored value stays the real address). Existing
-                // customer: the address from Siebel is shown as available and
-                // stays editable.
-                value={value.moiResult?.isNewCustomer && !value.moiResult?.createdByAgent && value.email ? maskEmail(value.email) : (value.email ?? '')}
-                readOnly={Boolean(value.moiResult?.isNewCustomer && !value.moiResult?.createdByAgent && value.email)}
+                // New customer: the address comes from NAS and is shown masked. The field is editable: focusing it selects the masked text,
+                // so typing replaces it, and what the agent types is shown as typed (the stored value stays the real address until then).
+                value={displayedEmail(value)}
+                onFocus={(e) => {
+                  if (displayedEmail(value) !== (value.email ?? '')) e.currentTarget.select();
+                }}
                 placeholder="customer@example.qa"
                 error={value.email && !isValidEmail(value.email) ? 'Please enter a valid email address.' : undefined}
-                helperText={
-                  emailVerification(value.email, value.moiResult?.email).hint ??
-                  (value.moiResult?.emailSource && value.email ? <span className={SYNTHETIC_CLASS}>{`Fetched from ${value.moiResult.emailSource}`}</span> : undefined)
-                }
+                helperText={emailVerification(value.email, value.moiResult?.email).hint}
                 trailingAddon={
                   !verifyThenFetch && emailVerification(value.email, value.moiResult?.email).verified ? (
                     <VerifiedBadge label="Email Address Verified" />
@@ -247,6 +216,20 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
                 }
                 onChange={(e) => onChange({ ...value, email: e.target.value })}
               />
+              {/* Personal Mobile: optional, a Qatar mobile; validated when entered. */}
+              <PhoneNumberInput
+                label="Personal Mobile"
+                noAutoFocus
+                fixedIso="QA"
+                maxNationalDigits={8}
+                value={value.personalMobile ?? ''}
+                maskedDisplay={displayedMobile(value)}
+                placeholder="55667766"
+                error={value.personalMobile && !isValidAltPhone(value.personalMobile) ? 'Enter a valid Qatar mobile number.' : undefined}
+                onChange={(e) => onChange({ ...value, personalMobile: e.target.value || undefined })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4 mt-4">
               {/* Work Email ID: optional for every customer (existing, new, B2B2C); validated when entered. */}
               <Input
                 label="Work Email ID"
@@ -272,15 +255,43 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
                 // underneath objected. The 9th keystroke now simply does not
                 // land.
                 maxNationalDigits={8}
-                helperText="Service notifications will be sent to this Qatar mobile number."
                 value={value.altPhone ?? ''}
-                placeholder="5566 7766"
+                placeholder="55667766"
                 error={
                   value.altPhone && !isValidAltPhone(value.altPhone)
                     ? 'Enter a valid Qatar mobile number.'
                     : undefined
                 }
                 onChange={(e) => onChange({ ...value, altPhone: e.target.value })}
+              />
+            </div>
+            {/* Language: its own row. */}
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              {/* Evidenced agent-entered field - `language` has held a slot on
+                  GuidedContactValue since this step's interface was written,
+                  but nothing rendered it until 2026-09-28. Defaults to
+                  English, matching every other Language control in the app
+                  (Base Management's Contact step).
+
+                  Options expanded 2026-09-28 from English/Arabic to also
+                  offer Hindi, Malayalam and Filipino, matching Qatar's expat
+                  customer base. English/Arabic/Hindi/Malayalam are the four
+                  languages the CRM's actual SMS notification templates are
+                  evidenced in (sms-templates - Locale codes
+                  ENU/ARA/HIN/MAL); Filipino has no such template evidence but
+                  was requested explicitly for this field, so it is included
+                  as a demo-catalogue addition rather than an evidenced one. */}
+              <Select
+                label={verifyThenFetch ? 'Preferred Communication Language' : 'Notification Language'}
+                value={value.language ?? 'English'}
+                onChange={(e) => onChange({ ...value, language: e.target.value })}
+                options={[
+                  { value: 'English', label: 'English' },
+                  { value: 'Arabic', label: 'Arabic' },
+                  { value: 'Hindi', label: 'Hindi' },
+                  { value: 'Malayalam', label: 'Malayalam' },
+                  { value: 'Filipino', label: 'Filipino' },
+                ]}
               />
               {/* Fixed Line evidences a "Get IPTV?" field at Contact; FWA's
                   evidenced set does not, hence the prop. Restored here after a

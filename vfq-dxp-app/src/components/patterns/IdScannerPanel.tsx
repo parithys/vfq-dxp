@@ -132,7 +132,7 @@ export function IdScannerPanel({
         // the eight selector-led journeys have no "Document detected"
         // auto-extraction step for a forced blur-then-retake to demonstrate,
         // so only the scan-first flow gets the blurred-first-pass behaviour.
-        blurFirstScan={autoDetectIdType || verifyThenFetch}
+        blurFirstScan={autoDetectIdType}
         hideUnclearNotice={verifyThenFetch}
         // Budget spent: the reader is done, so the card stops offering to
         // drive it and the error below becomes the only instruction.

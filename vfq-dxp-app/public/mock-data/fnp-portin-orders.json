@@ -12,7 +12,7 @@
     "idDocument": "QID-Front-Back-12001.pdf",
     "targetDate": "2026-09-02",
     "targetDateCalculationMethod": "manual",
-    "donorOperator": "Ooredoo",
+    "donorOperator": "Other Operator",
     "status": "donor validation",
     "conditionalAcceptance": {
       "triggered": false,
@@ -34,7 +34,7 @@
     "idDocument": "QID-Front-Back-12002.pdf",
     "targetDate": "2026-08-30",
     "targetDateCalculationMethod": "manual",
-    "donorOperator": "Ooredoo",
+    "donorOperator": "Other Operator",
     "status": "conditional acceptance",
     "conditionalAcceptance": {
       "triggered": true,

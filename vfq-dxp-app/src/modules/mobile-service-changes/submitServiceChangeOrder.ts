@@ -4,6 +4,7 @@ import { newActivityId } from '../../engines/activityEngine';
 import type { ActivityInput } from '../../engines/activityEngine';
 import { monthlyCharges } from '../../engines/postpaidPricing';
 import { emailVerification, maskEmail } from '../../capabilities';
+import { orderTerms } from '../../capabilities';
 import type { ConfirmedOrder, CustomerLine, GuidedContactValue, PrepaidCheckoutTotals } from '../../capabilities';
 import type { CustomerTypeValue } from '../../capabilities/CustomerType/customerTypeModel';
 import type { CheckoutTotals } from '../../components/patterns/checkoutSummaryModel';
@@ -141,6 +142,7 @@ export async function submitServiceChangeOrder(
     customerEmail: contact.email,
     customerEmailDisplay: contact.moiResult?.isNewCustomer && !contact.moiResult?.createdByAgent && contact.email ? maskEmail(contact.email) : contact.email,
     customerEmailVerified: emailVerification(contact.email, contact.moiResult?.email).verified,
+    terms: orderTerms(values, 'postpaid'),
     service: 'mobile',
   };
 }

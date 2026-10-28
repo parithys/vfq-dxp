@@ -46,3 +46,19 @@ test('the customer handed over is one the role may see, and the ticket carries t
     assert.equal(t.kioskMobileNumber, c.phone);
   }
 });
+
+// Demo switch (DEMO_UNKNOWN_ONLY_QUEUE): the queue serves Unknown customers only. Expected values come from the data, not from the scope.
+test('Other Operator-only scope: only tickets whose number is on no customer count, are called, or are issued', () => {
+  const all = rd('qtickets').map((t) => ({ ...t, status: 'Waiting' }));
+  const onFile = (t) => customers.some((c) => q.mobileMatches(t.kioskMobileNumber, c.phone));
+  const scope = q.queueScope(customers, true);
+  const expected = all.filter((t) => !onFile(t));
+  assert.ok(expected.length > 0 && expected.length < all.length, 'the seed has both kinds');
+  assert.equal(all.filter((t) => scope(t)).length, expected.length);
+  assert.ok(!onFile(q.nextTicketFor(undefined, all, scope)), 'the ticket called is not a Vodafone customer');
+  assert.equal(q.waitingCountFor(undefined, all, scope), expected.length);
+  assert.equal(q.waitingCountFor(undefined, all), all.filter((t) => q.queuesForRole(undefined).includes(t.journeyCode)).length, 'switched off: unchanged');
+  const vodafoneOnly = all.filter(onFile).map((t) => ({ ...t }));
+  const issued = w.nextWalkInTicket(undefined, vodafoneOnly, customers, new Date(), true);
+  assert.ok(issued && !onFile(issued) && issued.kioskMobileNumber, 'an empty Other Operator queue is refilled with an Other Operator walk-in');
+});

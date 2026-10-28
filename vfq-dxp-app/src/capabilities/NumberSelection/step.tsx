@@ -80,7 +80,7 @@ export function numberSelectionStep(
               plan && price !== undefined && price >= FREE_NUMBER_PRICE_CEILING_QAR ? starNumberOverageQar(plan.mrcQar ?? 0, price, plan.starEntitlementQar) : 0;
             return (
               <div className="flex items-center gap-3">
-                <WaiveOff chargeQar={values.msisdn ? charge : 0} waiver={isNumberWaiver(values.numberWaiver) ? values.numberWaiver : undefined} onChange={(w) => setValue('numberWaiver', w)} />
+                <WaiveOff chargeQar={values.msisdn ? charge : 0} numberChosen={Boolean(values.msisdn)} waiver={isNumberWaiver(values.numberWaiver) ? values.numberWaiver : undefined} onChange={(w) => setValue('numberWaiver', w)} />
                 {defaultButton}
               </div>
             );

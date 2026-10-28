@@ -3,11 +3,11 @@ import { EmptyState } from '../../components/primitives/EmptyState';
 import { useEffect, useState } from 'react';
 import { Icon } from '../../components/primitives/Icon';
 import { TabStrip } from '../../components/primitives/TabStrip';
-import { SegmentedTabs } from '../../components/primitives/SegmentedTabs';
+import { SearchField } from '../../components/primitives/SearchField';
 import { CARD_IDLE, CARD_SELECTED, SelectedTick, SelectedCardTexture } from '../../components/primitives/offerCardParts';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { isAddonEligible, type AddonEligibilityContext, type AddonEligibilityRule } from '../../engines/addonEligibility';
-import { ADDON_CATEGORIES, ADDON_PRICING_FILTERS, DEFAULT_ADDON_PRICING, addonsFor, selectedPerCategory, type AddonCategory, type AddonPricing, type AddonPricingModel, addonPriceDisplay } from '../../engines/addonCategories';
+import { ADDON_CATEGORIES, addonsFor, selectedPerCategory, type AddonCategory, type AddonPricingModel, addonPriceDisplay, addonChargeType } from '../../engines/addonCategories';
 import { formatAmount } from '../../lib/format';
 
 interface AddonProduct {
@@ -23,6 +23,8 @@ interface AddonProduct {
   pricing?: 'free' | 'paid';
   /** How it is charged (see addonCategories.ts); decides Free / Paid and the price wording. */
   pricingModel?: AddonPricingModel;
+  /** Stated on the record when the add-on is not monthly (weekly or one-time). */
+  billingFrequency?: 'monthly' | 'weekly' | 'one-time';
   introPriceQAR?: number;
   /** The catalogue's own wording for a price that is not a plain QAR amount (TBC, Plan-based, QR 10 after promotional period ...). */
   priceLabel?: string;
@@ -55,16 +57,10 @@ interface AddonsPickerProps {
    */
   source?: 'catalogue' | 'prepaid';
   /**
-   * The dedicated Add-ons page: two levels of navigation - the category tabs (Local Data, Local Minutes, International, Roaming, Combo, Others) and, under
-   * them, the Free / Paid filter, which applies to the category selected. Rows layout, catalogue add-ons.
+   * The dedicated Add-ons page: the category tabs (Local Data, Local Calls, International Calls, Roaming, Combo, Others) and, under them, the selected
+   * category's add-ons in two columns - Paid Addons and Free Addons - each listed top to bottom. Rows layout, catalogue add-ons.
    */
   categorized?: boolean;
-  /**
-   * The Paid / Free filter, when the page owns it (it sits in the page's top row, right-aligned, and is kept across the category tabs): the picker
-   * then draws no filter of its own and starts it on Paid, every time it is shown. Omitted: the picker keeps the filter itself, under the categories.
-   */
-  pricing?: AddonPricing;
-  onPricingChange?: (pricing: AddonPricing) => void;
 }
 
 // "Plan & Add-ons" (reference flow step 5) - optional, non-gating multi-select
@@ -74,16 +70,10 @@ const CHEVRON = 'M9 18l6-6-6-6';
 
 const PHONE_ICON = 'M7 2h10a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z M11 18h2';
 
-export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityContext, emptyMessage, layout = 'cards', source = 'catalogue', categorized = false, pricing: pricingProp, onPricingChange }: AddonsPickerProps) {
+export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityContext, emptyMessage, layout = 'cards', source = 'catalogue', categorized = false }: AddonsPickerProps) {
   const [category, setCategory] = useState<AddonCategory>(ADDON_CATEGORIES[0]);
-  const [ownPricing, setOwnPricing] = useState<AddonPricing>(DEFAULT_ADDON_PRICING);
-  const pricing = pricingProp ?? ownPricing;
-  const setPricing = onPricingChange ?? setOwnPricing;
-  // The page-owned filter opens on Paid whenever the page is loaded; switching category tabs never touches it.
-  useEffect(() => {
-    onPricingChange?.(DEFAULT_ADDON_PRICING);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Search by add-on name, description or price, scoped to the category on show (like the plan search under the plan tabs).
+  const [search, setSearch] = useState('');
   const [allAddons, setAllAddons] = useState<AddonProduct[]>([]);
   const [status, setStatus] = useState<'loading' | 'error' | 'ready'>('loading');
   const [attempt, setAttempt] = useState(0);
@@ -150,9 +140,66 @@ export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityCon
 
   // The add-ons on screen: all of them, or - on the Add-ons page - the selected category's, narrowed by Free / Paid.
   const useTabs = categorized && layout === 'rows' && source === 'catalogue';
-  const shown = useTabs ? addonsFor(addons, category, pricing) : addons;
+  const q = search.trim().toLowerCase();
+  const matchesSearch = (a: AddonProduct) =>
+    !q || [a.name, a.description, addonPriceDisplay(a)?.primary, addonPriceDisplay(a)?.secondary, a.priceLabel, String(a.mrcQAR)].some((t) => t?.toLowerCase().includes(q));
+  const paid = useTabs ? addonsFor(addons, category, 'paid').filter(matchesSearch) : [];
+  const free = useTabs ? addonsFor(addons, category, 'free').filter(matchesSearch) : [];
+  const shown = useTabs ? [...paid, ...free] : addons;
   const perCategory = selectedPerCategory(addons, selectedIds);
   const toggle = (id: string) => onChange(selectedIds.includes(id) ? selectedIds.filter((i) => i !== id) : [...selectedIds, id]);
+
+  const rowCard = (a: AddonProduct) => {
+    const selected = selectedIds.includes(a.productId);
+    return (
+              <div
+                key={a.productId}
+                role="button"
+                tabIndex={0}
+                aria-pressed={selected}
+                onClick={() => toggle(a.productId)}
+                onKeyDown={(e) => {
+                  if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    toggle(a.productId);
+                  }
+                }}
+                className={`relative flex items-center gap-4 rounded-[var(--radius-card)] border p-4 cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
+                  selected ? CARD_SELECTED : CARD_IDLE
+                }`}
+              >
+                {selected && <SelectedTick />}
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center card text-[var(--brand-plum)] shadow-[var(--shadow-icon-tile)]">
+                  <Icon path={PHONE_ICON} className="w-5 h-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  {/* The Add-ons page names an add-on by what it gives ("2.5 GB full-speed data"); elsewhere the name leads and the description follows. */}
+                  <p className="text-fg font-semibold text-[length:var(--fs-body)]">{useTabs ? a.description ?? a.name : a.name}</p>
+                  {!useTabs && a.description && <p className="text-fg-2 text-[length:var(--fs-caption)]">{a.description}</p>}
+                  {addonChargeType(a, source === 'prepaid' ? 'prepaid' : 'catalogue') && <p className="text-muted text-[length:var(--fs-caption)]">{addonChargeType(a, source === 'prepaid' ? 'prepaid' : 'catalogue')}</p>}
+                </div>
+                <div className="shrink-0 text-right">
+                  {addonPriceDisplay(a) ? (
+                    <>
+                      <p className="text-fg text-[length:var(--fs-h4)] font-bold">{addonPriceDisplay(a)!.primary}</p>
+                      {addonPriceDisplay(a)!.secondary && <p className="text-fg-2 text-[length:var(--fs-caption)] max-w-48 ml-auto">{addonPriceDisplay(a)!.secondary}</p>}
+                    </>
+                  ) : a.pricing === 'free' || (!a.pricing && a.mrcQAR === 0) ? (
+                    <p className="text-fg text-[length:var(--fs-h4)] font-bold">Free</p>
+                  ) : a.priceLabel && /QR\s*\d/.test(a.priceLabel) ? (
+                    // Only wording that states a QAR amount ("QR 50 per additional SIM") is shown; open prices (TBC, Plan-based, Plan-dependent) are not displayed.
+                    <p className="text-fg text-[length:var(--fs-body)] font-bold max-w-48">{a.priceLabel}</p>
+                  ) : a.priceLabel ? null : (
+                    <p className="text-fg">
+                      <span className="text-[length:var(--fs-caption)]">QAR </span>
+                      <span className="text-[length:var(--fs-h4)] font-bold">{formatAmount(a.mrcQAR)}</span>
+                      <span className="text-fg-2 text-[length:var(--fs-caption)]">{source === 'prepaid' ? ' one-off' : ' /mo'}</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+    );
+  };
 
   return (
     // Heading and spacing match the "Eligible Discounts" section this now sits
@@ -178,72 +225,41 @@ export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityCon
       )}
       {useTabs && (
         <div className="space-y-3">
-          {/* Level 1: the category (navigation) - the underline tabs, with how many of the chosen add-ons each holds. */}
+          {/* The category (navigation) - the underline tabs, with how many of the chosen add-ons each holds. */}
           <TabStrip
             label="Add-On Categories"
             items={ADDON_CATEGORIES.map((c) => ({ key: c, label: c, count: perCategory[c] > 0 ? perCategory[c] : undefined }))}
             active={category}
-            onChange={setCategory}
+            onChange={(c) => {
+              setCategory(c);
+              setSearch('');
+            }}
           />
-          {/* Level 2: Paid / Free (a filter of the same list) - applies to the category selected above. Drawn here only when the page does not own it. */}
-          {pricingProp === undefined && <SegmentedTabs label="Paid or Free Add-Ons" items={ADDON_PRICING_FILTERS} active={pricing} onChange={setPricing} />}
+          <SearchField
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onClear={() => setSearch('')}
+            placeholder={`Search ${category} add-ons by name or price`}
+            aria-label={`Search ${category} add-ons`}
+          />
         </div>
       )}
       {/* Add-on cards share the plan cards' standard (shared idle / selected states, selected texture, tick).
           Multi-select: each card toggles only itself, so choosing one never clears another. */}
+      {useTabs ? (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          {([['Paid', paid, 'paid'], ['Free', free, 'free']] as const).map(([title, list, kind]) => (
+            <section key={kind} aria-label={title} className="space-y-3 min-w-0">
+              <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">{title}</h4>
+              {list.length === 0 ? <EmptyState compact message={q ? `No ${kind} add-ons in ${category} match that search.` : `No ${kind} add-ons in ${category}.`} /> : <div className="flex flex-col gap-3">{list.map((a) => rowCard(a))}</div>}
+            </section>
+          ))}
+        </div>
+      ) : (
       <div className={layout === 'rows' ? `grid grid-cols-1 gap-3 md:grid-cols-2 ${open || hideHeader ? '' : 'hidden'}` : `grid grid-cols-[repeat(auto-fill,minmax(max(15rem,calc((100%-2rem)/3)),1fr))] gap-4 ${open || hideHeader ? '' : 'hidden'}`}>
         {shown.map((a) => {
           const selected = selectedIds.includes(a.productId);
-          if (layout === 'rows') {
-            return (
-              <div
-                key={a.productId}
-                role="button"
-                tabIndex={0}
-                aria-pressed={selected}
-                onClick={() => toggle(a.productId)}
-                onKeyDown={(e) => {
-                  if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
-                    e.preventDefault();
-                    toggle(a.productId);
-                  }
-                }}
-                className={`relative flex items-center gap-4 rounded-[var(--radius-card)] border p-4 cursor-pointer transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${
-                  selected ? CARD_SELECTED : CARD_IDLE
-                }`}
-              >
-                {selected && <SelectedTick />}
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center card text-[var(--brand-plum)] shadow-[var(--shadow-icon-tile)]">
-                  <Icon path={PHONE_ICON} className="w-5 h-5" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-fg font-semibold text-[length:var(--fs-body)]">
-                    {a.name}
-                  </p>
-                  {a.description && <p className="text-fg-2 text-[length:var(--fs-caption)]">{a.description}</p>}
-                </div>
-                <div className="shrink-0 text-right">
-                  {addonPriceDisplay(a) ? (
-                    <>
-                      <p className="text-fg text-[length:var(--fs-h4)] font-bold">{addonPriceDisplay(a)!.primary}</p>
-                      {addonPriceDisplay(a)!.secondary && <p className="text-fg-2 text-[length:var(--fs-caption)] max-w-48 ml-auto">{addonPriceDisplay(a)!.secondary}</p>}
-                    </>
-                  ) : a.pricing === 'free' || (!a.pricing && a.mrcQAR === 0) ? (
-                    <p className="text-fg text-[length:var(--fs-h4)] font-bold">Free</p>
-                  ) : a.priceLabel && /QR\s*\d/.test(a.priceLabel) ? (
-                    // Only wording that states a QAR amount ("QR 50 per additional SIM") is shown; open prices (TBC, Plan-based, Plan-dependent) are not displayed.
-                    <p className="text-fg text-[length:var(--fs-body)] font-bold max-w-48">{a.priceLabel}</p>
-                  ) : a.priceLabel ? null : (
-                    <p className="text-fg">
-                      <span className="text-[length:var(--fs-caption)]">QAR </span>
-                      <span className="text-[length:var(--fs-h4)] font-bold">{formatAmount(a.mrcQAR)}</span>
-                      <span className="text-fg-2 text-[length:var(--fs-caption)]">{source === 'prepaid' ? ' one-off' : ' /mo'}</span>
-                    </p>
-                  )}
-                </div>
-              </div>
-            );
-          }
+          if (layout === 'rows') return rowCard(a);
           return (
             <div
               key={a.productId}
@@ -274,8 +290,6 @@ export function AddonsPicker({ selectedIds, onChange, hideHeader, eligibilityCon
           );
         })}
       </div>
-      {useTabs && shown.length === 0 && (
-        <EmptyState compact message={`No ${pricing === 'free' ? 'free' : 'paid'} add-ons in ${category}.`} />
       )}
     </div>
   );

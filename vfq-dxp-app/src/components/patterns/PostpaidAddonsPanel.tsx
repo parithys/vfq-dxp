@@ -2,7 +2,6 @@ import { defaultBillLimitQar } from '../../engines/postpaidPricing';
 import { AddonsPicker } from '../../capabilities/AddonsSelection/AddonsPicker';
 import { BillLimitEditor } from '../domain/BillLimitEditor';
 import type { PostpaidPlan } from './postpaidPlanModel';
-import type { AddonPricing } from '../../engines/addonCategories';
 
 interface PostpaidAddonsPanelProps {
   preBundled: boolean;
@@ -14,9 +13,6 @@ interface PostpaidAddonsPanelProps {
   billLimit: number | undefined;
   onBillLimitChange: (value: number, pass: boolean) => void;
   billLimitMax?: number;
-  /** The Paid / Free add-on filter, owned by the page header (see AddonsPicker). */
-  addonPricing?: AddonPricing;
-  onAddonPricingChange?: (pricing: AddonPricing) => void;
   /** The bill limit is shown by the caller (full width, apart from the add-ons) instead of under the add-ons. */
   hideBillLimit?: boolean;
 }
@@ -31,8 +27,6 @@ export function PostpaidAddonsPanel({
   billLimit,
   onBillLimitChange,
   billLimitMax,
-  addonPricing,
-  onAddonPricingChange,
   hideBillLimit = false,
 }: PostpaidAddonsPanelProps) {
   return (preBundled ? (
@@ -51,8 +45,6 @@ export function PostpaidAddonsPanel({
             hideHeader
             layout="rows"
             categorized
-            pricing={addonPricing}
-            onPricingChange={onAddonPricingChange}
             emptyMessage="No add-ons available for this plan"
             eligibilityContext={{ planId: selectedProductId, ...customerContext }}
           />

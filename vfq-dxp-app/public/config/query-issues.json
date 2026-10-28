@@ -1280,13 +1280,13 @@
    "subArea": "Voice - General"
   },
   {
-   "id": "QI-CAN-T-MAKE-CALLS-OOREDOO",
-   "name": "Can't Make Calls (Ooredoo)",
+   "id": "QI-CAN-T-MAKE-CALLS-OTHER-OPERATOR",
+   "name": "Can't Make Calls (Other Operator)",
    "category": "Service Related",
    "serviceType": "Mobile Complaints",
    "severity": "Minor",
    "summary": "Can't Make Calls",
-   "subSummary": "Can't Make Calls (Ooredoo)",
+   "subSummary": "Can't Make Calls (Other Operator)",
    "ticketCategory": "Complaints",
    "area": "Voice Calls",
    "subArea": "Voice - Local"
@@ -1913,13 +1913,13 @@
    "subArea": "Voice - Local"
   },
   {
-   "id": "QI-CAN-T-RECEIVE-CALLS-OOREDOO",
-   "name": "Can't Receive Calls (Ooredoo)",
+   "id": "QI-CAN-T-RECEIVE-CALLS-OTHER-OPERATOR",
+   "name": "Can't Receive Calls (Other Operator)",
    "category": "Service Related",
    "serviceType": "Mobile Complaints",
    "severity": "Minor",
    "summary": "Can't Receive Calls",
-   "subSummary": "Can't Receive Calls (Ooredoo)",
+   "subSummary": "Can't Receive Calls (Other Operator)",
    "ticketCategory": "Complaints",
    "area": "Voice Calls",
    "subArea": "Voice - Local"
@@ -3645,14 +3645,14 @@
    "subArea": "Siebel Related Issue"
   },
   {
-   "id": "QI-LANDLINE-ISSUE-FNP-INVOLVING-OOREDOO",
-   "name": "Landline Issue - FNP ( involving Ooredoo)",
+   "id": "QI-LANDLINE-ISSUE-FNP-INVOLVING-OTHER-OPERATOR",
+   "name": "Landline Issue - FNP ( involving Other Operator)",
    "category": "Service Related",
    "serviceType": "Fixed/5G Complaints",
    "routing": "onshore-offshore",
    "severity": "Minor",
-   "summary": "Landline Issue - FNP ( involving Ooredoo)",
-   "subSummary": "Landline Issue - FNP ( involving Ooredoo)",
+   "summary": "Landline Issue - FNP ( involving Other Operator)",
+   "subSummary": "Landline Issue - FNP ( involving Other Operator)",
    "ticketCategory": "Fixed_QA",
    "area": "EBU-5G Modificaton\nEBU-Fixed Modification\nCBU-5G Modificaton\nCBU-Fixed Modification",
    "subArea": "Voice Calling Issue"

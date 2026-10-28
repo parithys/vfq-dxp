@@ -29,9 +29,6 @@ export function QidImageUpload({
   onDemoScan,
   blurFirstScan = false,
   hideUnclearNotice = false,
-  onAccept,
-  onReject,
-  accepted,
   variant,
   identity,
 }: QidImageUploadProps) {
@@ -208,7 +205,7 @@ export function QidImageUpload({
               )}
             </figure>
           ) : (
-          <div className={documentType === 'Passport' ? 'grid grid-cols-1 gap-4 max-w-xs mx-auto' : 'grid grid-cols-2 gap-4'}>
+          <div className={documentType === 'Passport' ? 'grid grid-cols-1 gap-4 max-w-xs mx-auto' : 'grid grid-cols-2 gap-8 max-w-[44rem] mx-auto'}>
             {(documentType === 'Passport' ? (['front'] as const) : (['front', 'back'] as const)).map((side) => (
               <figure key={side} className="flex flex-col items-center gap-2">
                 <ScannedIdPreview
@@ -255,21 +252,6 @@ export function QidImageUpload({
               Image unclear - the reader could not read this capture. Retake the scan for a clear image.
             </p>
           )}
-          {/* Retaking is the header button (its label becomes "Retake scan (n)" once a scan exists); this row is only the Accept / Reject a consumer asks for. */}
-          {(onAccept || onReject) && (
-            <div className="flex items-center justify-end gap-2">
-              {onAccept && (
-                <Button variant="primary" compact onClick={onAccept} disabled={accepted || value.clear === false}>
-                  {accepted ? 'Accepted' : 'OK'}
-                </Button>
-              )}
-              {onReject && (
-                <Button variant="secondary" compact onClick={onReject}>
-                  Cancel
-                </Button>
-              )}
-            </div>
-          )}
         </>
       ) : (
         <div className="flex flex-col gap-4">
@@ -277,7 +259,7 @@ export function QidImageUpload({
               scanner's placeholder. Uploading it replaces the ask with the real document. */}
           {missing && (
             <div className="flex flex-col gap-3">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-8 max-w-[44rem] mx-auto w-full">
                 {(['front', 'back'] as const).map((side) => {
                   const have = side !== missing;
                   const file = side === 'front' ? value.frontFile : value.backFile;

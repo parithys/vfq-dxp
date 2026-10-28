@@ -177,7 +177,7 @@ export function ContactPhoneInput({
                 role="option"
                 aria-selected={nav.active === i}
                 onClick={() => pick(c)}
-                className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-surface ${nav.active === i ? 'bg-surface ring-2 ring-inset ring-[var(--focus-outline)]' : ''}`}
+                className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-[var(--field-focus-bg)] ${nav.active === i ? 'bg-[var(--field-focus-bg)]' : ''}`}
               >
                 <span className="w-8 h-8 rounded-[var(--radius-pill)] bg-accent text-on-dark text-[length:var(--fs-caption)] font-semibold flex items-center justify-center shrink-0">
                   {initials(c.firstName, c.lastName)}

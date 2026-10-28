@@ -32,7 +32,7 @@ export interface CheckoutTotals {
   hrnAdvanceQar: number;
   /** The Star number's upfront charge before any Waive Off, the waiver chosen and the amount it waived. */
   numberChargeQar?: number;
-  numberWaiver?: 'partial' | 'full';
+  numberWaiver?: number;
   numberWaivedQar?: number;
 }
 

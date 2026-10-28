@@ -24,6 +24,12 @@ export function Textarea({ label, error, helperText, className = '', id, 'aria-d
       {label && (
         <label htmlFor={textareaId} className={`text-[length:var(--fs-label)] ${rest.disabled ? 'text-[var(--field-label-disabled)]' : 'text-fg'}`}>
           {label}
+          {/* Same required marker as Input: aria-hidden, the textarea carries aria-required. */}
+          {rest.required && (
+            <span className="text-[var(--field-border-error)]" aria-hidden="true">
+              {' *'}
+            </span>
+          )}
         </label>
       )}
       <textarea
@@ -31,6 +37,7 @@ export function Textarea({ label, error, helperText, className = '', id, 'aria-d
         rows={4}
         aria-describedby={describedBy}
         aria-invalid={error ? true : undefined}
+        aria-required={rest.required || undefined}
         className={`rounded-[var(--field-radius)] border px-3 py-2 text-[length:var(--fs-body)] text-[var(--color-field-text-filled)] bg-bg
           ${borderClass}
           focus:outline-none focus-visible:border-[var(--field-focus-border)]! focus-visible:bg-[var(--field-focus-bg)] focus-visible:shadow-[var(--field-focus-ring)]

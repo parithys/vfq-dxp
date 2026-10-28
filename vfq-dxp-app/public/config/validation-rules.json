@@ -91,7 +91,7 @@
     "id": "VAL-012",
     "validationType": "Business Rule",
     "name": "MNP Consent SMS 24-Hour Rule",
-    "description": "The customer must send a consent SMS within 24 hours; the request then goes via NPAS to Ooredoo, who has 24 hours to accept, reject, or conditionally accept if there are outstanding dues.",
+    "description": "The customer must send a consent SMS within 24 hours; the request then goes via NPAS to Other Operator, who has 24 hours to accept, reject, or conditionally accept if there are outstanding dues.",
     "sourceRef": "BR-037",
     "confidence": "high"
   },

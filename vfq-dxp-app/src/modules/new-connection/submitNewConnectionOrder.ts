@@ -1,6 +1,7 @@
 import { currentAgentId } from '../../stores/authStore';
 import { storedAddressLine } from '../../components/patterns/addressFromBilling';
 import { accountTypeForJourney } from '../../engines/creditLimit';
+import { scanFileName, specialDiscountDocumentLabel } from '../../engines/journeyDocuments';
 import { saveLinkedIdDocument } from './saveLinkedIdDocument';
 import { contactIdentityOrderFields } from './contactIdentityOrderFields';
 import { saveCustomerSalutation } from './saveCustomerSalutation';
@@ -10,6 +11,7 @@ import { hrnAdvanceQar } from '../../engines/hrnConfiguration';
 import { usePersonaStore } from '../../stores/personaStore';
 import { defaultBillLimitQar, formatQar, monthlyCharges } from '../../engines/postpaidPricing';
 import { effectiveCreditLimitQar, emailVerification, maskEmail, persistBillingAccount } from '../../capabilities';
+import { orderTerms, primaryContactMobile } from '../../capabilities';
 import type { GuidedContactValue } from '../../capabilities';
 import type { BillingAccountValue } from '../../capabilities';
 import { SUPPORTING_ID_DISCOUNT_TYPES } from '../../components/patterns/postpaidPlanModel';
@@ -31,7 +33,7 @@ import type { NewConnectionFlow, ConfirmedOrder } from './newConnectionModel';
 import { idScanAttachments } from './idScanAttachments';
 import { isB2B2COrder } from './approvalRouting';
 import { addonChargeNowQar } from '../../engines/addonCategories';
-import { isNumberWaiver, numberWaiverLabel } from '../../engines/numberWaiver';
+import { isNumberWaiver } from '../../engines/numberWaiver';
 import { approvalMessages, decisionRecord, needsCreditControl } from '../../engines/connectionEligibility';
 
 type EntityStore = ReturnType<typeof useEntityStore.getState>;
@@ -121,12 +123,13 @@ export async function submitNewConnectionOrder(
         | { cafType?: CafType; signatureDataUrl?: string; additionalDocuments?: AdditionalDocument[] }
         | undefined;
       const attachments = [
-        ...idScanAttachments(contact.idType, contact.qidScans),
+        ...idScanAttachments(contact.idType, contact.qidScans, { idNumber: contact.idNumber }),
         ...(customerType?.officeId?.frontScanned && customerType.officeId.backScanned
           ? [
               {
                 // Named for what it is for: only a B2B2C customer's is an office ID card.
-                label: customerType.type === 'b2b2c' ? 'Office ID Card' : `${customerType.type === 'retired' ? 'Retiree' : 'MADA'} Supporting Document`,
+                label: specialDiscountDocumentLabel(customerType.type),
+                fileName: scanFileName(specialDiscountDocumentLabel(customerType.type), customerType.officeId.combined ? 'Both-Sides' : 'Front', customerType.officeId.frontFile, new Date(), contact.idNumber),
                 detail: `${customerType.officeId.source === 'upload' ? 'Uploaded' : 'Scanned'} for ${customerType.type === 'b2b2c' ? 'B2B2C' : customerType.type === 'retired' ? 'Retired' : 'MADA'}`,
               },
             ]
@@ -151,7 +154,7 @@ export async function submitNewConnectionOrder(
         idNumber: contact.idNumber,
         contactName: contact.moiResult?.name,
         contactEmail: contact.email,
-        contactPhone: contact.moiResult?.phone,
+        contactPhone: primaryContactMobile(contact),
         addressLine: storedAddressLine(address),
         creditLimitQar: eligibility?.defaultCreditLimitQar,
         nationality: eligibility?.nationality,
@@ -159,6 +162,10 @@ export async function submitNewConnectionOrder(
         agentId: currentAgentId() ?? undefined,
       });
 
+      // The cycle of an existing billing account the order is billed on (a new one is read off what the agent entered).
+      const billingProfile = billingAccount?.selectedProfileId
+        ? (await mockDataEngine.list<{ billingProfileId: string; billingCycle?: string }>('billing-profiles')).find((b) => b.billingProfileId === billingAccount.selectedProfileId)
+        : undefined;
       const orderId = `ORD-${Date.now().toString().slice(-6)}`;
       // The salutation the agent entered is saved to the customer's profile (shown in Customer 360).
       await saveCustomerSalutation(eligibility?.customerId, contact.salutation, updateRecord);
@@ -174,7 +181,7 @@ export async function submitNewConnectionOrder(
                 eligibility?.checks.some((c) => c.id === 'id-validity' && c.outcome === 'approval-routing') ? 'ID expiry date not on file - routed for approval' : '',
                 eligibility?.requiresHrnAdvance ? `HRN customer - ${formatQar(hrnAdvanceQar({ nationality: eligibility?.nationality, personaId: usePersonaStore.getState().activePersonaId }))} advance payment applies` : '',
                 isB2B2COrder(contact, customerType) ? 'B2B2C employee - Proof of Employment to be verified' : '',
-                waived && waiver ? `${numberWaiverLabel(waiver)} - ${formatQar(waivedAmountQar)} waived off the Star number upfront charge of ${formatQar(checkoutTotals?.numberChargeQar ?? 0)}` : '',
+                waived && waiver ? `Waive Off - ${formatQar(waivedAmountQar)} waived off the Star number upfront charge of ${formatQar(checkoutTotals?.numberChargeQar ?? 0)}` : '',
                 discount && SUPPORTING_ID_DISCOUNT_TYPES.has(discount.addonType ?? '') ? `${discount.addonType} - supporting document to be verified` : '',
               ].filter(Boolean).join(' | ') : undefined;
       await createRecord('orders', {
@@ -300,6 +307,8 @@ export async function submitNewConnectionOrder(
         dueTodayQar,
         monthlyRecurringQar,
         simType: simType?.simType,
+        activeAddons: addons.map((a) => a.name),
+        billingCycle: newBillingAccount ? (newBillingAccount.billCycleDay ? `Monthly - Day ${newBillingAccount.billCycleDay}` : 'Monthly') : billingProfile?.billingCycle,
         esimActivationCode: simType?.esimActivationCode,
         customerEmail: contact.email,
         // Shown exactly as on Customer Verification: masked for a new customer (NAS email),
@@ -307,6 +316,7 @@ export async function submitNewConnectionOrder(
         // addressed to the real address.
         customerEmailDisplay: contact.moiResult?.isNewCustomer && !contact.moiResult?.createdByAgent && contact.email ? maskEmail(contact.email) : contact.email,
         customerEmailVerified: emailVerified,
+        terms: orderTerms(values, 'postpaid'),
       };
 
   return confirmed;

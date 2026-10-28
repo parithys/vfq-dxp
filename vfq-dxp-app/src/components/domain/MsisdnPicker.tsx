@@ -387,18 +387,6 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
           setPage(0);
         }}
       />
-      {/* States the cap up front rather than only on the error that hitting it
-          produces - an agent planning a second reservation should be able to
-          see they are at the limit before they try. */}
-      {tab === 'Reserved' && (
-        <div
-          role="note"
-          className="flex items-center gap-2 rounded-[var(--radius-card)] border border-[var(--info-banner-border)] bg-[var(--info-banner-bg)] px-3 py-2 text-[var(--tint-blue-fg)] text-[length:var(--fs-caption)]"
-        >
-          <Icon path="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 11v5 M12 7.5h.01" className="w-4 h-4 shrink-0" />
-          A customer can have a maximum of {MAX_RESERVATIONS_PER_AGENT} reserved numbers.
-        </div>
-      )}
       {/* Hidden on Reserved (2026-09-28): a customer can hold at most
           MAX_RESERVATIONS_PER_AGENT numbers, so there is nothing to search -
           shown on both Free and Star still, since search narrows by number

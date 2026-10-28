@@ -5,6 +5,7 @@ import { Icon } from '../../components/primitives/Icon';
 import { CompanySearchInput } from './CompanySearchInput';
 import type { CompanySelection } from './CompanySearchInput';
 import { QidImageUpload } from './QidImageUpload';
+import { isScanAccepted } from './qidImageUploadModel';
 import { CARD, CARD_SELECTABLE } from '../stepStyles';
 import { TYPE_OPTIONS, isCompanySupported } from './specialDiscountsModel';
 import type { SpecialDiscountType, SpecialDiscountsValue } from './specialDiscountsModel';
@@ -13,14 +14,11 @@ export function SpecialDiscountsStep({
   value,
   onChange,
   derivedCompany,
-  onReject,
 }: {
   value: SpecialDiscountsValue;
   onChange: (v: SpecialDiscountsValue) => void;
   /** Employer already on the MOI record, offered as the B2B2C starting point. */
   derivedCompany?: CompanySelection;
-  /** Reject: decline the benefit, classify as Standard and continue the journey. */
-  onReject?: () => void;
 }) {
   // Standard customer is the default. An employer on the MOI record is not
   // selected for the agent - it only prefills the company if they choose B2B2C.
@@ -49,7 +47,7 @@ export function SpecialDiscountsStep({
               onChange={(company) => onChange({ ...value, company })}
             />
             <Input
-              label="ID Number (Optional)"
+              label="ID Number"
               value={value.idNumber ?? ''}
               onChange={(e) => onChange({ ...value, idNumber: e.target.value })}
               placeholder="Employee ID number"
@@ -77,12 +75,8 @@ export function SpecialDiscountsStep({
             documentType="Office ID"
             variant={type === 'b2b2c' || type === 'retired' || type === 'mada' ? type : undefined}
             value={value.officeId ?? {}}
-            onChange={(officeId) => onChange({ ...value, officeId, officeAccepted: false })}
-            accepted={value.officeAccepted}
-            onAccept={() => onChange({ ...value, officeAccepted: true })}
-            // Reject declines the benefit and returns to a Standard customer, so no
-            // B2B2C/Retired/MADA benefit is carried without its office ID.
-            onReject={() => (onReject ? onReject() : onChange({ type: 'none', rejected: true }))}
+            // A clear scan or upload is accepted and saved as it lands; a rescan or new upload replaces it, so only the latest image counts.
+            onChange={(officeId) => onChange({ ...value, officeId, officeAccepted: isScanAccepted(officeId) })}
           />
           </div>
           </div>

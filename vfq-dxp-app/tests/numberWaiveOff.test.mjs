@@ -11,20 +11,27 @@ const read = (p) => fs.readFileSync(p, 'utf8');
 before(boot);
 after(close);
 
-test('the waiver maths: nothing without a waiver or a charge, all when Full, half when Partial; conservation (waived + payable = charge)', async () => {
+test('the waiver is a fixed amount: nothing without one or without a charge, the amount itself, never more than the charge; conservation (waived + payable = charge)', async () => {
   const w = await load('/src/engines/numberWaiver.ts');
   assert.equal(w.waivedQar(1000, undefined), 0);
-  assert.equal(w.waivedQar(0, 'full'), 0);
-  assert.equal(w.waivedQar(-5, 'full'), 0);
-  assert.equal(w.waivedQar(1000, 'full'), 1000);
-  assert.equal(w.waivedQar(1000, 'partial'), 500);
-  assert.equal(w.waivedQar(333.33, 'partial'), 166.67);
-  for (const charge of [0, 1, 47125, 333.33, 999.99]) for (const mode of [undefined, 'partial', 'full']) {
-    assert.equal(Math.round((w.waivedQar(charge, mode) + w.chargeAfterWaiverQar(charge, mode)) * 100) / 100, charge, `${charge} ${mode}`);
+  assert.equal(w.waivedQar(0, 2000), 0);
+  assert.equal(w.waivedQar(-5, 2000), 0);
+  assert.equal(w.waivedQar(25000, 2000), 2000, 'a fixed QAR 2,000, not a percentage');
+  assert.equal(w.chargeAfterWaiverQar(25000, 2000), 23000);
+  assert.equal(w.waivedQar(1000, 5000), 1000, 'never more than the charge');
+  assert.equal(w.waivedQar(1000, 0), 0);
+  for (const charge of [0, 1, 47125, 333.33, 999.99]) for (const amount of [undefined, 0, 1, 250.5, 100000]) {
+    assert.equal(Math.round((w.waivedQar(charge, amount) + w.chargeAfterWaiverQar(charge, amount)) * 100) / 100, charge, `${charge} ${amount}`);
   }
-  assert.deepEqual(w.NUMBER_WAIVER_OPTIONS.map((o) => o.label), ['Partial Waive Off', 'Full Waive Off']);
-  assert.equal(w.isNumberWaiver('full'), true);
-  assert.equal(w.isNumberWaiver('half'), false);
+  assert.equal(w.isNumberWaiver(2000), true);
+  assert.equal(w.isNumberWaiver('full'), false);
+  assert.equal(w.isNumberWaiver(0), false);
+  assert.equal(w.isNumberWaiver(-5), false);
+  assert.equal(w.waiverAmountProblem(2000, 25000), undefined);
+  assert.ok(w.waiverAmountProblem(0, 25000));
+  assert.ok(w.waiverAmountProblem(undefined, 25000));
+  assert.ok(w.waiverAmountProblem(30000, 25000), 'more than the charge');
+  assert.doesNotMatch(read('src/capabilities/NumberSelection/WaiveOff.tsx'), /Partial|Full|%/, 'no percentage options');
 });
 
 test('Waive Off sits before Continue on the number step, only for a journey that asks for it, and a new number drops the waiver', async () => {

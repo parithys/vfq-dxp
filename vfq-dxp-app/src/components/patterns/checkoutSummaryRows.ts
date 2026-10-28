@@ -62,7 +62,6 @@ export function buildCafSummaryRows({
   charges,
 }: CafSummaryRowsArgs): { label: string; value: string }[] {
   const simSerial = simType?.simSerial;
-  const simIccid = simType?.simIccid;
   return [
     { label: 'Customer Name', value: customerName ?? '-' },
     { label: 'Selected Number', value: msisdn ? `${toLocalMsisdn(msisdn)} (${isStarNumber ? 'Star' : 'Free'})` : '-' },
@@ -90,7 +89,6 @@ export function buildCafSummaryRows({
     { label: 'SIM Type', value: simType?.simType ?? '-' },
     ...(simType?.simType === 'Physical' ? [{ label: 'SIM Serial Number', value: simSerial ?? '-' }] : []),
     // The eSIM's activation code is deliberately NOT read back here - it is the string that generates the QR, and nothing eSIM-shaped is shown active before payment.
-    { label: 'ICCID', value: simIccid ?? '-' },
     { label: 'Plan Lock-In', value: plan.commitmentMonths ? `${plan.commitmentMonths} months` : 'No lock-in' },
     ...(isStarNumber
       ? [

@@ -316,18 +316,18 @@
   },
   {
     "id": "BR-036",
-    "name": "MNP Donor Operator Fixed Rule (QTEL/Ooredoo)",
+    "name": "MNP Donor Operator Fixed Rule (the donor operator)",
     "ruleType": "Derivation",
-    "description": "In mobile number portability (MNP), the donor operator is always QTEL/Ooredoo; porting details captured include customer ID number/type, customer type, donor operator, subscription type, and scheduled porting date.",
+    "description": "In mobile number portability (MNP), the donor operator is always the donor operator; porting details captured include customer ID number/type, customer type, donor operator, subscription type, and scheduled porting date.",
     "engineHint": "procedural",
-    "sourceRuleIds": "raw:MNP Donor Operator Fixed Rule (QTEL/Ooredoo)",
+    "sourceRuleIds": "raw:MNP Donor Operator Fixed Rule (the donor operator)",
     "confidence": "high"
   },
   {
     "id": "BR-037",
     "name": "MNP Consent SMS 24-Hour Rule",
     "ruleType": "Validation",
-    "description": "The customer must send a consent SMS within 24 hours; the request then goes via NPAS to Ooredoo, who has 24 hours to accept, reject, or conditionally accept if there are outstanding dues.",
+    "description": "The customer must send a consent SMS within 24 hours; the request then goes via NPAS to Other Operator, who has 24 hours to accept, reject, or conditionally accept if there are outstanding dues.",
     "engineHint": "procedural",
     "sourceRuleIds": "raw:MNP Consent SMS 24-Hour Rule",
     "confidence": "high"
@@ -399,7 +399,7 @@
     "id": "BR-045",
     "name": "Dunning Initiator and De-automation Rule",
     "ruleType": "Routing",
-    "description": "Degradation (dunning) is initiated by Ooredoo (the donor operator), and the process was de-automated to manual handling after complaints from customers with legitimate bill disputes.",
+    "description": "Degradation (dunning) is initiated by Other Operator (the donor operator), and the process was de-automated to manual handling after complaints from customers with legitimate bill disputes.",
     "engineHint": "procedural",
     "sourceRuleIds": "raw:Dunning Initiator and De-automation Rule",
     "confidence": "high"
@@ -2064,7 +2064,7 @@
     "id": "BR-230",
     "name": "Donor Operator Field Is Read-Only/Derived, Not Agent-Editable",
     "ruleType": "Derivation",
-    "description": "The Donor Operator field (identifying the losing operator in an MNP port, e.g. Qtel/Ooredoo) is system-derived and read-only, not directly editable by the agent.",
+    "description": "The Donor Operator field (identifying the losing operator in an MNP port, e.g. the donor operator) is system-derived and read-only, not directly editable by the agent.",
     "engineHint": "procedural",
     "sourceRuleIds": "",
     "confidence": "high"

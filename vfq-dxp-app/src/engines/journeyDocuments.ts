@@ -47,13 +47,18 @@ type Values = Record<string, unknown>;
  * answer); which document uses which condition is configuration (public/config/document-types.json).
  */
 const CONDITIONS: Record<string, (v: Values) => boolean> = {
-  'number-waiver': (v) => v.numberWaiver === 'partial' || v.numberWaiver === 'full',
+  'number-waiver': (v) => typeof v.numberWaiver === 'number' && v.numberWaiver > 0,
   'minor-applicant': (v) => {
     const age = ageFromDob((v.contact as { moiResult?: { dob?: string } } | undefined)?.moiResult?.dob);
     return age !== undefined && age < MINIMUM_APPLICANT_AGE;
   },
   'actual-user-other': (v) => (v.actualUser as { choice?: string } | undefined)?.choice === 'other',
   'manual-caf': (v) => (v.caf as { cafType?: string } | undefined)?.cafType === 'Manual',
+  // A VAT registration number was entered on the new billing account: the VAT document must come with it.
+  'vat-registration': (v) => {
+    const b = v.billingAccount as { creatingNew?: boolean; newAccount?: { vatRegistrationNumber?: string } } | undefined;
+    return Boolean(b?.creatingNew && b.newAccount?.vatRegistrationNumber?.trim());
+  },
   'upfront-payment': (v) => ((v.checkoutTotals as { dueTodayQar?: number } | undefined)?.dueTodayQar ?? 0) > 0,
 };
 const specialDiscount = (v: Values, kind: string) => {
@@ -114,24 +119,55 @@ interface Scan {
   source?: 'scan' | 'upload';
 }
 
-function scanDocuments(prefix: string, label: string, source: string, scan: Scan | undefined): JourneyDocument[] {
+/** What the Special Discount's supporting document is called: only a B2B2C customer's is an office ID card. */
+export function specialDiscountDocumentLabel(type: string | undefined): string {
+  return type === 'b2b2c' ? 'Office ID Card' : type === 'retired' ? 'Retiree Supporting Document' : type === 'mada' ? 'MADA Supporting Document' : 'Supporting Document';
+}
+
+const digitsOnly = (text: string | undefined): string => (text ?? '').replace(/[^A-Za-z0-9]/g, '');
+
+/**
+ * The name a scanned supporting document is stored under: a MADA document is `<QID number>-MADA-Front-2026-10-28.jpg`; any other keeps
+ * `Retiree-Supporting-Document_Front_2026-10-28.jpg` (its name, the side, the capture day). An uploaded file keeps its own name.
+ */
+export function scanFileName(label: string, side: 'Front' | 'Back' | 'Both-Sides', uploaded: string | undefined, at: Date = new Date(), idNumber?: string): string {
+  if (uploaded) return uploaded;
+  const day = at.toISOString().slice(0, 10);
+  const number = digitsOnly(idNumber);
+  if (number && /^MADA\b/i.test(label)) return `${number}-MADA-${side}-${day}.jpg`;
+  return `${label.replace(/\s+/g, '-')}_${side}_${day}.jpg`;
+}
+
+/** The file type of a captured image, from the content held (png, pdf ...); jpg for a capture with none. */
+export const extensionOfDataUrl = (dataUrl: string | undefined): string => {
+  const mime = /^data:([^;,]+)/.exec(dataUrl ?? '')?.[1]?.toLowerCase();
+  return mime === 'image/png' ? 'png' : mime === 'application/pdf' ? 'pdf' : mime === 'image/svg+xml' ? 'svg' : mime === 'image/webp' ? 'webp' : 'jpg';
+};
+
+/** The name a scanned identity document is stored under: `<ID number>-back-2026-10-28.png`, with the file type of what was captured. An uploaded file keeps its own name; without a number the type stands in for it. */
+export function idScanDisplayName(idType: string | undefined, idNumber: string | undefined, side: 'front' | 'back' | 'both-sides', uploaded: string | undefined, at: Date = new Date(), dataUrl?: string): string {
+  if (uploaded) return uploaded;
+  return `${digitsOnly(idNumber) || (idType ?? 'ID').replace(/\s+/g, '-')}-${side}-${at.toISOString().slice(0, 10)}.${extensionOfDataUrl(dataUrl)}`;
+}
+
+function scanDocuments(prefix: string, label: string, source: string, scan: Scan | undefined, name: (side: 'Front' | 'Back' | 'Both-Sides', uploaded: string | undefined, dataUrl: string | undefined) => string): JourneyDocument[] {
   if (!scan) return [];
   const how = scan.source === 'upload' ? 'Uploaded' : 'Scanned';
   const out: JourneyDocument[] = [];
-  if (scan.frontScanned) out.push({ id: `${prefix}-front`, label: `${label}${scan.combined ? ' (Both Sides)' : ' (Front)'}`, source: `${source} · ${how}`, fileName: scan.frontFile, dataUrl: scan.frontImage });
-  if (scan.backScanned && !scan.combined) out.push({ id: `${prefix}-back`, label: `${label} (Back)`, source: `${source} · ${how}`, fileName: scan.backFile, dataUrl: scan.backImage });
+  if (scan.frontScanned) out.push({ id: `${prefix}-front`, label: `${label}${scan.combined ? ' (Both Sides)' : ' (Front)'}`, source: `${source} · ${how}`, fileName: name(scan.combined ? 'Both-Sides' : 'Front', scan.frontFile, scan.frontImage), dataUrl: scan.frontImage });
+  if (scan.backScanned && !scan.combined) out.push({ id: `${prefix}-back`, label: `${label} (Back)`, source: `${source} · ${how}`, fileName: name('Back', scan.backFile, scan.backImage), dataUrl: scan.backImage });
   return out;
 }
 
 /** Every document the journey holds so far, in the order the journey collected them. */
 export function consolidatedDocuments(values: Record<string, unknown>, uploaded: { id: string; label: string; fileName: string }[] = []): JourneyDocument[] {
-  const contact = values.contact as { idType?: string; qidScans?: Scan } | undefined;
+  const contact = values.contact as { idType?: string; idNumber?: string; qidScans?: Scan } | undefined;
   const type = values.customerType as { type?: string; officeId?: Scan; rejected?: boolean } | undefined;
   const caf = values.caf as { signatureDataUrl?: string; secondarySignatureDataUrl?: string } | undefined;
-  const officeLabel = type?.type === 'b2b2c' ? 'Office ID Card' : type?.type === 'retired' ? 'Retiree Supporting Document' : type?.type === 'mada' ? 'MADA Supporting Document' : 'Supporting Document';
+  const officeLabel = specialDiscountDocumentLabel(type?.type);
   return [
-    ...scanDocuments('id', contact?.idType ? `${contact.idType} ID Document`.replace('ID ID', 'ID') : 'ID Document', 'Customer Verification', contact?.qidScans),
-    ...(type && type.type && type.type !== 'none' && !type.rejected ? scanDocuments('special', officeLabel, 'Special Discounts', type.officeId) : []),
+    ...scanDocuments('id', contact?.idType ? `${contact.idType} ID Document`.replace('ID ID', 'ID') : 'ID Document', 'Customer Verification', contact?.qidScans, (side, uploaded, dataUrl) => idScanDisplayName(contact?.idType, contact?.idNumber, side.toLowerCase() as 'front' | 'back' | 'both-sides', uploaded, new Date(), dataUrl)),
+    ...(type && type.type && type.type !== 'none' && !type.rejected ? scanDocuments('special', officeLabel, 'Special Discounts', type.officeId, (side, uploaded) => scanFileName(officeLabel, side, uploaded, new Date(), contact?.idNumber)) : []),
     ...(caf?.signatureDataUrl ? [{ id: 'caf-signature', label: 'Signed CAF', source: 'CAF & Signature', fileName: 'signed-caf.png', dataUrl: caf.signatureDataUrl }] : []),
     ...(caf?.secondarySignatureDataUrl ? [{ id: 'caf-secondary', label: 'Supplementary Form Signature', source: 'CAF & Signature', fileName: 'supplementary-signature.png', dataUrl: caf.secondarySignatureDataUrl }] : []),
     ...uploaded.map((u) => ({ id: `upload-${u.id}`, label: u.label, source: 'Additional Documents · Uploaded', fileName: u.fileName, fileId: u.id })),

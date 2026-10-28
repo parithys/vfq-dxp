@@ -87,7 +87,6 @@
     "summary": "Set up what an order bills to: one layout everywhere - the customer's existing billing accounts, or Create New Billing Account (contact, billing address, payment, card on file, primary payment profile, billing profile setup).",
     "parts": [
       "components/patterns/BillingAccountStep.tsx",
-      "components/patterns/BillingProfileSetupDrawer.tsx",
       "components/patterns/BillingAccountAutoResolver.tsx",
       "components/patterns/billingAccountModel.ts"
     ],

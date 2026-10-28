@@ -52,3 +52,12 @@ export function buildTncBullets(facts: TncLegalFacts | undefined, templates: Tnc
   }
   return bullets;
 }
+
+/**
+ * The signed terms an order carries to its confirmation page, so the agent can print what the customer signed: which journey's
+ * Terms & Conditions, and - only when the line has an actual user other than the customer - that user's Supplementary Form.
+ */
+export interface OrderTerms {
+  journey: 'postpaid' | 'prepaid';
+  supplementary?: { rows: { label: string; value: string }[]; actualUserName?: string };
+}

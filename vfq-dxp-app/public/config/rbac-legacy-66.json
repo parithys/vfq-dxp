@@ -420,7 +420,7 @@
   {
     "id": "RBAC-039",
     "personaId": "PERSONA-016",
-    "personaName": "Donor Operator (Ooredoo/QTEL)",
+    "personaName": "Donor Operator (Other Operator/QTEL)",
     "screenId": "SCR-017",
     "screenName": "Siebel Order Creation Screen (MNP)",
     "permissionLevel": "Approve",
@@ -431,7 +431,7 @@
   {
     "id": "RBAC-040",
     "personaId": "PERSONA-016",
-    "personaName": "Donor Operator (Ooredoo/QTEL)",
+    "personaName": "Donor Operator (Other Operator/QTEL)",
     "screenId": "",
     "screenName": "",
     "permissionLevel": "Create",

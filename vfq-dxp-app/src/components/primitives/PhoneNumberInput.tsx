@@ -7,7 +7,7 @@ import { COUNTRY_DIAL_CODES, DEFAULT_COUNTRY_ISO, countryByIso, countryFromNumbe
 
 const CHEVRON_DOWN = 'M6 9l6 6 6-6';
 
-// Presentation-only grouping ("+974 5035 0824") for a complete, valid
+// Presentation-only formatting ("+974 50350824": the digits of the number are never split by a space) for a complete, valid
 // +974-prefixed 8-digit local number (mobile or landline - Qatar numbers of
 // either kind are 8 digits after the country code, so this isn't restricted
 // to mobile-prefix digits). Kept exported: callers outside this field still
@@ -17,11 +17,11 @@ export function formatQatarPhoneForDisplay(raw: string): string {
   if (!digits.startsWith('974')) return raw;
   const local = digits.slice(3);
   if (!/^\d{8}$/.test(local)) return raw;
-  return `+974 ${local.slice(0, 4)} ${local.slice(4)}`;
+  return `+974 ${local}`;
 }
 
 function groupDigits(national: string): string {
-  return national.length > 4 ? `${national.slice(0, 4)} ${national.slice(4)}` : national;
+  return national;
 }
 
 interface PhoneNumberInputProps {
@@ -54,6 +54,8 @@ interface PhoneNumberInputProps {
   fixedIso?: string;
   /** Keep the wizard's arrival auto-focus off this field (an optional one). */
   noAutoFocus?: boolean;
+  /** Text shown in the field instead of the digits (a masked number); focusing selects it, so typing replaces it. */
+  maskedDisplay?: string;
 }
 
 // Shared phone-number field: a country-code dropdown locked inside the field's
@@ -84,6 +86,7 @@ export function PhoneNumberInput({
   helperText,
   fixedIso,
   noAutoFocus,
+  maskedDisplay,
 }: PhoneNumberInputProps) {
   const [iso, setIso] = useState(() => fixedIso ?? countryFromNumber(value)?.iso ?? DEFAULT_COUNTRY_ISO);
   const [open, setOpen] = useState(false);
@@ -266,7 +269,7 @@ export function PhoneNumberInput({
                     onMouseEnter={() => setHighlighted(i)}
                     onClick={() => pickCountry(c.iso)}
                     className={`flex items-center justify-between gap-3 px-3 py-2 text-[length:var(--fs-caption)] cursor-pointer text-fg-2 ${
-                      i === highlighted ? 'bg-surface ring-2 ring-inset ring-[var(--focus-outline)]' : ''
+                      i === highlighted ? 'bg-[var(--field-focus-bg)]' : ''
                     }`}
                   >
                     <span className="flex items-center gap-2 min-w-0">
@@ -282,7 +285,8 @@ export function PhoneNumberInput({
             )}
         </span>
       }
-      value={groupDigits(nationalDigits)}
+      value={maskedDisplay ?? groupDigits(nationalDigits)}
+      onFocus={maskedDisplay ? (e) => e.currentTarget.select() : undefined}
       placeholder={placeholder}
       className={className}
       onChange={handleDigits}

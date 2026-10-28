@@ -332,7 +332,7 @@
   --radius-lg: 24px;
   --radius-md: 16px;
   /* THE pill radius, used by every pill-shaped control app-wide as of
-     2026-09-27 - status badges, the Ooredoo mark, nav/filter/category chips,
+     2026-09-27 - status badges, the Other Operator mark, nav/filter/category chips,
      and Button's pill variants. It absorbed three other radii that had
      each been carrying a fixed pixel value for one corner of the app's pill
      family: --radius-tag (4px, badges - a deliberate 2026-09-24 reference
@@ -415,14 +415,12 @@
   --tag-primary-bg: #5e2750; --tag-primary-fg: #ffffff; /* Badge 'tag-primary': the Primary marker, solid plum + white in both themes */
   --tag-amber-bg: #fff3d9;   /* 'tag-amber' fill; its label is --warn-text */
   /* Info banner (e.g. MSISDN picker notice). */
-  --info-banner-bg: #eaf4fd; --info-banner-border: #b9d8f5;
+  --info-banner-bg: #eaf4fd;
   /* Eligibility 'approval-routing' wash. */
   --approval-routing: #ff8a00;
   /* Brand marks: the Vodafone speech-mark red (a different red from --accent) and the Qatar maroon. */
   --brand-vodafone: #ee3023;
   --brand-qatar: #8d1b3d;
-  /* Ooredoo partner mark. */
-  --brand-ooredoo: #ed1b2e;
   /* Telesales Customer 360: chart series, status dots, module tag, map placeholder. */
   --telesales-chart-slate: #546a91;
   --telesales-blue: #2563eb;
@@ -713,7 +711,7 @@
   --tag-blue-fg: #9cc4ff;
   --tint-blue-bg: rgba(80,140,255,.16);  --tint-blue-fg: #9cc4ff;
   --tint-indigo-bg: rgba(130,140,255,.16); --tint-indigo-fg: #b5bbff;
-  --info-banner-bg: rgba(80,140,255,.12);  --info-banner-border: rgba(80,140,255,.35);
+  --info-banner-bg: rgba(80,140,255,.12);
   --telesales-module-tag-bg: rgba(130,140,255,.16); --telesales-module-tag-fg: #b5bbff;
   --telesales-map-from: rgba(62,203,110,.12); --telesales-map-to: rgba(62,203,110,.2);
   /* Tooltips are an inverse surface: light on a dark page so they do not merge into the dark chrome. */

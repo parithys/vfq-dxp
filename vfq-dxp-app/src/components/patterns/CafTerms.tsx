@@ -1,6 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
-import { SYNTHETIC_CLASS } from '../../data/synthetic/syntheticMarker';
 import type { TncSection } from './cafTermsModel';
 
 /**
@@ -45,7 +44,6 @@ export function FullTerms({
     <section aria-label="Full Terms and Conditions" className="card ">
       <div className="flex items-center justify-between gap-3 border-b border-border-soft px-4 py-3">
         <h3 className="text-fg font-semibold text-[length:var(--fs-body)]">Terms &amp; Conditions</h3>
-        <span className={`${SYNTHETIC_CLASS} text-[length:var(--fs-micro)] uppercase tracking-wide`}>Sample text - replace with approved wording</span>
       </div>
       {/* tabIndex so the panel can be scrolled with the keyboard. */}
       <div

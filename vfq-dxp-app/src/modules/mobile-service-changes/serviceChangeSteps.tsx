@@ -81,7 +81,7 @@ const prepaidDue = (values: Values) => (values.checkoutTotals as PrepaidCheckout
  * shared steps as New Mobile Postpaid, without Address, Number or SIM: the line already has them.
  */
 export function changePostpaidPlanSteps(ctx: ServiceChangeContext): WizardStep[] {
-  const planContext = { products: ctx.products, customerBenefits: ctx.customerBenefits, hiddenProductId: (values: Values) => lineOf(values)?.productId };
+  const planContext = { products: ctx.products, customerBenefits: ctx.customerBenefits, hiddenProductId: (values: Values) => lineOf(values)?.productId, announceHrn: true };
   return [
     // A plan change adds no line, so the postpaid line limit does not apply.
     customerQualificationStep({ ...ctx, productAgnostic: true, knownCustomer: true, skipLineLimit: true }),

@@ -12,8 +12,8 @@ after(close);
 const nums = JSON.parse(fs.readFileSync('public/mock-data/numbers.json', 'utf8')).filter((n) => n.msisdn);
 const local = (n) => n.msisdn.replace(/[\s+-]/g, '').replace(/^974/, '');
 
-test('the dropdown offers Any, XXYY, Contains, Starts With, Ends With in that order, and opens on Any', () => {
-  assert.deepEqual(m.SEARCH_MODE_OPTIONS.map((o) => o.label), ['Any', 'XXYY', 'Contains', 'Starts With', 'Ends With']);
+test('the dropdown offers All, XXYY, Contains, Starts With, Ends With in that order, and opens on All', () => {
+  assert.deepEqual(m.SEARCH_MODE_OPTIONS.map((o) => o.label), ['All', 'XXYY', 'Contains', 'Starts With', 'Ends With']);
   assert.equal(m.DEFAULT_SEARCH_MODE, 'any');
   assert.equal(m.SEARCH_MODE_OPTIONS[0].value, m.DEFAULT_SEARCH_MODE);
 });

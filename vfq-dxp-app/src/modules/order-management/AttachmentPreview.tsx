@@ -8,6 +8,8 @@ import { formatDateTime } from '../../lib/format';
 export interface OrderAttachment {
   label: string;
   detail?: string;
+  /** The name the file is stored under (an identity scan: type, side, number, day). */
+  fileName?: string;
   previewUrl?: string;
 }
 

@@ -1,12 +1,17 @@
 import { SIM_SERIAL_LABEL, SIM_TYPE_LABEL } from '../../data/stepLabels';
 import type { GuidedContactValue } from '../../components/patterns/guidedContactModel';
-import { maskEmail } from '../../components/patterns/guidedContactModel';
+import { displayedEmail } from '../../components/patterns/guidedContactModel';
 import type { SimTypeValue } from '../../components/domain/SimTypeStep';
 import type { DeviceType } from '../../lib/deviceType';
 import type { WizardStep } from '../../components/patterns/wizard/guidedWizardTypes';
 import { SimType } from './SimType';
 import { SimSerial } from './SimSerial';
 import { simTypeSummary } from './summary';
+import { Button } from '../../components/primitives/Button';
+import { ActualUser } from '../ActualUser/ActualUser';
+import { isActualUserValid } from '../ActualUser/actualUserModel';
+import type { ActualUserValue } from '../ActualUser/actualUserModel';
+import { actualUserSummary } from '../ActualUser/summary';
 
 /**
  * SIM type, stored under `simType`. Physical is complete once the serial validates; eSIM once it is issued. A
@@ -25,17 +30,44 @@ export function simTypeStep(
     prePaired?: (values: Record<string, unknown>) => boolean;
     /** Says the order will be held for approval, so the eSIM message names approval rather than submission. */
     approvalRequired?: (values: Record<string, unknown>) => boolean;
+    /**
+     * Offer "Add Actual User" beside Continue: it opens the Actual User section on this same page (stored under `actualUser`), and once it is
+     * open its identification gates Continue. For a journey that names who will use the line without a step of its own for it.
+     */
+    withActualUser?: boolean;
   } = {}
 ): WizardStep {
   const fromContact = (values: Record<string, unknown>) => {
     const contact = values.contact as GuidedContactValue | undefined;
-    return contact?.moiResult?.isNewCustomer && !contact?.moiResult?.createdByAgent && contact.email ? maskEmail(contact.email) : contact?.email;
+    return displayedEmail(contact);
   };
+  const primaryId = (values: Record<string, unknown>) => (values.contact as GuidedContactValue | undefined)?.idNumber;
+  const primaryCustomerId = (values: Record<string, unknown>) => (values.eligibility as { customerId?: string } | undefined)?.customerId;
+  // The SIM is selected once its type is chosen and it is valid (a Physical SIM's serial, an eSIM issued, or a Pre-Paired SIM).
+  const simSelected = (values: Record<string, unknown>) => {
+    const s = values.simType as SimTypeValue | undefined;
+    if (opts.prePaired?.(values)) return s?.prePaired === true && s.simValid === true;
+    return (s?.simType === 'Physical' && s.simValid === true) || (s?.simType === 'eSIM' && s.esimIssued === true);
+  };
+  const actualUserOpen = (values: Record<string, unknown>) => Boolean(opts.withActualUser) && (values.actualUser as ActualUserValue | undefined)?.choice === 'other';
   return {
     key: 'simType',
-    summary: simTypeSummary,
+    summary: opts.withActualUser ? [...simTypeSummary, ...actualUserSummary] : simTypeSummary,
     label: SIM_TYPE_LABEL,
+    primaryAction: opts.withActualUser
+      ? ({ values, setValue, defaultButton }) => (
+          <div className="flex items-center gap-3">
+            {!actualUserOpen(values) && simSelected(values) && (
+              <Button variant="secondary" onClick={() => setValue('actualUser', { ...((values.actualUser as ActualUserValue | undefined) ?? {}), choice: 'other' })}>
+                Add Actual User
+              </Button>
+            )}
+            {defaultButton}
+          </div>
+        )
+      : undefined,
     render: ({ values, setValue }) => (
+      <>
       <SimType
         value={(values.simType as SimTypeValue) ?? {}}
         customerEmail={(opts.customerEmail ?? fromContact)(values)}
@@ -48,9 +80,18 @@ export function simTypeStep(
           if (opts.prePaired?.(values)) setValue('msisdn', v.prePairedMsisdn);
         }}
       />
+      {actualUserOpen(values) && (
+        <section aria-label="Actual User" className="mt-8 pt-6 border-t border-border-soft space-y-4">
+          <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Actual User</h3>
+          <ActualUser value={(values.actualUser as ActualUserValue) ?? {}} onChange={(v) => setValue('actualUser', v)} primaryIdNumber={primaryId(values)} primaryCustomerId={primaryCustomerId(values)} />
+        </section>
+      )}
+      </>
     ),
     isValid: (values) => {
       const s = values.simType as SimTypeValue | undefined;
+      // Once the Actual User section is open, the person must be identified too (choosing "Same as Primary Customer" in it is complete).
+      if (opts.withActualUser && !isActualUserValid(values.actualUser as ActualUserValue | undefined, primaryId(values))) return false;
       if (opts.prePaired?.(values)) return s?.prePaired === true && s.simValid === true && Boolean(values.msisdn);
       if (s?.simType === 'Physical') return s.simValid === true;
       if (s?.simType === 'eSIM') return s.esimIssued === true;

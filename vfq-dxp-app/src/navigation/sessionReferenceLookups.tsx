@@ -42,7 +42,7 @@ export interface TroubleTicketRecord {
 // One resolution returns BOTH facts, so the operator mark and the Active lines
 // row cannot end up describing different people.
 //
-// Yields operator 'other' - the Ooredoo mark - for a number with no Vodafone
+// Yields operator 'other' - the Other Operator mark - for a number with no Vodafone
 // record. Reachable with the current seed: QTK-7006 carries +97455519999 and a
 // null customerId, which matches nobody in customers.json.
 export interface KioskCustomerFacts {
@@ -67,13 +67,14 @@ export interface KioskCustomerFacts {
 //
 // Three link-less shapes, each a different claim and none of them "0":
 //
-//   - 'Not applicable' - a competitor's customer. The question does not apply
-//     to them; they do not hold zero Vodafone services.
+//   - (omitted)        - a competitor's customer. The question does not apply
+//     to them, so there is no column at all.
 //   - 'None'           - a Vodafone customer who genuinely holds nothing.
 //   - 'Not recorded'   - facts never resolved, so nothing is known either way.
-function activeLinesRow(facts: KioskCustomerFacts | undefined): ToastRow {
+function activeLinesRow(facts: KioskCustomerFacts | undefined): ToastRow | undefined {
   if (!facts) return { label: 'Active Lines', value: 'Not recorded' };
-  if (facts.brand.operator === 'other') return { label: 'Active Lines', value: 'Not applicable' };
+  // A competitor's customer has no Vodafone lines to report, so the column is omitted rather than shown as 'Not applicable'.
+  if (facts.brand.operator === 'other') return undefined;
   if (facts.serviceCount === 0) return { label: 'Active Lines', value: 'None' };
   // Empty value, not a repeat of the count: it is in the label now.
   // The count is SERVICES, not category rows: facts.links.length would have
@@ -220,7 +221,7 @@ function relationshipOf(customer: CustomerRecord): string | undefined {
 // "Customer status" ("Existing registered customer" / "New customer") was
 // removed on 2026-09-25. The operator mark on the header line now carries the
 // same distinction and carries it better: a Vodafone mark IS "existing
-// registered", and the Ooredoo mark says "not ours" more directly than the
+// registered", and the Other Operator mark says "not ours" more directly than the
 // word "New" did. Keeping both put the same fact on screen twice, in two
 // vocabularies, one of which called a competitor's customer "New".
 //
@@ -229,11 +230,11 @@ function relationshipOf(customer: CustomerRecord): string | undefined {
 // them would mislabel people. `brand` comes from resolving the kiosk number,
 // while `customerName` can be null for a Vodafone customer whose record
 // simply is not loaded: the info-icon reopen reads the active customer store,
-// which Finish clears. Keying "Ooredoo Customer" off a missing name would
+// which Finish clears. Keying "Unknown Customer" off a missing name would
 // therefore have relabelled a Vodafone walk-in as a competitor's customer the
 // moment the agent reopened the notification.
 //
-//   - no name, operator 'other'    -> "Ooredoo Customer" (2026-09-25)
+//   - no name, operator 'other'    -> "Unknown Customer" (2026-09-25)
 //   - no name, operator 'vodafone' -> "Not on file", as before
 function ticketToastRows(
   ticket: QTicketRecord,
@@ -244,12 +245,11 @@ function ticketToastRows(
 ): ToastRow[] {
   // A protected-segment customer this role may not see: the notification names no one, shows no number or services, and launches nothing.
   if (facts?.restricted) {
-    return [
-      { label: 'Customer Name', value: 'Restricted customer' },
-      { label: 'Access', value: 'Access restricted for your role' },
-    ];
+    // Just the neutral name: no 'Access restricted' row, and no link or launch, so nothing the role cannot do is offered or announced.
+    return [{ label: 'Customer Name', value: 'Restricted customer' }];
   }
   const launchTarget = launchTargetFor(ticket.journeyCode, customerId);
+  const activeLines = activeLinesRow(facts);
   return [
     // "Ticket number" is no longer a row (2026-09-25): the id moved into the
     // headline, where it names the notification rather than sitting as the
@@ -257,12 +257,12 @@ function ticketToastRows(
     // so the cyan value treatment only appears if another row asks for it.
     {
       label: 'Customer Name',
-      value: customerName ?? (facts?.brand.operator === 'other' ? 'Ooredoo Customer' : 'Not on file'),
+      value: customerName ?? (facts?.brand.operator === 'other' ? 'Unknown Customer' : 'Not on file'),
       // Clicking the name opens Customer 360 (2026-09-27) - same `to`
       // mechanism "Purpose of visit" already uses below, so a customer row
       // and a journey row are actionable the same way rather than two
       // different link conventions on one toast. Only when there IS a
-      // customer: "Ooredoo Customer" and "Not on file" both mean no record
+      // customer: "Unknown Customer" and "Not on file" both mean no record
       // exists to open, so neither gets a link.
       to: customerId ? `/customer/${customerId}` : undefined,
     },
@@ -275,7 +275,7 @@ function ticketToastRows(
       // postpaid standing on this number to state.
       sub: facts?.brand.relationship ? `(${facts.brand.relationship})` : undefined,
     },
-    activeLinesRow(facts),
+    ...(activeLines ? [activeLines] : []),
     {
       label: 'Purpose of Visit',
       // The journey the kiosk code stands for, not the queue the customer is
@@ -334,7 +334,8 @@ export function ticketToast(
     {
       rows: ticketToastRows(ticket, customerName, customerId, mobile, facts),
       key: `qticket-${ticket.qTicketId}`,
-      brand: facts?.brand,
+      // A restricted customer's facts carry a placeholder 'other' brand, which the toast would draw as Other Operator - show no operator mark.
+      brand: facts?.restricted ? undefined : facts?.brand,
       reference: ticket.qTicketId,
     },
   ];

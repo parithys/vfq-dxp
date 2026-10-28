@@ -112,7 +112,7 @@ export function QnomyTicketHistory() {
   //
   // Customer name/link resolved HERE, once per ticket, rather than in a
   // column `render` - see DisplayRow's own note on why that matters for
-  // `linkTo`. "Ooredoo Customer", not "Not on file": every row here already
+  // `linkTo`. "Unknown Customer", not "Not on file": every row here already
   // went through a real interaction (it was released, not merely queued), so
   // the only reason a number resolves to nobody is that it was never a
   // Vodafone number - the same fallback the assignment toast uses for the
@@ -124,7 +124,7 @@ export function QnomyTicketHistory() {
         .sort((a, b) => String(b.releasedAt).localeCompare(String(a.releasedAt)))
         .map((t) => {
           const matched = t.kioskMobileNumber ? customers.find((c) => mobileMatches(t.kioskMobileNumber, c.phone)) : undefined;
-          return { ...t, customerName: matched?.name ?? 'Ooredoo Customer', customerLinkId: matched?.customerId };
+          return { ...t, customerName: matched?.name ?? 'Unknown Customer', customerLinkId: matched?.customerId };
         }),
     [tickets, customers, staffUserId]
   );

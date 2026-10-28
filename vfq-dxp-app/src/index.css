@@ -169,6 +169,17 @@ body {
 /* Native dropdowns: the browser draws the arrow flush against the right edge. Draw it ourselves with clear space
    after it, and reserve that space so the text never runs under it. (Selects that already carry their own chevron use
    Tailwind's appearance-none and are left alone.) Unlayered on purpose, so it wins over a field's own px-* utility. */
+/* A number the agent must key in (no stepper arrows). */
+input.no-spinner::-webkit-outer-spin-button,
+input.no-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input.no-spinner {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
 select:not([multiple]):not([size]):not(.appearance-none) {
   appearance: none;
   background-image: var(--icon-chevron-down);

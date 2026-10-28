@@ -476,7 +476,7 @@ export function FilterSelect({ label, value, options, onChange, hideLabel = fals
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => choose(i)}
               onMouseEnter={() => setActive(i)}
-              className={`cursor-pointer whitespace-nowrap px-3 py-2 text-[length:var(--fs-body)] text-fg ${i === active ? 'bg-surface ring-2 ring-inset ring-[var(--focus-outline)]' : ''} ${o.value === value ? 'font-medium text-accent' : ''}`}
+              className={`cursor-pointer whitespace-nowrap px-3 py-2 text-[length:var(--fs-body)] text-fg ${i === active ? 'bg-[var(--field-focus-bg)]' : ''} ${o.value === value ? 'font-medium text-accent' : ''}`}
             >
               {o.label}
             </li>

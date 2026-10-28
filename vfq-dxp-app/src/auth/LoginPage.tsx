@@ -140,7 +140,7 @@ export function LoginPage() {
   // white panel on the right. Only the presentation differs from before - the handlers, validation, error display and
   // field ids are the same ones as above.
   return (
-    <div className="min-h-screen flex flex-col md:flex-row font-sans">
+    <div className="min-h-screen flex flex-col md:flex-row font-sans bg-charcoal-panel">
       {/* Sign-in panel - ordered after the brand panel on md:+ (DOM order, and so tab order, is unchanged); takes the full width when the brand panel is not shown (phone, tablet). */}
       <div role="main" className={`w-full shrink-0 md:order-2 bg-charcoal-panel text-on-dark flex flex-col px-[8%] py-8 ${showBrandPanel ? 'md:w-[42%] lg:w-[38%]' : ''}`}>
         <div className="my-auto py-10 space-y-8">

@@ -18,8 +18,6 @@ export interface ServiceAddressProps {
   /** From Customer Verification: a Qatari national's registered address is prefilled. */
   idNumber?: string;
   nationality?: string;
-  /** A journey that reports fibre readiness itself hides the built-in banner. */
-  hideFibreReadiness?: boolean;
 }
 
 export function ServiceAddress({ mode: _mode, ...rest }: ServiceAddressProps) {

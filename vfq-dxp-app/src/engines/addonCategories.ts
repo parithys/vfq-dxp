@@ -24,7 +24,13 @@ export const DEFAULT_ADDON_PRICING: AddonPricing = 'paid';
 export type AddonPricingModel = 'free-all' | 'free-with-plan' | 'free-first-3' | 'standard' | 'intro-discount';
 export const INTRO_MONTHS = 3;
 
+/** How often an add-on is charged. Absent on a record means monthly recurring - what a postpaid add-on is by default. */
+export type AddonBillingFrequency = 'monthly' | 'weekly' | 'one-time';
+const WEEKS_PER_MONTH = 52 / 12;
+
 export interface CategorisedAddon {
+  /** Stated on the record when it is not monthly. */
+  billingFrequency?: AddonBillingFrequency;
   pricingModel?: AddonPricingModel;
   /** The discounted monthly price of the first INTRO_MONTHS months ('intro-discount'). */
   introPriceQAR?: number;
@@ -59,9 +65,26 @@ export function addonChargeNowQar(a: CategorisedAddon): number {
     case 'intro-discount':
       return a.introPriceQAR ?? a.mrcQAR;
     default:
-      return a.mrcQAR;
+      // One-time: paid at activation (addonOneTimeQar), nothing monthly. Weekly: the price of a week, 52/12 weeks to a month.
+      return a.billingFrequency === 'one-time' ? 0 : a.billingFrequency === 'weekly' ? Math.round(a.mrcQAR * WEEKS_PER_MONTH * 100) / 100 : a.mrcQAR;
   }
 }
+
+/**
+ * How an add-on is charged, as the label under its name: what its record states (`billingFrequency`), else 'Recurring Monthly' for a postpaid add-on
+ * (its price is the record's monthly recurring charge, `mrcQAR`) and 'One-time' for a prepaid pack (priced once). An add-on stated as included with
+ * a plan for everyone carries no charge, so it has no charging type: undefined, never guessed.
+ */
+export type AddonChargeType = 'One-time' | 'Recurring Weekly' | 'Recurring Monthly';
+export function addonChargeType(a: CategorisedAddon, source: 'catalogue' | 'prepaid' = 'catalogue'): AddonChargeType | undefined {
+  if (a.pricingModel === 'free-all' || a.pricingModel === 'free-with-plan') return undefined;
+  if (a.billingFrequency === 'weekly') return 'Recurring Weekly';
+  if (a.billingFrequency === 'one-time') return 'One-time';
+  return source === 'prepaid' ? 'One-time' : 'Recurring Monthly';
+}
+
+/** An add-on charged once is paid at activation, not added to the monthly bill. */
+export const addonOneTimeQar = (a: CategorisedAddon): number => (a.billingFrequency === 'one-time' ? a.mrcQAR : 0);
 
 /** What the card says about the price: the figure, and the line that qualifies it (when it is not simply the monthly price). */
 export interface AddonPriceDisplay {
@@ -80,10 +103,10 @@ export function addonPriceDisplay(a: CategorisedAddon): AddonPriceDisplay | unde
     case 'free-first-3':
       return { primary: 'Free', secondary: `for Months 1\u2013${INTRO_MONTHS}, ${then}` };
     case 'intro-discount':
-      return { primary: `${formatQar(a.introPriceQAR ?? a.mrcQAR)}/mo`, secondary: `for Months 1\u2013${INTRO_MONTHS}, ${then}` };
+      return { primary: formatQar(a.introPriceQAR ?? a.mrcQAR), secondary: `for Months 1\u2013${INTRO_MONTHS}, ${then}` };
     case 'standard':
-      // A plain price has nothing to qualify: supplementary text is for conditional, promotional or time-based pricing only.
-      return { primary: `${formatQar(a.mrcQAR)}/mo` };
+      // A plain monthly price has nothing to qualify; a weekly or one-time charge says so.
+      return { primary: formatQar(a.mrcQAR), ...(a.billingFrequency === 'weekly' ? { secondary: 'per week' } : a.billingFrequency === 'one-time' ? { secondary: 'one-off charge' } : {}) };
     default:
       return undefined;
   }

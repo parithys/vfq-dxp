@@ -517,14 +517,6 @@
     "_note": "App-level demo addition (2026-09-30): supplied company list for the New Connection B2B2C company search. No CR number or other registry fields were provided, so none are invented."
   },
   {
-    "enterpriseAccountId": "ENT-ACC-8055",
-    "accountType": "BUSINESS",
-    "level": "parent",
-    "name": "Ooredoo Group",
-    "businessType": "B2B2C",
-    "_note": "App-level demo addition (2026-09-30): supplied company list for the New Connection B2B2C company search. No CR number or other registry fields were provided, so none are invented."
-  },
-  {
     "enterpriseAccountId": "ENT-ACC-8056",
     "accountType": "BUSINESS",
     "level": "parent",

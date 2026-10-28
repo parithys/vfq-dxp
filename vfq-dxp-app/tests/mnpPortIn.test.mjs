@@ -74,7 +74,7 @@ test('a scheduled Port-In date must be a working day', () => {
 });
 
 // ---- donor details (SEQ_012, DF-MNP-010..015) --------------------------------------------------------------------------------
-const donorOk = { portInNumber: '66000666', donorId: 'D1', donorIdType: 'QID', donorCustomerType: 'Individual', donorOperator: 'Ooredoo', donorSubscriptionType: 'Postpaid' };
+const donorOk = { portInNumber: '66000666', donorId: 'D1', donorIdType: 'QID', donorCustomerType: 'Individual', donorOperator: 'Other Operator', donorSubscriptionType: 'Postpaid' };
 
 test('donor details need the number, ID, ID type, customer type, operator and subscription type', () => {
   assert.equal(donor.donorDetailsValid(donorOk), true);
@@ -88,10 +88,10 @@ test('donor details need the number, ID, ID type, customer type, operator and su
   assert.equal(donor.donorDetailsValid(undefined), false);
 });
 
-test('the donor operator is Ooredoo: Vodafone and Other Licensed Operator are not offered, and Diplomatic ID is a donor ID type (DF-MNP-011)', () => {
+test('the donor operator is Other Operator: Vodafone and Other Licensed Operator are not offered, and Diplomatic ID is a donor ID type (DF-MNP-011)', () => {
   assert.ok(!rules.DONOR_OPERATORS.includes('Vodafone'));
-  assert.deepEqual([...rules.DONOR_OPERATORS], ['Ooredoo']);
-  assert.equal(rules.DONOR_OPERATOR, 'Ooredoo', 'the only donor operator is set by the journey, not chosen');
+  assert.deepEqual([...rules.DONOR_OPERATORS], ['Other Operator']);
+  assert.equal(rules.DONOR_OPERATOR, 'Other Operator', 'the only donor operator is set by the journey, not chosen');
 });
 
 // ---- MNP Form (SEQ_018 / 019) ----------------------------------------------------------------------------------------------
@@ -136,7 +136,7 @@ test('the MNP steps keep their order, with the MNP Form step gated on a signatur
 // ---- the request after submission (BR-MNP-013 / 019 / 025 / 026, SEQ_024..027) ---------------------------------------------
 const submitted = (over = {}) => engine.buildPortInRecord({
   id: 'MNP-123456', orderId: 'ORD-1', customerId: 'CUST-1', customerName: 'Test', idNumber: '2845', mnpCategory: 'Postpaid Consumer', planSelected: 'PROD-104',
-  portInNumber: '97466000666', donor: { customerId: 'D1', idType: 'QID', customerType: 'Individual', operator: 'Ooredoo', subscriptionType: 'Postpaid' },
+  portInNumber: '97466000666', donor: { customerId: 'D1', idType: 'QID', customerType: 'Individual', operator: 'Other Operator', subscriptionType: 'Postpaid' },
   mnpForm: { number: 'MNPF-1', signed: true, type: 'MNP-Digital' }, simSerial: 'S1', recipient: { phone: '97455512001' },
   draftSnapshot: { mnpType: 'postpaid', productId: 'PROD-104', donorDetails: donorOk }, ...over,
 }, new Date('2026-10-14T06:00:00Z'));
@@ -271,13 +271,13 @@ test('postpaid port-in uses the shared Plan, Add-ons, Checkout Summary and full 
   assert.equal(typeof postpaidCaf.locksAfter, 'function', 'the full CAF locks the journey once signed');
   assert.equal(prepaidCaf.locksAfter, undefined);
   const [postpaidCheckout] = all.filter((s) => s.key === 'checkout');
-  assert.equal(postpaidCheckout.label, 'Checkout');
-  assert.equal(all.find((s) => s.key === 'planExtras').label, 'Addons & Discounts');
+  assert.equal(postpaidCheckout.label, 'Order Summary');
+  assert.equal(all.find((s) => s.key === 'planExtras').label, 'Addons');
 });
 
 test('the prepaid port-in checkout is the shared prepaid checkout, gated on the validations and storing what is due as dueTodayQar', () => {
   const [, prepaidCheckout] = steps.mnpSteps().filter((s) => s.key === 'checkout');
-  assert.equal(prepaidCheckout.label, 'Checkout');
+  assert.equal(prepaidCheckout.label, 'Order Summary');
   const values = journey({ mnpType: 'prepaid' });
   assert.equal(prepaidCheckout.isValid(values), true);
   assert.equal(prepaidCheckout.isValid({ ...values, simValid: false }), false);

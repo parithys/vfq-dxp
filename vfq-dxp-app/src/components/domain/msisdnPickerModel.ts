@@ -66,18 +66,18 @@ export const RETAIL_SALES_PERSONA_ID = 'ROLE-01';
  * Qatar MSISDNs are stored E.164 (+9743300...) but shown as the bare 8-digit
  * local number: every number in this picker is Qatari, so the country code is
  * the same eleven characters on every row and carries no information the agent
- * is choosing between. Grouped 4+4, which is how they are read aloud.
+ * is choosing between. Shown as one run of eight digits, never split by a space.
  */
 export function toLocalMsisdn(msisdn: string): string {
   const local = msisdn.replace(/[\s-]/g, '').replace(/^\+?974/, '');
-  return /^\d{8}$/.test(local) ? `${local.slice(0, 4)} ${local.slice(4)}` : msisdn;
+  return /^\d{8}$/.test(local) ? local : msisdn;
 }
 
-/** How the search box matches a number: Any (no pattern: the number or a value tier), XXYY (repeating pairs), Contains, Starts With, Ends With. */
+/** How the search box matches a number: All (shown as "All"; value 'any' - no pattern: the number or a value tier), XXYY (repeating pairs), Contains, Starts With, Ends With. */
 export type SearchMode = 'any' | 'xxyy' | 'contains' | 'starts' | 'ends';
 
 export const SEARCH_MODE_OPTIONS: { value: SearchMode; label: string }[] = [
-  { value: 'any', label: 'Any' },
+  { value: 'any', label: 'All' },
   { value: 'xxyy', label: 'XXYY' },
   { value: 'contains', label: 'Contains' },
   { value: 'starts', label: 'Starts With' },

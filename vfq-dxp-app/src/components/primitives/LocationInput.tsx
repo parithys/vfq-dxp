@@ -144,7 +144,7 @@ export function LocationInput({ label, error, helperText, placeholder, onSelect,
                 role="option"
                 aria-selected={nav.active === i}
                 onClick={() => pick(a)}
-                className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-surface ${nav.active === i ? 'bg-surface ring-2 ring-inset ring-[var(--focus-outline)]' : ''}`}
+                className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-[var(--field-focus-bg)] ${nav.active === i ? 'bg-[var(--field-focus-bg)]' : ''}`}
               >
                 <span className="mt-0.5 text-[var(--field-pin)] shrink-0">
                   <Icon path={PIN_ICON} className="w-5 h-5" />

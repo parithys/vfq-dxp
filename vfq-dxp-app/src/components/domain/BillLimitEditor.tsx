@@ -53,21 +53,16 @@ export function BillLimitEditor({ product, value, onChange, layout = 'default', 
     setEditing(false);
   };
 
-  const step = (delta: number) => {
-    const current = Number(draft) || 0;
-    setDraft(String(Math.max(0, current + delta)));
-  };
-
   return (
     <div className={bare ? '' : `card ${row ? 'p-4' : 'p-3'}`}>
       <div className="flex items-center justify-between gap-3">
         {row && !editing ? (
           <div>
-            <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Bill Limit ({product})</h4>
+            <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Bill Limit</h4>
             {value !== undefined && <p className="text-fg-2 text-[length:var(--fs-caption)]">Current limit · {formatQarAny(value)}</p>}
           </div>
         ) : (
-          <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Bill Limit ({product})</h4>
+          <h4 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Bill Limit</h4>
         )}
         {!editing && (
           <Button variant="secondary" compact onClick={() => setEditing(true)}>
@@ -77,13 +72,7 @@ export function BillLimitEditor({ product, value, onChange, layout = 'default', 
       </div>
       {editing ? (
         <div className="flex items-end gap-2 mt-2">
-          <Button variant="secondary" compact className="h-[var(--size-btn-compact-h)]" aria-label="Decrease by 50 QR" onClick={() => step(-50)}>
-            −50
-          </Button>
-          <Input label={maxLimit !== undefined ? `QAR (Agent Min ${agentMinimum}, Max ${maxLimit})` : `QAR (Agent Min ${agentMinimum})`} type="number" value={draft} onChange={(e) => setDraft(e.target.value)} />
-          <Button variant="secondary" compact className="h-[var(--size-btn-compact-h)]" aria-label="Increase by 50 QR" onClick={() => step(50)}>
-            +50
-          </Button>
+          <Input label={maxLimit !== undefined ? `QAR (Agent Min ${agentMinimum}, Max ${maxLimit})` : `QAR (Agent Min ${agentMinimum})`} type="number" className="no-spinner" value={draft} onChange={(e) => setDraft(e.target.value)} />
           <Button variant="primary" className="h-[var(--size-btn-compact-h)]" onClick={apply}>
             Apply
           </Button>

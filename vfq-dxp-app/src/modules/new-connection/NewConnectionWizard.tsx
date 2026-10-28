@@ -150,11 +150,14 @@ export function NewConnectionWizard({
                 ? 'Home Connection'
                 : 'New Connection'
         }
+        // Not on Customer Verification (step 0, always the first step): the customer is only confirmed there, so naming them in the header is premature.
         titleAside={
-          <JourneyCustomerBadge
-            wizardId={WIZARD_ID}
-            routeCustomer={flow === 'existing' ? { name: routeCustomerName, customerId: existingCustomerId } : undefined}
-          />
+          (draftStep ?? 0) > 0 ? (
+            <JourneyCustomerBadge
+              wizardId={WIZARD_ID}
+              routeCustomer={flow === 'existing' ? { name: routeCustomerName, customerId: existingCustomerId } : undefined}
+            />
+          ) : undefined
         }
         onAbandon={() => navigate(POST_EXIT_DESTINATION)}
         hideAbandonFrom="payment"

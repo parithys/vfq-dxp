@@ -112,16 +112,16 @@
     "name": "MNP Port-In Order",
     "description": "An order in Siebel representing an incoming mobile number port from another operator. Fulfilment validates and creates the order, selecting plan, MNP category, porting details, a reserved zero-value temporary MSISDN, and attachments. Auto-created ticket via NPass triggers a 2-hour action window (extendable to 24 hours once documents validated), bound by NPass working hours. Auto-validates customer name, QID/ID type and number, service type, consumer type; auto-rejects on failure. Conditional acceptance auto-triggered on billed due over 100 QAR (MNP) or any unbilled amount at service level (FNP).",
     "attributes": "plan, MNP category, porting details (customer ID number/type, customer type, donor operator, subscription type, scheduled porting date), reserved zero-value temporary MSISDN, attachments (MNP form 2-A-D, donor-registered ID), 2-hour action window extended to 24 hours, 14-15 rejection reason codes tightly coupled to NPass, consumer uses only reason codes 1,4,9",
-    "relationships": "linked to donor operator (QTEL/Ooredoo) via NPAS",
+    "relationships": "linked to donor operator (the donor operator) via NPAS",
     "lifecycleStates": "created -> consent pending -> submitted to NPAS -> donor accept/reject/conditional-accept -> porting window -> ported; rejection restarts the whole journey",
     "validationRules": "consent SMS required within 24 hours; only 13 valid rejection reasons; attachments under 2MB, PDF or JPG; auto-validates customer name, QID/ID type and number, service type, consumer type; auto-rejects on failure; conditional acceptance auto-triggered on billed due over 100 QAR (MNP) or any unbilled amount at service level (FNP)"
   },
   {
     "id": "ENT-014",
     "name": "FNP Port-In Order / Trouble Ticket",
-    "description": "A fiber-to-fiber number port order at service level, requiring RFS check, trouble ticket, and two technician visits. FNP form (mandatory Karma ID), ID document, target date (manually calculated). Submitted via NPAS to Ooredoo for document validation and acceptance. Conditional acceptance shows visible due amount, with 3 working days for consumer to clear.",
+    "description": "A fiber-to-fiber number port order at service level, requiring RFS check, trouble ticket, and two technician visits. FNP form (mandatory Karma ID), ID document, target date (manually calculated). Submitted via NPAS to Other Operator for document validation and acceptance. Conditional acceptance shows visible due amount, with 3 working days for consumer to clear.",
     "attributes": "FNP form (mandatory Karma ID), ID document, target date (manually calculated)",
-    "relationships": "submitted via NPAS to Ooredoo for document validation and acceptance",
+    "relationships": "submitted via NPAS to Other Operator for document validation and acceptance",
     "lifecycleStates": "RFS check -> trouble ticket -> form/ID submission -> donor validation -> conditional/accept -> installation visit -> porting-date visit -> ported",
     "validationRules": "conditional acceptance shows visible due amount, 3 working days for consumer to clear"
   },

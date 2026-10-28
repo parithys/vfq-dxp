@@ -72,21 +72,22 @@ test('SIM Type and ICCID are shown on SIM Selection for a Physical SIM and an eS
   for (const f of ['checkoutSummaryRows', 'checkoutDetailedTables']) {
     const src = read(`src/components/patterns/${f}.ts`);
     assert.match(src, /label: 'SIM Type'/, f);
-    assert.match(src, /label: 'ICCID'/, f);
+    assert.doesNotMatch(src, /label: 'ICCID'/, `${f}: the checkout summary no longer lists the ICCID`);
   }
   assert.match(read('src/capabilities/SimType/summary.ts'), /label: 'ICCID'/);
 });
 
-test('the plan-type filter: All Plans, Voice Plan, Broadband Plan - conservation over the whole catalogue, reset on each tab', async () => {
+test('the plan-type filter: All Plans, Voice Plan, Broadband Plan, Family Plan - conservation over the whole catalogue, reset on each tab', async () => {
   const m = await load('/src/components/patterns/postpaidPlanModel.ts');
-  assert.deepEqual(m.PLAN_TYPE_FILTERS.map((f) => f.label), ['All Plans', 'Voice Plan', 'Broadband Plan']);
+  assert.deepEqual(m.PLAN_TYPE_FILTERS.map((f) => f.label), ['All Plans', 'Voice Plan', 'Broadband Plan', 'Family Plan']);
   const products = JSON.parse(read('public/mock-data/products.json'));
   const plans = products.filter((p) => p.type === 'Postpaid Plan' && p.listed !== false);
   const voice = plans.filter((p) => m.matchesPlanType(p, 'Postpaid Voice Plans'));
   const broadband = plans.filter((p) => m.matchesPlanType(p, 'Postpaid Broadband Plans'));
   assert.equal(plans.filter((p) => m.matchesPlanType(p, 'all')).length, plans.length);
-  assert.equal(voice.length + broadband.length, plans.filter((p) => p.planClass).length, 'a class-less plan is under All Plans only; no plan is in both');
-  assert.ok(voice.length > 0 && broadband.length > 0);
+  const family = plans.filter((p) => m.matchesPlanType(p, 'Postpaid Family Plans'));
+  assert.equal(voice.length + broadband.length + family.length, plans.filter((p) => p.planClass).length, 'a class-less plan is under All Plans only; no plan is in two classes');
+  assert.ok(voice.length > 0 && broadband.length > 0 && family.length > 0);
   assert.equal(m.matchesPlanType({}, 'Postpaid Voice Plans'), false, 'unknown stays unknown');
   const hook = read('src/components/patterns/usePostpaidPlanAddons.ts');
   assert.match(hook, /setActiveTabState\(tab\);\s*setPlanTypeFilter\('all'\)/, 'each tab starts at All Plans');

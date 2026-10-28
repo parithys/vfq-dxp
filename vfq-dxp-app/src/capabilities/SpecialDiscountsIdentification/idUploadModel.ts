@@ -122,9 +122,10 @@ export function removeIdUpload<T extends UploadValue>(value: T, side: 'front' | 
 }
 
 /**
- * Special Discounts offers BOTH capture actions on every device: the reader ("Initiate scan", when it is available) and "Upload document".
- * Unlike Customer Verification, nothing here depends on the device type.
+ * Which capture actions the Special Discounts step offers (2026-10-27): the reader ("Initiate scan", when it is available) on every device, and
+ * "Upload document" on a tablet only. On the web the reader is the one way in - except when it is not available (it failed, or the step has none),
+ * where upload stays so the agent is never left without a way in.
  */
-export function idCaptureOptions(readerAvailable: boolean): { scan: boolean; upload: boolean } {
-  return { scan: readerAvailable, upload: true };
+export function idCaptureOptions(readerAvailable: boolean, device: 'web' | 'tablet' = 'web'): { scan: boolean; upload: boolean } {
+  return { scan: readerAvailable, upload: device === 'tablet' || !readerAvailable };
 }

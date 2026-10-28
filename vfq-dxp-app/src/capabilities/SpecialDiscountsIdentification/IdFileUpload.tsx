@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Button } from '../../components/primitives/Button';
 import { Icon } from '../../components/primitives/Icon';
+import { detectDeviceType } from '../../lib/deviceType';
 import { ID_UPLOAD_ACCEPT, idCaptureOptions, idFileProblem, readIdFile } from './idUploadModel';
 import type { IdUploadResult, IdUploadSides, UploadedIdFile } from './idUploadModel';
 
@@ -40,11 +41,11 @@ export function IdFileUpload({
   align?: 'center' | 'end';
   /** Shown immediately before the button, in the same row, so the two always stay together (e.g. Initiate scan). */
   leading?: ReactNode;
-  /** The reader is offered at this step (defaults to whether `leading` is given). Web shows the reader, tablet shows upload; upload stays when there is no reader. */
+  /** The reader is offered at this step (defaults to whether `leading` is given). The reader is offered on every device and upload on a tablet only; upload also stays when there is no reader. */
   scanner?: boolean;
   onUpload: (result: IdUploadResult) => void;
 }) {
-  const { scan, upload } = idCaptureOptions(scanner);
+  const { scan, upload } = idCaptureOptions(scanner, detectDeviceType());
   const input = useRef<HTMLInputElement>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);

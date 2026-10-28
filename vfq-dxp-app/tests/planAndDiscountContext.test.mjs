@@ -123,11 +123,11 @@ test('Offers → Number Selection is a standing rule: every plan on the Offers t
   for (const p of all.filter((p) => pm.planGroupOf(p) !== 'specials' && !p.preBundledOffer)) assert.equal(Boolean(extras.skip({ productId: p.productId, selectionSource: 'PLAN' })), false, p.productId);
 });
 
-test('a plan chosen under Special Offers skips Addons & Discounts like the Offers flow; the tab is recorded when the plan is chosen and reset with the product', async () => {
+test('a plan chosen under Special Offers keeps the Addons & Discounts step; the tab is still recorded when the plan is chosen and reset with the product', async () => {
   const ps = await load('/src/modules/new-connection/postpaidSteps.tsx');
   const extras = ps.postpaidSteps({ products: [], customerBenefits: [] }).find((s) => s.key === 'planExtras');
-  assert.equal(Boolean(extras.skip({ productId: 'PROD-131', planTab: 'special' })), true);
-  assert.equal(Boolean(extras.skip({ productId: 'PROD-131', planTab: 'for-you' })), false, 'the same plan chosen under Plans keeps the step');
+  assert.equal(Boolean(extras.skip({ productId: 'PROD-131', planTab: 'special' })), false, 'Special Offers plans get Addons & Discounts');
+  assert.equal(Boolean(extras.skip({ productId: 'PROD-131', planTab: 'for-you' })), false, 'the same plan chosen under Standard Plans keeps the step');
   assert.equal(Boolean(extras.skip({ planTab: 'special' })), false, 'no plan chosen: nothing to skip');
   assert.match(read('src/components/patterns/PostpaidPlanAddonsStep.tsx'), /onPlanTabChange\?\.\(activeTab\)/);
   assert.match(read('src/capabilities/PlanSelection/postpaidStep.tsx'), /setValue\('planTab', tab\)/);

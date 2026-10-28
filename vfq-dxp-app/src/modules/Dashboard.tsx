@@ -13,10 +13,10 @@ import { DashboardZone } from './dashboard/DashboardZone';
 import { useZoneMetrics } from './dashboard/useZoneMetrics';
 import { customerOpsSpec, productWorkSpec } from './dashboard/zoneSpecs';
 import { layoutFor, productZoneVariantFor } from './dashboard/dashboardLayout';
-import { AVERAGE_WAIT_TIME_DEMO, countWord } from './dashboard/heroFigures';
+import { AVERAGE_WAIT_TIME_DEMO } from './dashboard/heroFigures';
 import { useQnomyQueueStore } from '../stores/qnomyQueueStore';
 import { ensureWalkInWaiting } from '../engines/qnomyWalkIns';
-import { waitingCountFor } from '../engines/qnomyQueueEngine';
+import { waitingCountFor, queueScope } from '../engines/qnomyQueueEngine';
 import { canSeeQnomyTicketNumber } from '../engines/agentPrivilegeEngine';
 import type { QTicketRecord } from '../navigation/sessionReferenceLookups';
 import { formatDate } from '../lib/format';
@@ -70,8 +70,8 @@ export function Dashboard() {
       return;
     }
     let cancelled = false;
-    ensureWalkInWaiting(activePersonaId).then(() => mockDataEngine.list<QTicketRecord>('qtickets')).then((q) => {
-      if (!cancelled) setWaiting(waitingCountFor(activePersonaId, q));
+    ensureWalkInWaiting(activePersonaId).then(() => Promise.all([mockDataEngine.list<QTicketRecord>('qtickets'), mockDataEngine.list<{ phone?: string }>('customers')])).then(([q, customers]) => {
+      if (!cancelled) setWaiting(waitingCountFor(activePersonaId, q, queueScope(customers)));
     });
     return () => {
       cancelled = true;
@@ -115,23 +115,7 @@ export function Dashboard() {
 
   const twoUp = layout.zones.filter((z) => z.size === 'half').length === 2;
 
-  // Joined rather than concatenated in the markup: the region scoping notice
-  // used to be appended to the subtitle with a leading space, which now that
-  // most approaches carry no subtitle would have opened the line with one.
-  // Both parts are optional, and for most roles neither is present.
-  const headerNote = [layout.subtitle, regional ? `Scoped to ${regionLabel}.` : undefined]
-    .filter(Boolean)
-    .join(' ');
-
   const today = `${new Date().toLocaleDateString('en-GB', { weekday: 'long' })}, ${formatDate(new Date())}`;
-  const priority = m.taskTiles.find((t) => t.key === 'priority')?.count ?? 0;
-  const facts = [
-    layout.zones.some((z) => z.id === 'customer-ops') ? `${countWord(priority)} priority ${priority === 1 ? 'task' : 'tasks'}` : null,
-    waiting !== null ? `${countWord(waiting)} ${waiting === 1 ? 'customer' : 'customers'} waiting in the live queue` : null,
-  ].filter(Boolean);
-  const heroLine = ['Your workspace is ready.', facts.length ? `You have ${facts.join(' and ')}.` : null, headerNote || null]
-    .filter(Boolean)
-    .join(' ');
 
   return (
     <div className="p-8">
@@ -150,7 +134,6 @@ export function Dashboard() {
           <div className="min-w-0 max-w-3xl">
             <p className="text-on-dark text-[length:var(--fs-caption)]">{today}</p>
             <h1 className="mt-1 text-[length:clamp(1.75rem,4vw,2.25rem)] leading-tight font-extrabold tracking-tight break-words">{layout.heading}</h1>
-            <p className="text-on-dark text-[length:var(--fs-caption)] mt-3">{heroLine}</p>
           </div>
           <dl className="flex flex-wrap gap-3">
             {[

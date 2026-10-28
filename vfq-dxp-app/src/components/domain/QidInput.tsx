@@ -67,6 +67,8 @@ interface QidNumberFieldProps {
   inlineField?: ReactNode;
   /** The acted-for customer's own ID number: the demo barcode button pushes this instead of the fixed specimen number. */
   barcodeNumber?: string;
+  /** The barcode button's own handler (the reader supplies the number); without it the button pushes `barcodeNumber` / the demo number. */
+  onBarcodeScan?: () => void;
   /** Show Fetch even though the number is read-only. */
   showFetch?: boolean;
   /**
@@ -141,7 +143,7 @@ export function QidTypeSelector({
       </p>
       {/* Columns follow the count offered, so two cards fill the row rather
           than leaving two empty quarter-width gaps. */}
-      <div className={`grid gap-3 ${offered.length > 2 ? 'grid-cols-[repeat(auto-fill,minmax(min(100%,9.5rem),1fr))]' : 'grid-cols-[repeat(auto-fill,minmax(min(100%,14rem),1fr))]'}`}>
+      <div className={`grid gap-3 ${offered.length > 2 ? 'grid-cols-[repeat(auto-fill,minmax(min(100%,12rem),1fr))]' : 'grid-cols-[repeat(auto-fill,minmax(min(100%,14rem),1fr))]'}`}>
         {offered.map((t) => {
           const isUnavailable = unavailable.has(t.type);
           // NOT gated on availability (2026-09-28) - `idType` is the type
@@ -163,7 +165,7 @@ export function QidTypeSelector({
               aria-disabled={isUnavailable || undefined}
               aria-pressed={selected}
               onClick={() => !isUnavailable && onIdTypeChange(t.type)}
-              className={`relative flex flex-col items-center gap-2 rounded-[var(--radius-card)] border p-4 ${
+              className={`relative flex flex-row items-center justify-start gap-3 rounded-[var(--radius-card)] border p-4 ${
                 isUnavailable
                   ? 'border-border-soft bg-bg text-muted opacity-60'
                   : selected
@@ -177,13 +179,7 @@ export function QidTypeSelector({
               <span className={`inline-flex p-2 rounded-[var(--radius-card)] ${selected && !isUnavailable ? 'bg-[var(--field-card-selected)] text-on-dark' : 'bg-[var(--icon-tile-bg)] text-[var(--icon-tile-fg)]'}`}>
                 <Icon path={t.icon} className="w-6 h-6" />
               </span>
-              <span className="text-[length:var(--fs-caption)] font-bold">{t.label}</span>
-              {/* Shown only while a card needing approval is selected. The line is always
-                  rendered (invisible otherwise) so every card is one height in every state -
-                  otherwise the row grows and the page jumps when Passport/GCC ID is picked. */}
-              <span className={`text-[length:var(--fs-micro)] -mt-1.5 ${selected && (t.type === 'Passport' || t.type === 'GCC ID') ? '' : 'invisible'}`}>
-                Requires Approval
-              </span>
+              <span className="text-[length:var(--fs-caption)] font-bold whitespace-nowrap">{t.label}</span>
             </button>
           );
         })}
@@ -197,6 +193,11 @@ export function QidTypeSelector({
 
 // The number field and its Fetch action. The label and placeholder follow the
 // selected ID Type. Whether this renders AT ALL is the caller's decision.
+/** The label of an ID type's number field, e.g. "Qatar ID (QID) Number". */
+export function idNumberLabel(idType: QidType): string {
+  return (ID_TYPES.find((t) => t.type === idType) ?? ID_TYPES[0]).numberLabel;
+}
+
 export function QidNumberField({
   idType,
   value,
@@ -210,6 +211,7 @@ export function QidNumberField({
   fetchDisabled = false,
   inlineField,
   barcodeNumber,
+  onBarcodeScan,
   showFetch = false,
   status,
   statusDetail,
@@ -292,7 +294,7 @@ export function QidNumberField({
                 fixed number for whichever ID type is currently selected. */}
             <button
               type="button"
-              onClick={() => onChange(barcodeNumber ?? BARCODE_DEMO_NUMBERS[idType])}
+              onClick={() => (onBarcodeScan ? onBarcodeScan() : onChange(barcodeNumber ?? BARCODE_DEMO_NUMBERS[idType]))}
               aria-label={`Simulate scanning the ${current.numberLabel.replace(/ Number$/, '')} barcode`}
               title="Scan barcode"
               className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-[var(--radius-button)] text-muted

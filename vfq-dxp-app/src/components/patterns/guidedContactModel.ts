@@ -16,6 +16,8 @@ interface MoiResult {
   dob: string;
   nationality: string;
   email?: string;
+  /** A new customer's mobile from the NAS (see idLookupModel.MoiResult.mobile). */
+  mobile?: string;
   /** Siebel for an existing customer, NAS for a new one. */
   emailSource?: 'Siebel' | 'NAS' | 'Billing Profile';
   /** No customer record exists for this ID (details came from NAS). */
@@ -88,6 +90,8 @@ export interface GuidedContactValue {
   nationality?: string;
   email?: string;
   altPhone?: string;
+  /** The customer's personal mobile: optional, validated as a Qatar mobile when entered. */
+  personalMobile?: string;
   /** How the customer is addressed (Mr, Ms ...): captured by the agent at Contact, optional, and kept on the contact. */
   salutation?: string;
   /** The customer's work email: optional for everyone, kept on the contact next to the (mandatory) personal email. */
@@ -270,6 +274,46 @@ export function emailVerification(email: string | undefined, registryEmail: stri
 }
 
 /**
+ * The personal email as the screen shows it. A new customer's NAS address is masked while it is the address NAS returned;
+ * once the agent types a different one (the field is editable) that address is shown as typed.
+ */
+export function displayedEmail(contact: { email?: string; moiResult?: { isNewCustomer?: boolean; createdByAgent?: boolean; email?: string } } | undefined): string {
+  const email = contact?.email ?? '';
+  const moi = contact?.moiResult;
+  const fromNas = Boolean(moi?.isNewCustomer && !moi.createdByAgent && email && moi.email && email.trim().toLowerCase() === moi.email.trim().toLowerCase());
+  return fromNas ? maskEmail(email) : email;
+}
+
+/**
+ * The customer's primary contact mobile number, for the billing contact: the personal mobile entered at Customer Verification, else
+ * the number on the customer record. One definition, so the number the Billing step shows is the one the billing profile is saved with.
+ */
+export function primaryContactMobile(contact: { personalMobile?: string; mobileNumber?: string; moiResult?: { phone?: string } } | undefined): string | undefined {
+  return contact?.personalMobile?.trim() || contact?.mobileNumber?.trim() || contact?.moiResult?.phone?.trim() || undefined;
+}
+
+/**
+ * A new customer's NAS mobile is masked the same way as the email: first and last digit kept, a fixed run of stars between - 5******5.
+ * The number of stars is fixed, so the length is not revealed.
+ */
+export function maskMobile(mobile: string | undefined): string {
+  const digits = (mobile ?? '').replace(/\D/g, '').replace(/^974/, '');
+  if (digits.length < 2) return '';
+  return `${digits[0]}******${digits[digits.length - 1]}`;
+}
+
+/**
+ * The personal mobile as the screen shows it: a new customer's NAS number is masked while it is still the number NAS returned; once the agent types
+ * a different one (the field is editable) it is shown as typed. Undefined: show the field's own value.
+ */
+export function displayedMobile(contact: { personalMobile?: string; moiResult?: { isNewCustomer?: boolean; createdByAgent?: boolean; mobile?: string } } | undefined): string | undefined {
+  const moi = contact?.moiResult;
+  const mobile = contact?.personalMobile;
+  const fromNas = Boolean(moi?.isNewCustomer && !moi.createdByAgent && mobile && moi.mobile && mobile === moi.mobile);
+  return fromNas ? maskMobile(mobile) : undefined;
+}
+
+/**
  * A new customer's NAS email is never shown in full: first and last character of the name
  * and of the domain are kept, the rest hidden, and the domain ending stays - j***e@e****e.com.
  * The number of stars is fixed, so it does not reveal the length of the address.
@@ -301,6 +345,7 @@ export function identityFromMoi(moi: MoiResult | undefined) {
       // Another person: how the last one was addressed does not carry over.
       salutation: undefined,
       workEmail: undefined,
+      personalMobile: undefined,
       // Cleared with the rest. An employer link belongs to the resolved
       // customer, so losing the customer has to lose the link - otherwise
       // re-typing an ID would leave the previous person's employer attached,
@@ -358,6 +403,8 @@ export function identityFromMoi(moi: MoiResult | undefined) {
     idExpiryDate: moi.expiryDate ? isoToMaskedDob(moi.expiryDate) : undefined,
     nationality: moi.nationality,
     email: moi.email,
+    // A new customer's NAS mobile is offered as the Personal Mobile (shown masked, like the email); an existing customer's is not (theirs is the record's own).
+    personalMobile: moi.isNewCustomer && !moi.createdByAgent ? moi.mobile : undefined,
     gender: moi.gender,
   };
 }

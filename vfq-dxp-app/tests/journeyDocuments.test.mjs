@@ -16,11 +16,20 @@ after(close);
 
 test('a Waive Off requires its supporting document; no waiver, no requirement', () => {
   assert.deepEqual(jd.requiredDocumentsFor({ values: {}, journey: 'new-connection' }), []);
-  for (const mode of ['partial', 'full']) {
+  for (const mode of [2000, 12500.5]) {
     const r = jd.requiredDocumentsFor({ values: { numberWaiver: mode }, journey: 'new-connection' });
     assert.deepEqual(r.map((x) => x.id), ['star-number-discount-approval']);
   }
-  assert.deepEqual(jd.requiredDocumentsFor({ values: { numberWaiver: 'full' }, journey: 'prepaid' }), [], 'a journey that has no Waive Off is never asked');
+  assert.deepEqual(jd.requiredDocumentsFor({ values: { numberWaiver: 2000 }, journey: 'prepaid' }), [], 'a journey that has no Waive Off is never asked');
+});
+
+test('a VAT registration number on a new billing account requires the VAT document; none, blank or an existing account asks for nothing', () => {
+  const vat = (billingAccount) => jd.requiredDocumentsFor({ values: { billingAccount }, journey: 'new-connection' }).map((x) => x.id);
+  assert.deepEqual(vat({ creatingNew: true, newAccount: { vatRegistrationNumber: 'VAT-123' } }), ['vat-document']);
+  assert.deepEqual(vat({ creatingNew: true, newAccount: { vatRegistrationNumber: '   ' } }), [], 'blank is not a number');
+  assert.deepEqual(vat({ creatingNew: true, newAccount: {} }), []);
+  assert.deepEqual(vat({ selectedProfileId: 'BILL-1', newAccount: { vatRegistrationNumber: 'VAT-123' } }), [], 'an account picked from the customer\'s own is not a new one');
+  assert.deepEqual(jd.requiredDocumentsFor({ values: {}, journey: 'new-connection' }), []);
 });
 
 test('an applicant under 18 requires the court order; unknown stays unknown', () => {
@@ -54,9 +63,9 @@ test('the consolidated list holds the ID scans, the evidence, the signature and 
 test('the requirements are asked for in Additional Documents after signing - not on the Waive Off dialog or the Number step - and hold Continue until uploaded', () => {
   const comp = read('src/components/domain/AdditionalDocumentsUpload.tsx');
   assert.match(comp, /aria-label="Required documents"/);
-  assert.match(comp, /Documents on this order/);
+  assert.match(comp, /aria-label="Journey documents"/, 'every document held, in one flat list');
   assert.match(comp, /openDocument\(dataUrl\)/);
-  assert.match(comp, /downloadDocument\(dataUrl, name\)/);
+  assert.doesNotMatch(comp, /downloadDocument/, 'viewing is enough: no download');
   const cap = read('src/components/patterns/CafSignatureCapture.tsx');
   assert.match(cap, /disabled=\{documentsBlock\}/);
   assert.match(read('src/capabilities/CafSignature/step.tsx'), /requiredDocumentsFor\(\{ values, personaId/);
@@ -95,7 +104,7 @@ test('the list offered is narrowed by the customer, the scenario, the journey an
 });
 
 test('a required type is asked for as its own card, not repeated in the list; unknown conditions never hold', () => {
-  const waived = { product: 'postpaid', contact: { idType: 'QID' }, numberWaiver: 'full' };
+  const waived = { product: 'postpaid', contact: { idType: 'QID' }, numberWaiver: 2000 };
   assert.deepEqual(jd.requiredDocumentsFor({ ...base, values: waived }).map((r) => r.label), ['Star Number Discount Approval']);
   assert.ok(!labels(waived).includes('Star Number Discount Approval'));
   assert.equal(jd.documentTypeApplies({ id: 'x', label: 'X', appliesTo: { conditions: ['no-such-condition'] } }, { values: {} }), false);

@@ -10,7 +10,9 @@ let m;
 before(async () => { await boot(); m = await load('/src/engines/addonCategories.ts'); });
 after(close);
 
-const addons = JSON.parse(fs.readFileSync('public/mock-data/products.json', 'utf8')).filter((p) => p.type === 'Add-on');
+const allAddons = JSON.parse(fs.readFileSync('public/mock-data/products.json', 'utf8')).filter((p) => p.type === 'Add-on');
+// The workbook's add-ons. The demo add-ons that show the other billing frequencies (weekly, one-time) state `billingFrequency` and are checked on their own below.
+const addons = allAddons.filter((p) => !p.billingFrequency);
 
 // From Addons.xlsx: productId -> [name, category, pricing, QAR price (0 where the workbook gives no fixed QR amount)].
 const WORKBOOK = {
@@ -138,12 +140,13 @@ test('the chosen add-ons are counted per category, across both filters', () => {
   assert.deepEqual(counts, { 'Local Data': 2, 'Local Calls': 0, 'International Calls': 0, Roaming: 1, Combo: 0, Others: 3 });
 });
 
-test('the Add-ons page mounts the picker with the two levels: underline category tabs, then the Free / Paid filter', () => {
+test('the Add-ons page mounts the picker with the category tabs, and under them the selected category in two columns: Paid Addons, Free Addons', () => {
   const picker = fs.readFileSync('src/capabilities/AddonsSelection/AddonsPicker.tsx', 'utf8');
   assert.match(picker, /<TabStrip[\s\S]*ADDON_CATEGORIES\.map/);
-  assert.match(picker, /<SegmentedTabs[\s\S]*ADDON_PRICING_FILTERS/);
-  assert.ok(picker.indexOf('<TabStrip') < picker.indexOf('<SegmentedTabs'), 'categories first, the filter under them');
-  assert.match(picker, /addonsFor\(addons, category, pricing\)/);
+  assert.match(picker, /addonsFor\(addons, category, 'paid'\)/);
+  assert.match(picker, /addonsFor\(addons, category, 'free'\)/);
+  assert.ok(picker.indexOf("'Paid'") < picker.indexOf("'Free'"), 'Paid on the left, Free on the right');
+  assert.match(picker, /md:grid-cols-2/);
   assert.match(fs.readFileSync('src/components/patterns/PostpaidAddonsPanel.tsx', 'utf8'), /categorized/);
 });
 
@@ -176,8 +179,8 @@ test('the five pricing models: free for all, free with the plan, free for 3 mont
   assert.deepEqual(d({ mrcQAR: 0, pricingModel: 'free-all' }), { primary: 'Free' });
   assert.deepEqual(d({ mrcQAR: 0, pricingModel: 'free-with-plan' }), { primary: 'Free', secondary: 'Included with the selected plan' });
   assert.deepEqual(d({ mrcQAR: 25, pricingModel: 'free-first-3' }), { primary: 'Free', secondary: 'for Months 1\u20133, then QAR 25/month from Month 4' });
-  assert.deepEqual(d({ mrcQAR: 20, pricingModel: 'standard' }), { primary: 'QAR 20/mo' });
-  assert.deepEqual(d({ mrcQAR: 20, introPriceQAR: 10, pricingModel: 'intro-discount' }), { primary: 'QAR 10/mo', secondary: 'for Months 1\u20133, then QAR 20/month from Month 4' });
+  assert.deepEqual(d({ mrcQAR: 20, pricingModel: 'standard' }), { primary: 'QAR 20' });
+  assert.deepEqual(d({ mrcQAR: 20, introPriceQAR: 10, pricingModel: 'intro-discount' }), { primary: 'QAR 10', secondary: 'for Months 1\u20133, then QAR 20/month from Month 4' });
   assert.equal(d({ mrcQAR: 20 }), undefined, 'a record with no model keeps its own wording');
   for (const model of ['free-all', 'free-with-plan', 'free-first-3']) assert.equal(m.isFreeAddon({ mrcQAR: 9, pricingModel: model }), true, model);
   for (const model of ['standard', 'intro-discount']) assert.equal(m.isFreeAddon({ mrcQAR: 0, pricingModel: model }), false, model);
@@ -187,16 +190,11 @@ test('the five pricing models: free for all, free with the plan, free for 3 mont
   for (const a of addons.filter((x) => x.pricingModel === 'free-with-plan')) assert.ok(a.eligibility?.plans?.length, a.productId);
 });
 
-test('the Paid | Free filter: Paid first and the default, owned by the page header and kept across category tabs', () => {
+test('there is no Paid | Free filter: the page header and the picker draw none, and a category lists both kinds side by side', () => {
   const read = (f) => fs.readFileSync(f, 'utf8');
   assert.deepEqual(m.ADDON_PRICING_FILTERS.map((f) => f.key), ['paid', 'free']);
-  const step = read('src/capabilities/PlanSelection/postpaidStep.tsx');
-  assert.match(step, /headerAction: \(\{ values, setValue \}\)/);
-  assert.match(step, /\(values\.addonPricing as AddonPricing \| undefined\) \?\? DEFAULT_ADDON_PRICING/);
-  const picker = read('src/capabilities/AddonsSelection/AddonsPicker.tsx');
-  assert.match(picker, /pricingProp === undefined && <SegmentedTabs/, 'the picker draws no filter of its own when the page owns it');
-  assert.match(picker, /onPricingChange\?\.\(DEFAULT_ADDON_PRICING\)/, 'opens on Paid whenever the page is loaded');
-  assert.doesNotMatch(picker, /setCategory\([^)]*\)[^;]*setPricing/, 'switching category does not touch the filter');
+  assert.doesNotMatch(read('src/capabilities/PlanSelection/postpaidStep.tsx'), /SegmentedTabs|headerAction|addonPricing/);
+  assert.doesNotMatch(read('src/capabilities/AddonsSelection/AddonsPicker.tsx'), /SegmentedTabs|setPricing|pricingProp/);
 });
 
 test('the first months\' charge of an add-on (what the monthly summary, checkout and the order carry): free models and the free trial cost nothing, the intro price applies, standard is its price', () => {
@@ -209,10 +207,24 @@ test('the first months\' charge of an add-on (what the monthly summary, checkout
   for (const a of addons) assert.ok(m.addonChargeNowQar(a) <= a.mrcQAR, a.productId);
 });
 
-test('Addons & Discounts reads in this order: Add-ons, Eligible Discounts, Bill Limit (Mobile), Monthly Summary', () => {
+test('Addons reads in this order: Add-ons, Bill Limit - no Eligible Discounts (they are added from Add Discount on the plan page) and no Monthly Summary', () => {
   const s = fs.readFileSync('src/components/patterns/PostpaidPlanAddonsStep.tsx', 'utf8');
   const at = (needle) => s.indexOf(needle);
-  const order = [at('<PostpaidAddonsPanel'), at('<PostpaidDiscountsPanel'), at('<BillLimitEditor'), at('<PostpaidMonthlySummary')];
-  assert.ok(order.every((i) => i > 0), 'all four are on the step');
+  const order = [at('<PostpaidAddonsPanel'), at('<BillLimitEditor')];
+  assert.ok(order.every((i) => i > 0), 'both are on the step');
+  assert.equal(at('<PostpaidDiscountsPanel'), -1, 'no Eligible Discounts section on this page');
+  assert.equal(at('PostpaidMonthlySummary'), -1, 'the Monthly Summary is not on this page');
   assert.deepEqual([...order].sort((a, b) => a - b), order, 'in source order, so in page order');
+});
+
+test('weekly and one-time add-ons: labelled by what the record states; a weekly one is billed 52/12 weeks a month, a one-time one is paid at activation and adds nothing monthly', () => {
+  const demo = allAddons.filter((p) => p.billingFrequency);
+  assert.deepEqual([...new Set(demo.map((p) => p.billingFrequency))].sort(), ['one-time', 'weekly']);
+  for (const a of demo) assert.equal(m.addonChargeType(a), a.billingFrequency === 'weekly' ? 'Recurring Weekly' : 'One-time', a.productId);
+  assert.equal(m.addonChargeType({ mrcQAR: 20, pricingModel: 'standard' }), 'Recurring Monthly', 'no frequency stated: monthly');
+  assert.equal(m.addonChargeNowQar({ mrcQAR: 12, billingFrequency: 'weekly' }), 52, '12 x 52/12');
+  assert.equal(m.addonChargeNowQar({ mrcQAR: 30, billingFrequency: 'one-time' }), 0);
+  assert.equal(m.addonOneTimeQar({ mrcQAR: 30, billingFrequency: 'one-time' }), 30);
+  assert.equal(m.addonOneTimeQar({ mrcQAR: 30, billingFrequency: 'weekly' }), 0);
+  assert.equal(m.addonOneTimeQar({ mrcQAR: 30 }), 0);
 });

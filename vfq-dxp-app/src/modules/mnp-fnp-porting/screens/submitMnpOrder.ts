@@ -9,6 +9,7 @@ import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { logActivity, newActivityId } from '../../../engines/activityEngine';
 import type { ActivityInput } from '../../../engines/activityEngine';
 import { COLLECTION_TEAM_ROLE, emailVerification, maskEmail, persistBillingAccount } from '../../../capabilities';
+import { orderTerms, primaryContactMobile } from '../../../capabilities';
 import { approvalMessages, decisionRecord, needsCreditControl } from '../../../engines/connectionEligibility';
 import type { BillingAccountValue, ConfirmedOrder, GuidedContactValue } from '../../../capabilities';
 import type { DonorDetailsValue } from '../../../components/patterns/DonorDetailsStep';
@@ -88,7 +89,7 @@ export async function submitMnpOrder(
         idNumber: contact.idNumber,
         contactName: contact.moiResult?.name,
         contactEmail: contact.email,
-        contactPhone: contact.moiResult?.phone,
+        contactPhone: primaryContactMobile(contact),
         addressLine: storedAddressLine(address),
         creditLimitQar: eligibility?.defaultCreditLimitQar,
         nationality: eligibility?.nationality,
@@ -119,7 +120,7 @@ export async function submitMnpOrder(
     // A new customer's National Address as the NAS returned it: kept with the order, unchanged; the address the customer gave is `address`.
     nationalAddress: contact.moiResult?.nationalAddress,
     // The identity document captured at Customer Verification, as scanned or uploaded.
-    attachments: idScanAttachments(contact.idType, contact.qidScans),
+    attachments: idScanAttachments(contact.idType, contact.qidScans, { idNumber: contact.idNumber }),
     productId: values.productId,
     msisdn: portInNumber,
     ...(isPrepaid ? { discountId: values.discountId } : { billLimitQAR: values.billLimit, billingProfileId, discountId: values.discountId, addonIds: (values.addonIds as string[] | undefined) ?? [], monthlyRecurringQar: (values.checkoutTotals as CheckoutTotals | undefined)?.monthlyRecurringQar }),
@@ -208,6 +209,7 @@ export async function submitMnpOrder(
     customerEmail: contact.email,
     customerEmailDisplay: contact.moiResult?.isNewCustomer && !contact.moiResult?.createdByAgent && contact.email ? maskEmail(contact.email) : contact.email,
     customerEmailVerified: emailVerification(contact.email, contact.moiResult?.email).verified,
+    terms: orderTerms(values, mnpType),
     service: 'mobile',
   };
 }

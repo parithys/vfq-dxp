@@ -6,6 +6,6 @@ import { toLocalMsisdn } from '../../components/domain/msisdnPickerModel';
 export const numberSummary = (priceField: string | undefined = 'numberPriceQAR'): SummaryField[] => [
   { key: 'msisdn', label: 'Mobile Number', type: 'text', // The number without the country code (+974), as the number cards show it.
     value: (v) => { const n = at(v, 'msisdn'); return typeof n === 'string' ? toLocalMsisdn(n) : (at(v, 'prePaired') === true ? 'Pre-Paired SIM' : undefined); } },
-  { key: 'waiver', label: 'Waive Off', type: 'text', optional: true, value: (v) => { const w = at(v, 'numberWaiver'); return w === 'full' ? 'Full Waive Off' : w === 'partial' ? 'Partial Waive Off' : undefined; } },
+  { key: 'waiver', label: 'Waive Off', type: 'text', optional: true, value: (v) => { const w = at(v, 'numberWaiver'); return typeof w === 'number' && w > 0 ? qar(w) : undefined; } },
   ...(priceField ? [{ key: 'price', label: 'Number Price', type: 'text' as const, optional: true, value: (v: Record<string, unknown>) => qar(at(v, priceField)) }] : []),
 ];

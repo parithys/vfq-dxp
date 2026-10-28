@@ -68,7 +68,6 @@ export function BillingAccountAutoResolver({
         autoResolvedFor: key,
         newAccount: {
           primaryContactId: contact?.contactRecordId,
-          useSameAddress: true,
           preferredInvoiceRecipient: 'Primary Contact',
           billCycleDay: computeBillCycleDay(segment, new Date()),
           profileName: `${customerName ?? 'New customer'} - ${profileSuffix}`,

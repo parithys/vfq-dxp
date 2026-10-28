@@ -11,6 +11,7 @@ import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { newActivityId } from '../../../engines/activityEngine';
 import type { ActivityInput } from '../../../engines/activityEngine';
 import { COLLECTION_TEAM_ROLE, emailVerification, maskEmail, persistBillingAccount } from '../../../capabilities';
+import { orderTerms, primaryContactMobile } from '../../../capabilities';
 import { decisionRecord, needsCreditControl } from '../../../engines/connectionEligibility';
 import type { BillingAccountValue, ConfirmedOrder, CustomerLine, GuidedContactValue } from '../../../capabilities';
 import type { CustomerTypeValue } from '../../../capabilities/CustomerType/customerTypeModel';
@@ -70,7 +71,7 @@ export async function submitPreToPostOrder(
     idNumber: contact.idNumber,
     contactName: contact.moiResult?.name,
     contactEmail: contact.email,
-    contactPhone: contact.moiResult?.phone,
+    contactPhone: primaryContactMobile(contact),
     creditLimitQar: eligibility?.defaultCreditLimitQar,
     nationality: eligibility?.nationality,
     segment: eligibility?.segment,
@@ -100,7 +101,7 @@ export async function submitPreToPostOrder(
     // A new customer's National Address as the NAS returned it: kept with the order, unchanged; the address the customer gave is `address`.
     nationalAddress: contact.moiResult?.nationalAddress,
     // The identity document captured at Customer Verification, as scanned or uploaded.
-    attachments: idScanAttachments(contact.idType, contact.qidScans),
+    attachments: idScanAttachments(contact.idType, contact.qidScans, { idNumber: contact.idNumber }),
     msisdn,
     installedAssetId: line.installedAssetId,
     previousProductId: line.productId,
@@ -148,6 +149,7 @@ export async function submitPreToPostOrder(
     customerEmail: contact.email,
     customerEmailDisplay: contact.moiResult?.isNewCustomer && !contact.moiResult?.createdByAgent && contact.email ? maskEmail(contact.email) : contact.email,
     customerEmailVerified: emailVerification(contact.email, contact.moiResult?.email).verified,
+    terms: orderTerms(values, 'postpaid'),
     service: 'mobile',
   };
 }

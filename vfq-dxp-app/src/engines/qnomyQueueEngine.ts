@@ -128,22 +128,38 @@ export interface QueueTicket {
   counterNumber?: string | null;
 }
 
+/**
+ * DEMO SWITCH (2026-10-27): when true, the walk-in queue serves Unknown customers only - a ticket counts, is called and is issued
+ * only if its kiosk number is NOT a customer on file (the same test `factsForKioskNumber` uses to call someone Other Operator's). Set to
+ * false after the demo to restore the full queue (Vodafone and Other Operator walk-ins); nothing else needs undoing.
+ */
+export const DEMO_UNKNOWN_ONLY_QUEUE = true;
+
+/** Which tickets the queue serves: all of them, or - under the demo switch - only those whose kiosk number matches no customer on file. */
+export type TicketScope = (t: { kioskMobileNumber?: string | null }) => boolean;
+
+export function queueScope(customers: { phone?: string }[], unknownOnly = DEMO_UNKNOWN_ONLY_QUEUE): TicketScope {
+  if (!unknownOnly) return () => true;
+  return (t) => !customers.some((c) => mobileMatches(t.kioskMobileNumber, c.phone));
+}
+
 /** Oldest waiting ticket in any queue this role serves. Oldest-first across
  * the role's queues combined, so a role covering several is served strictly in
  * arrival order rather than queue-by-queue. */
 export function nextTicketFor<T extends QueueTicket>(
   personaId: string | undefined,
-  tickets: T[]
+  tickets: T[],
+  inScope: TicketScope = () => true
 ): T | undefined {
   const mine = new Set(queuesForRole(personaId));
   return tickets
-    .filter((t) => t.status === 'Waiting' && t.journeyCode && mine.has(t.journeyCode))
+    .filter((t) => t.status === 'Waiting' && t.journeyCode && mine.has(t.journeyCode) && inScope(t))
     .sort((a, b) => a.generatedAt.localeCompare(b.generatedAt))[0];
 }
 
-export function waitingCountFor(personaId: string | undefined, tickets: QueueTicket[]): number {
+export function waitingCountFor(personaId: string | undefined, tickets: QueueTicket[], inScope: TicketScope = () => true): number {
   const mine = new Set(queuesForRole(personaId));
-  return tickets.filter((t) => t.status === 'Waiting' && t.journeyCode && mine.has(t.journeyCode)).length;
+  return tickets.filter((t) => t.status === 'Waiting' && t.journeyCode && mine.has(t.journeyCode) && inScope(t)).length;
 }
 
 /** Normalises for comparison - a kiosk keypad entry may carry spaces or omit

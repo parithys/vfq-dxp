@@ -102,7 +102,7 @@
     "orderSubType": "Consumer",
     "status": "Pending",
     "customerId": "CUST-1004",
-    "donorOperator": "Ooredoo",
+    "donorOperator": "Other Operator",
     "productIds": [
       "PROD-100"
     ],
@@ -112,9 +112,9 @@
     "createdAt": "2026-09-13T10:28:00+03:00",
     "customerName": "Mohammed Rashid Khalid Al-Emadi",
     "idNumber": "29011122233",
-    "_note": "Scenario SC-74: MNP port-in (donor Ooredoo, 5-day porting window).",
+    "_note": "Scenario SC-74: MNP port-in (donor Other Operator, 5-day porting window).",
     "demoTitle": "MNP port-in",
-    "demoDetail": "Customer is porting the mobile number from Ooredoo with a 5-day porting window."
+    "demoDetail": "Customer is porting the mobile number from Other Operator with a 5-day porting window."
   },
   {
     "orderId": "ORD-90020",

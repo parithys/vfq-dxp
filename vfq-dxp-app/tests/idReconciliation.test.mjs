@@ -104,7 +104,7 @@ test('the identity lookup reconciles before it accepts MOI, keeps the result on 
   assert.match(fs.readFileSync('src/modules/new-connection/submitNewConnectionOrder.ts', 'utf8'), /idReconciliation: contact\.moiResult \? contact\.idReconciliation : undefined/);
 });
 
-test('after the reader fails (the typed-entry pass) or for an upload, the card\'s printed details are not "captured": only the typed number and expiry are', () => {
+test('for an upload, the card\'s printed details are not "captured": only the typed number and expiry are (a reader pass, barcode included, did read the card)', () => {
   const hook = fs.readFileSync('src/components/patterns/useIdLookup.ts', 'utf8');
-  assert.match(hook, /captureMode === 'manual' \|\| captureMode === 'upload' \? undefined : latest\.current\.qidScans\?\.captured/);
+  assert.match(hook, /captureMode === 'upload' \? undefined : latest\.current\.qidScans\?\.captured/);
 });

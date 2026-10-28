@@ -66,7 +66,7 @@ test('before a product is chosen the journey is Customer Verification, Address, 
 });
 
 test('every product continues the same wizard: identification, address, billing profile (where the product has one), product selection, then that product\'s own steps', () => {
-  assert.deepEqual(activeKeys({ product: 'postpaid' }), ['contact', 'address', 'billingAccount', 'product', 'plan', 'planExtras', 'number', 'simType', 'actualUser', 'checkout', 'caf', 'payment']);
+  assert.deepEqual(activeKeys({ product: 'postpaid' }), ['contact', 'address', 'billingAccount', 'product', 'plan', 'planExtras', 'number', 'simType', 'checkout', 'caf', 'payment']);
   assert.deepEqual(activeKeys({ product: 'prepaid' }), ['contact', 'address', 'product', 'plan', 'planExtras', 'number', 'simType', 'cart', 'checkout', 'caf', 'payment']);
   assert.deepEqual(activeKeys({ product: 'fixed-line' }), ['contact', 'address', 'billingAccount', 'product', 'homeKind', 'installation', 'plan', 'number', 'checkout', 'caf', 'payment', 'appointment']);
   assert.deepEqual(activeKeys({ product: 'mnp', mnpType: 'postpaid' }), ['contact', 'address', 'billingAccount', 'product', 'mnpType', 'sim', 'plan', 'planExtras', 'donor-details', 'checkout', 'donor-attachment', 'caf', 'payment']);
@@ -182,7 +182,7 @@ const mnpValues = (over = {}) => withSignedForm({
   contact: { idNumber: '2845', email: 'a@example.qa', isB2B2C: false, moiResult: { name: 'Test Customer', email: 'a@example.qa' } },
   eligibility: { checks: [], customerId: 'CUST-1', defaultCreditLimitQar: 1000 },
   billingAccount: { creatingNew: true, newAccount: { profileName: 'Test - Postpaid', billCycleDay: 1 } },
-  donorDetails: { portInNumber: '97466000666', donorId: 'P1', donorIdType: 'Passport', donorCustomerType: 'Individual', donorOperator: 'Ooredoo', donorSubscriptionType: 'Postpaid' },
+  donorDetails: { portInNumber: '97466000666', donorId: 'P1', donorIdType: 'Passport', donorCustomerType: 'Individual', donorOperator: 'Other Operator', donorSubscriptionType: 'Postpaid' },
   productId: 'PROD-104', simSerial: '8974412345678901234', simValid: true, comments: 'note',
   caf: { cafType: 'Digital', signatureDataUrl: 'data:image/png;base64,x' },
   checkoutTotals: { dueTodayQar: 0, monthlyRecurringQar: 350, hrnAdvanceQar: 0 },
@@ -208,7 +208,7 @@ test('MNP: a port request is Pending NPAS Approval, takes no payment, and a post
   assert.equal(confirmed.statusLabel, 'Pending NPAS Approval');
   assert.equal(confirmed.msisdn, '97466000666');
   const request = created.find((c) => c.kind === 'mnp-portin-orders').rec;
-  assert.equal(request.donorOperator, 'Ooredoo');
+  assert.equal(request.donorOperator, 'Other Operator');
   assert.equal(request.orderStatus, 'Pending NPAS Approval');
   assert.equal(request.portStatus, 'Pending Approval');
   assert.equal(request.trackingStatus, 'In Progress');

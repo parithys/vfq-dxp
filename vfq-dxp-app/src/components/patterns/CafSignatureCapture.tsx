@@ -133,6 +133,14 @@ interface CafSignatureCaptureProps {
 // applicant/billing/plan data, then a "Please Sign" pad modal (drawn signature,
 // Clear/Done) - reused identically for CAF, MNP application, Passport-to-QID
 // forms (SCR-058, SCR-069/070, SCR-084, SCR-127/129, etc.).
+/** What the secondary contact (the actual user, on the Supplementary Form) agrees to. */
+const SECONDARY_CONTACT_TERMS = [
+  { title: 'Package Management', body: 'The Ahli Package Owner can manage your number, including SIM replacement, plan changes, add-ons, and service requests.' },
+  { title: 'Billing & Usage', body: 'All Ahli Package charges are billed to the Ahli Package Owner, who can view usage, allowances, and billing details.' },
+  { title: 'Your Privacy', body: 'The Ahli Package Owner cannot access your call or SMS content, browsing history, or location information.' },
+  { title: 'Leaving the Package', body: 'You can request to leave the Ahli Package, subject to any applicable commitments and outstanding charges.' },
+] as const;
+
 export function CafSignatureCapture({
   value,
   onChange,
@@ -261,10 +269,6 @@ export function CafSignatureCapture({
 
         <FullTerms termsUrl={termsUrl} enabled={fullTerms} signed={signed} scrollMode={termsScrollMode} journey={journey}>
         <div className={`${fullTerms ? 'py-4 pr-4' : 'card p-4'} ${inlineSignaturePad ? '' : 'bg-surface'}`}>
-          <div className="flex justify-between text-[length:var(--fs-caption)] text-muted mb-2">
-            <span>{journey === 'prepaid' ? 'Vodafone Prepaid Customer Application Form' : 'Vodafone Customer Application Form'}</span>
-            <span dir="rtl">{journey === 'prepaid' ? 'نموذج طلب فودافون مسبق الدفع' : 'نموذج طلب عميل فودافون'}</span>
-          </div>
           {formDetails && formDetails.length > 0 && (
             <dl className="mb-2">
               {formDetails.map((row) => (
@@ -275,24 +279,13 @@ export function CafSignatureCapture({
               ))}
             </dl>
           )}
-          <p className="text-fg text-[length:var(--fs-body)]">
-            Applicant: <span className="font-medium">{customerName ?? '-'}</span>
-          </p>
           {idLabel && (
             <p className="text-fg text-[length:var(--fs-body)]">
               {idLabel}: <span className="font-medium">{idValue ?? '-'}</span>
             </p>
           )}
-          <p className="text-fg-2 text-[length:var(--fs-caption)] mt-1">
-            By signing below, the applicant accepts the General Terms and Conditions of Vodafone Qatar.
-          </p>
-
           {supplementaryForm && (
             <div id="supplementary-form-primary" className="mt-3 rounded-[var(--radius-card)] border border-border-soft p-3 space-y-2" aria-label="Supplementary Form">
-              <div className="flex items-center justify-between text-[length:var(--fs-caption)] text-muted">
-                <h3 className="text-fg font-semibold text-[length:var(--fs-body)]">Vodafone Supplementary Form</h3>
-                <span dir="rtl">النموذج التكميلي</span>
-              </div>
               <dl>
                 <div className="flex justify-between gap-4 py-1 border-b border-border-soft text-[length:var(--fs-caption)]">
                   <dt className="text-fg">Primary Customer</dt>
@@ -376,6 +369,15 @@ export function CafSignatureCapture({
                 </div>
               ))}
             </dl>
+            {/* The terms the secondary contact agrees to by signing. */}
+            <ul className="space-y-2 text-[length:var(--fs-caption)]">
+              {SECONDARY_CONTACT_TERMS.map((t) => (
+                <li key={t.title}>
+                  <span className="text-fg font-semibold">{t.title}: </span>
+                  <span className="text-fg-2">{t.body}</span>
+                </li>
+              ))}
+            </ul>
             {secondarySigned ? (
               <div className="flex items-center gap-3">
                 <Badge variant="success">Signed by {supplementaryForm.actualUserName ?? 'the secondary contact'}</Badge>
@@ -405,7 +407,8 @@ export function CafSignatureCapture({
             uploader, which had nothing left to collect once signing always
             happens in-app. */}
         {/* agent-only: hidden in the customer's pop-up - attaching documents is the agent's job. */}
-        {signed && (
+        {/* Only once every required signature is captured: the primary CAF and, with an actual user, the secondary contact's. */}
+        {allSigned && (
           <div className="agent-only">
             <AdditionalDocumentsUpload
               documents={value.additionalDocuments ?? []}

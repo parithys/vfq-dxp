@@ -22,6 +22,8 @@ interface OrderConfirmationScreenProps {
   activityId?: string;
   summaryLines: ConfirmationSummaryLine[];
   actions: ConfirmationAction[];
+  /** The print actions, in their own row under `actions`, in the order given. */
+  printActions?: ConfirmationAction[];
   /**
    * Optional block between the summary and "What happens next", for anything
    * the customer has to act on before leaving the counter - currently the
@@ -46,13 +48,14 @@ export function OrderConfirmationScreen({
   activityId,
   summaryLines,
   actions,
+  printActions,
   headerNote,
   handoverPanel,
 }: OrderConfirmationScreenProps) {
   return (
     // The outcome (heading, tick, order and activity numbers) is centred on top; below it the content is left-aligned: the
     // receipt on the left and - when there is something to hand over (the eSIM QR) - that handover on the right, then
-    // every action in one row. Under lg the two columns stack, receipt first, so the page still prints on one A4 sheet.
+    // every action in one row, with the print actions in a second row. Under lg the two columns stack, receipt first, so the page still prints on one A4 sheet.
     <div className="max-w-6xl mx-auto py-8">
       <div className="flex flex-col items-center text-center">
         <h1 className="text-[length:var(--fs-h3)] font-bold text-fg mb-6">{heading}</h1>
@@ -60,11 +63,11 @@ export function OrderConfirmationScreen({
           <Icon path={CHECK} className="w-8 h-8" />
         </div>
         <p className="text-fg-2 mb-2">
-          Order <span className="font-medium text-fg">{orderId}</span>
+          Order: <span className="font-medium text-fg">{orderId}</span>
           {activityId && (
             <>
               <span className="mx-2 text-muted">|</span>
-              Activity <span className="font-medium text-fg">{activityId}</span>
+              Activity: <span className="font-medium text-fg">{activityId}</span>
             </>
           )}
         </p>
@@ -94,6 +97,15 @@ export function OrderConfirmationScreen({
           </Button>
         ))}
       </div>
+      {printActions && printActions.length > 0 && (
+        <div className="no-print print:hidden flex flex-wrap items-center justify-center gap-3 mt-3">
+          {printActions.map((action) => (
+            <Button key={action.label} variant={action.variant ?? 'secondary'} onClick={action.onClick}>
+              {action.label}
+            </Button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

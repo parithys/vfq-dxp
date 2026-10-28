@@ -117,7 +117,12 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
             // MNP does not know its connection type until Plan Type: the approvals that depend on it (the ID type's, the line-count and
             // passport BAU ones - a prepaid line needs none of the ID-type approval) are announced there, for the plan type chosen.
             // A stop is still shown here, because it blocks Continue.
-            showRow={values.product === 'mnp' ? (row) => !((row.id === 'active-lines' || row.id === 'id-type-routing') && row.tone === 'approval-routing') : undefined}
+            showRow={(row) =>
+              // The upfront payment (HRN) depends on the journey, which a product-agnostic Customer Verification has not chosen yet (it never
+              // applies to Prepaid): the product stage announces it.
+              !(productAgnostic && row.id === 'hrn') &&
+              (values.product !== 'mnp' || !((row.id === 'active-lines' || row.id === 'id-type-routing') && row.tone === 'approval-routing'))
+            }
             requestKind={requestKind}
             journeyType={journeyType}
             // The customer's full set of checks, as the single-product journeys always showed them at Customer Verification: ID type
@@ -160,12 +165,6 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
                 if (before && (before.type !== v.type || Boolean(before.rejected) !== Boolean(v.rejected))) setValue('discountId', undefined);
                 setValue('customerType', v);
               }}
-              onReject={() => {
-                // Decline the benefit: stay on this page with every Customer Type selection
-                // cleared (company, office ID scan, acceptance) back to Standard, no discount carried.
-                setValue('customerType', { type: 'none', rejected: true });
-                setValue('discountId', undefined);
-              }}
               derivedCompany={
                 contact.isB2B2C
                   ? { companyName: contact.companyName, companyAccountId: contact.companyAccountId, companyIsNew: contact.companyIsNew }
@@ -198,7 +197,7 @@ export function customerQualificationStep({ flow, existingCustomerId, guardedCon
       const c = values.contact as GuidedContactValue | undefined;
       const e = values.eligibility as EligibilityResult | undefined;
       const identityOk = Boolean(
-        c?.moiResult && hasIdentityDetails(c ?? {}) && isValidEmail(c?.email) && (!c?.workEmail || isValidEmail(c.workEmail)) && (!c?.altPhone || isValidAltPhone(c.altPhone))
+        c?.moiResult && hasIdentityDetails(c ?? {}) && isValidEmail(c?.email) && (!c?.workEmail || isValidEmail(c.workEmail)) && (!c?.altPhone || isValidAltPhone(c.altPhone)) && (!c?.personalMobile || isValidAltPhone(c.personalMobile))
       );
       if (!identityOk || !e) return false;
       // A soft stop (a postpaid collections block) belongs to the product chosen later, not to identification.

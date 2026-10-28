@@ -11,7 +11,7 @@
     "donorCustomerId": "28556789012",
     "donorIdType": "QID",
     "donorCustomerType": "Individual",
-    "donorOperator": "Ooredoo",
+    "donorOperator": "Other Operator",
     "donorSubscriptionType": "Postpaid",
     "scheduledPortInDate": "2026-08-25",
     "mnpFormNumber": "MNPF-260824-110001",
@@ -53,7 +53,7 @@
         "donorId": "28556789012",
         "donorIdType": "QID",
         "donorCustomerType": "Individual",
-        "donorOperator": "Ooredoo",
+        "donorOperator": "Other Operator",
         "donorSubscriptionType": "Postpaid"
       }
     }
@@ -70,7 +70,7 @@
     "donorCustomerId": "29187765432",
     "donorIdType": "QID",
     "donorCustomerType": "Individual",
-    "donorOperator": "Ooredoo",
+    "donorOperator": "Other Operator",
     "donorSubscriptionType": "Prepaid",
     "scheduledPortInDate": "2026-08-24",
     "mnpFormNumber": "MNPF-260823-110002",
@@ -112,7 +112,7 @@
         "donorId": "29187765432",
         "donorIdType": "QID",
         "donorCustomerType": "Individual",
-        "donorOperator": "Ooredoo",
+        "donorOperator": "Other Operator",
         "donorSubscriptionType": "Prepaid"
       }
     }
@@ -152,7 +152,7 @@
         "donorId": "27334561098",
         "donorIdType": "QID",
         "donorCustomerType": "Individual",
-        "donorOperator": "Ooredoo",
+        "donorOperator": "Other Operator",
         "donorSubscriptionType": "Postpaid"
       }
     },

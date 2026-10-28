@@ -1,25 +1,24 @@
 import { isBusinessSegment } from '../../engines/businessSegment';
-import { EmptyState } from '../primitives/EmptyState';
 import { CARD_SELECTED, SelectedTick, CARD_IDLE } from '../primitives/offerCardParts';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { Badge } from '../primitives/Badge';
 import { Button } from '../primitives/Button';
-import { Checkbox } from '../primitives/Checkbox';
 import { Icon } from '../primitives/Icon';
 import { Input } from '../primitives/Input';
 import { Select } from '../primitives/Select';
-import { useAreaOptions } from '../../hooks/useAreaOptions';
-import { BILLING_MODES, BILL_CYCLE_DAYS, CARD_NUMBER_LENGTH, DEFAULT_BILLING_MODE, cardDigits, computeBillCycleDay, formatCardNumber, ordinal, tokenizeCard, INVOICE_RECIPIENTS } from './billingAccountModel';
+import { BILL_LANGUAGES, BILL_TYPES, DEFAULT_BILL_LANGUAGE, DEFAULT_BILL_TYPE, computeBillCycleDay, isValidVatExpiry, ordinal } from './billingAccountModel';
+import { toLocalMsisdn } from '../domain/msisdnPickerModel';
 import type { AccountRecord, BillingProfileRecord, ContactRecord, CustomerRecord, NewBillingAccountValue, BillingAccountValue } from './billingAccountModel';
-import { BillingProfileSetupDrawer } from './BillingProfileSetupDrawer';
 
 
 const CHEVRON_DOWN = 'M6 9l6 6 6-6';
+const PERSON_ICON = 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z';
 const CHEVRON_UP = 'M18 15l-6-6-6 6';
-// Ruled form sections inside the Create New card: a bold heading, space below it, a divider between sections.
+// Form sections inside the Create New form: a bold heading, space below it, and space - no divider line - between sections.
 const SECTION = 'space-y-3';
-const SECTION_RULE = 'border-t border-border-soft mt-6 pt-6';
+const SECTION_RULE = 'mt-8';
 const SECTION_TITLE = 'text-fg font-semibold text-[length:var(--fs-body-lg)]';
 
 interface BillingAccountStepProps {
@@ -37,6 +36,10 @@ interface BillingAccountStepProps {
   customerEmail?: string;
   /** The identified customer's name: the primary contact to offer when no contact records are on file (a new customer). */
   customerName?: string;
+  /** The customer's primary contact mobile number as captured on Customer Verification: the Billing Mobile Number, read-only. */
+  customerMobile?: string;
+  /** The credit-limit rows (CreditLimitCard, embedded) listed straight after the billing details, for a new account. */
+  creditLimit?: ReactNode;
 }
 
 // "Billing Profile" (2026-09-28 request) - Step 3 of New Postpaid Activation,
@@ -62,19 +65,14 @@ export function BillingAccountStep({
   onChange,
   customerEmail,
   customerName,
+  customerMobile,
+  creditLimit,
 }: BillingAccountStepProps) {
-  const areaOptions = useAreaOptions();
   const cached = customerId ? billingDataCache.get(customerId) : undefined;
   const [profiles, setProfiles] = useState<(BillingProfileRecord & { accountType: string })[]>(cached?.profiles ?? []);
   const [contacts, setContacts] = useState<ContactRecord[]>(cached?.contacts ?? []);
   const [customerSegment, setCustomerSegment] = useState<string | undefined>(cached?.segment);
   const [loaded, setLoaded] = useState(Boolean(cached));
-  const [setupOpen, setSetupOpen] = useState(false);
-  // The card number is held as digits only; it is shown in groups of four (formatCardNumber).
-  const [cardNumber, setCardNumber] = useState('');
-  const cardInputRef = useRef<HTMLInputElement>(null);
-  const [cardError, setCardError] = useState<string | null>(null);
-
   useEffect(() => {
     if (!customerId) return;
     (async () => {
@@ -109,7 +107,7 @@ export function BillingAccountStep({
     onChange({ ...value, newAccount: { ...newAccount, ...patch } });
 
   const asOf = new Date();
-  // The default day for this customer; the agent can pick another (newAccount.billCycleDay).
+  // The bill cycle follows from the activation date (computeBillCycleDay) and is not the agent's to change; an account being edited keeps the cycle it has.
   const defaultBillCycleDay = computeBillCycleDay(customerSegment, asOf);
   const billCycleDay = newAccount.billCycleDay ?? defaultBillCycleDay;
 
@@ -144,16 +142,41 @@ export function BillingAccountStep({
     });
   };
 
-  const validateCard = () => {
-    const result = tokenizeCard(cardNumber);
-    if (!result) {
-      setCardError(`Enter a ${CARD_NUMBER_LENGTH}-digit card number.`);
-      setNewAccount({ cardLast4: undefined, cardToken: undefined });
-      return;
-    }
-    setCardError(null);
-    setNewAccount({ cardLast4: result.last4, cardToken: result.token });
+  // The account's contacts, as cards. A customer with contact records picks from them; a new customer has none yet, so the person identified in
+  // this journey is the contact (otherwise the step could not be completed).
+  const nameOf = (c: ContactRecord) => [c.firstName, c.middleName, c.lastName].filter(Boolean).join(' ');
+  const isCustomersOwn = (c: ContactRecord) => Boolean(customerName) && nameOf(c).trim().toLowerCase() === customerName?.trim().toLowerCase();
+  const contactOptions: { id: string; name: string; record?: ContactRecord }[] =
+    contacts.length > 0 || !customerName
+      ? contacts.map((c) => ({ id: c.contactRecordId, name: nameOf(c), record: c }))
+      : [{ id: NEW_CUSTOMER_CONTACT, name: customerName }];
+  const selectPrimary = (o: (typeof contactOptions)[number]) => {
+    // Another contact's details come from their own record; the customer's own come from Customer Verification (undefined: not overridden).
+    const other = o.record && !isCustomersOwn(o.record) ? o.record : undefined;
+    setNewAccount({
+      primaryContactId: o.id,
+      primaryContactName: o.name,
+      primaryContactPhone: other ? (other.cellNumber ?? '') : undefined,
+      primaryContactEmail: other ? (other.employerEmail ?? '') : undefined,
+      // The contact now primary cannot also be the secondary.
+      ...(newAccount.secondaryContactId === o.id ? { secondaryContactId: undefined, hasSecondaryContact: false, secondaryContactName: undefined, secondaryContactPhone: undefined, secondaryContactEmail: undefined } : {}),
+    });
   };
+  const selectSecondary = (o: (typeof contactOptions)[number] | undefined) =>
+    setNewAccount({
+      secondaryContactId: o?.id,
+      hasSecondaryContact: Boolean(o),
+      secondaryContactName: o?.name,
+      secondaryContactPhone: o?.record?.cellNumber ?? undefined,
+      secondaryContactEmail: o?.record?.employerEmail ?? undefined,
+    });
+  // One contact: it is the primary contact without the agent choosing. Several: the customer's own record leads, else the first.
+  const defaultPrimary = contactOptions.find((o) => o.record && isCustomersOwn(o.record)) ?? contactOptions[0];
+  const needsDefaultPrimary = Boolean(value.creatingNew) && !editing && !newAccount.primaryContactId && Boolean(defaultPrimary);
+  useEffect(() => {
+    if (needsDefaultPrimary && defaultPrimary) selectPrimary(defaultPrimary);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [needsDefaultPrimary, defaultPrimary?.id]);
 
   // No customer yet (a new customer, or a journey that has not resolved one): there are no accounts to load, so the step
   // opens on its create form instead of waiting forever.
@@ -163,11 +186,12 @@ export function BillingAccountStep({
 
   return (
     <div className="space-y-6">
+      {/* Nothing to choose from when the customer has no account: the new-account form below is all there is. */}
+      {profiles.length > 0 && (
       <div>
-        <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-1">Existing Billing Accounts</h3>
-        {profiles.length === 0 && <EmptyState compact message="No billing accounts on file for this customer yet." />}
+        {profiles.length > 0 && <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)] mb-1">Existing Billing Accounts</h3>}
         {/* The customer's accounts and "Create New Billing Account" sit in one row; the new-account form opens below it. */}
-        <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${profiles.length === 0 ? 'mt-3' : ''}`}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {profiles.map((p, i) => {
             const selected = value.selectedProfileId === p.billingProfileId;
             return (
@@ -204,7 +228,7 @@ export function BillingAccountStep({
           })}
           {/* "A consumer can have at most two billing profiles" - once a Consumer already holds two, there is nowhere for a new one to go,
               so the option to create one is withheld rather than offered and then rejected at submission. */}
-          {!atConsumerCap && (
+          {!atConsumerCap && profiles.length > 0 && (
             <button
               type="button"
               onClick={() =>
@@ -214,7 +238,16 @@ export function BillingAccountStep({
                   selectedProfileId: undefined,
                   editingProfileId: undefined,
                   // Opening the form fixes the primary-payment default: ticked only when the customer has no other profile.
-                  newAccount: { ...value.newAccount, primaryPaymentProfile: value.newAccount?.primaryPaymentProfile ?? profiles.length === 0 },
+                  newAccount: {
+                    ...value.newAccount,
+                    primaryPaymentProfile: value.newAccount?.primaryPaymentProfile ?? profiles.length === 0,
+                    // The profile is set up for the agent: its name, bill medium and schedule, and the cycle the activation date gives.
+                    profileName: value.newAccount?.profileName ?? `${customerName ?? 'Customer'} - Postpaid`,
+                    preferredInvoiceRecipient: value.newAccount?.preferredInvoiceRecipient ?? 'Primary Contact',
+                    billMedia: value.newAccount?.billMedia ?? 'Email',
+                    billingSchedule: value.newAccount?.billingSchedule ?? 'Immediate',
+                    billCycleDay: value.newAccount?.billCycleDay ?? defaultBillCycleDay,
+                  },
                 })
               }
               aria-expanded={Boolean(value.creatingNew)}
@@ -236,63 +269,65 @@ export function BillingAccountStep({
           </p>
         )}
       </div>
+      )}
 
       {((value.creatingNew && !atConsumerCap) || editing) && (
-        <div className="border border-[var(--field-card-border)] rounded-[var(--radius-card)]">
-          <div className="px-6 pb-6">
+        <div>
+          <div className="pb-6">
               {editing && <p className="pt-6 text-fg font-semibold text-[length:var(--fs-body-lg)]">Edit billing account ending …{editedProfile?.billingProfileId.slice(-4)}</p>}
               {/* Contact */}
               <div className={`${SECTION} pt-6`}>
-                <h4 className={SECTION_TITLE}>Contact</h4>
-                {/* Primary and secondary contact share one row once a secondary contact is added. */}
-                <div className={`grid gap-3 ${newAccount.hasSecondaryContact ? 'sm:grid-cols-2' : ''}`}>
-                  <Select
-                    label="Primary Contact"
-                    required
-                    value={newAccount.primaryContactId ?? ''}
-                    onChange={(e) => {
-                      const c = contacts.find((x) => x.contactRecordId === e.target.value);
-                      setNewAccount({ primaryContactId: e.target.value, ...(editing ? { primaryContactName: c ? [c.firstName, c.middleName, c.lastName].filter(Boolean).join(' ') : customerName } : {}) });
-                    }}
-                    placeholder="Select contact"
-                    // A customer with contact records picks one; a new customer has none yet, so the person identified in this
-                    // journey is the contact (otherwise the list is empty and the step cannot be completed).
-                    options={
-                      contacts.length > 0 || !customerName
-                        ? contacts.map((c) => ({
-                            value: c.contactRecordId,
-                            label: [c.firstName, c.middleName, c.lastName].filter(Boolean).join(' '),
-                          }))
-                        : [{ value: NEW_CUSTOMER_CONTACT, label: `${customerName} (the customer)` }]
-                    }
-                  />
-                  {newAccount.hasSecondaryContact && (
-                    <Input
-                      label="Secondary Contact Name"
-                      required
-                      placeholder="Full name"
-                      value={newAccount.secondaryContactName ?? ''}
-                      onChange={(e) => setNewAccount({ secondaryContactName: e.target.value })}
-                    />
-                  )}
+                <h4 className={SECTION_TITLE}>
+                  Primary Contact
+                  <span className="text-[var(--field-border-error)]" aria-hidden="true">{' *'}</span>
+                </h4>
+                <div role="radiogroup" aria-label="Primary Contact" aria-required="true">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {contactOptions.map((o) => (
+                      <ContactCard key={o.id} name={o.name} checked={newAccount.primaryContactId === o.id} onChoose={() => selectPrimary(o)} />
+                    ))}
+                  </div>
                 </div>
-                <label className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg cursor-pointer">
-                  <Checkbox
-                    checked={newAccount.hasSecondaryContact ?? false}
-                    onChange={(e) =>
-                      setNewAccount({
-                        hasSecondaryContact: e.target.checked,
-                        secondaryContactName: e.target.checked ? newAccount.secondaryContactName : undefined,
-                      })
-                    }
-                  />
-                  Add a secondary contact
-                </label>
+                {/* With more than one contact on the account, a secondary contact can be picked from the others: nothing is typed, their details come from their record. */}
+                {!editing && contactOptions.length > 1 && (
+                  <div className="space-y-3 pt-3">
+                    <h4 className={SECTION_TITLE}>Secondary Contact</h4>
+                    <div role="radiogroup" aria-label="Secondary Contact">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {contactOptions
+                          .filter((o) => o.id !== newAccount.primaryContactId)
+                          .map((o) => (
+                            <ContactCard
+                              key={o.id}
+                              name={o.name}
+                              checked={newAccount.secondaryContactId === o.id}
+                              // Choosing the chosen one again clears it: a secondary contact is optional.
+                              onChoose={() => selectSecondary(newAccount.secondaryContactId === o.id ? undefined : o)}
+                            />
+                          ))}
+                      </div>
+                    </div>
+                    {newAccount.secondaryContactId && (
+                      <dl className="text-[length:var(--fs-body)]">
+                        {[
+                          { label: 'Mobile Number', value: newAccount.secondaryContactPhone ? toLocalMsisdn(newAccount.secondaryContactPhone) : '-' },
+                          { label: 'Email', value: newAccount.secondaryContactEmail || '-' },
+                        ].map((row) => (
+                          <div key={row.label} className="flex items-baseline justify-between gap-4 py-1.5 border-b border-border-soft">
+                            <dt className="text-fg-2">{row.label}</dt>
+                            <dd className="text-fg font-medium text-right break-words min-w-0">{row.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    )}
+                  </div>
+                )}
               </div>
 
-              {/* Billing Address */}
+              {/* Billing Details: filled from the customer's Primary Contact Information and not editable - the bill goes to the customer's own address,
+                  email and mobile number. (Editing an existing account still changes its address line.) */}
               <div className={`${SECTION} ${SECTION_RULE}`}>
-                <h4 className={SECTION_TITLE}>Billing Address</h4>
+                <h4 className={SECTION_TITLE}>{editing ? 'Billing Address' : 'Billing Details'}</h4>
                 {editing ? (
                   <Input
                     label="Billing Address"
@@ -301,198 +336,102 @@ export function BillingAccountStep({
                     onChange={(e) => setNewAccount({ editAddressLine: e.target.value })}
                   />
                 ) : (
-                <>
-                <label className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg cursor-pointer">
-                  <Checkbox
-                    checked={newAccount.useSameAddress ?? true}
-                    onChange={(e) => setNewAccount({ useSameAddress: e.target.checked })}
-                  />
-                  Use same address as Communication Address
-                </label>
-                {newAccount.useSameAddress ?? true ? (
-                  <p className="text-muted text-[length:var(--fs-caption)]">{defaultAddressLine || 'No communication address on file yet.'}</p>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <Input
-                        label="Street"
-                        required
-                        value={newAccount.newStreet ?? ''}
-                        onChange={(e) => setNewAccount({ newStreet: e.target.value })}
-                      />
-                      <Input
-                        label="Building"
-                        required
-                        value={newAccount.newBuilding ?? ''}
-                        onChange={(e) => setNewAccount({ newBuilding: e.target.value })}
-                      />
-                    </div>
-                    {/* The same three fields as the Additional Details of the service address. */}
-                    <div className="grid grid-cols-3 gap-3">
-                      <Select
-                        label="Area / District"
-                        required
-                        placeholder="Select an area"
-                        searchable
-                        options={[...new Set([...(newAccount.newArea ? [newAccount.newArea] : []), ...areaOptions])].map((a) => ({ value: a, label: a }))}
-                        value={newAccount.newArea ?? ''}
-                        onChange={(e) => setNewAccount({ newArea: e.target.value })}
-                      />
-                      <Input
-                        label="Flat / Apartment / Unit Number"
-                        placeholder="e.g. 4B, 1402"
-                        value={newAccount.newUnit ?? ''}
-                        onChange={(e) => setNewAccount({ newUnit: e.target.value })}
-                      />
-                      <Input
-                        label="Floor"
-                        placeholder="e.g. 4"
-                        value={newAccount.newFloor ?? ''}
-                        onChange={(e) => setNewAccount({ newFloor: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                )}
-                </>
+                  // The same rows as the Credit Limit block below (CreditLimitCard): label on the left, value on the right.
+                  <dl className="text-[length:var(--fs-body)]">
+                    {[
+                      { label: 'Billing Address', value: defaultAddressLine || 'No communication address on file yet.' },
+                      { label: 'Billing Email', value: (newAccount.primaryContactEmail !== undefined ? newAccount.primaryContactEmail : customerEmail) || '-' },
+                      { label: 'Billing Mobile Number', value: (newAccount.primaryContactPhone !== undefined ? (newAccount.primaryContactPhone ? toLocalMsisdn(newAccount.primaryContactPhone) : '') : customerMobile) || '-' },
+                    ].map((row) => (
+                      <div key={row.label} className="flex items-baseline justify-between gap-4 py-1.5 border-b border-border-soft">
+                        <dt className="text-fg-2">{row.label}</dt>
+                        <dd className="text-fg font-medium text-right break-words min-w-0">{row.value}</dd>
+                      </div>
+                    ))}
+                    {creditLimit}
+                  </dl>
                 )}
               </div>
 
               {/* Payment */}
               <div className={`${SECTION} ${SECTION_RULE}`}>
-                <h4 className={SECTION_TITLE}>Payment</h4>
-                <Select
-                  label="Preferred Invoice Recipient"
-                  required
-                  value={newAccount.preferredInvoiceRecipient ?? ''}
-                  onChange={(e) => setNewAccount({ preferredInvoiceRecipient: e.target.value })}
-                  placeholder="e.g. Primary Contact"
-                  options={
-                    newAccount.hasSecondaryContact
-                      ? INVOICE_RECIPIENTS
-                      : INVOICE_RECIPIENTS.filter((r) => r.value === 'Primary Contact')
-                  }
-                />
-                {/* Bill cycle and billing mode on one row: the day the cycle starts (default by rule, editable) and how it bills. */}
+                <h4 className={SECTION_TITLE}>Account Credit Limit</h4>
+                {/* Bill cycle: the same field as Bill Type and Bill Language, but disabled - it follows from the activation date and is not the agent's to change. */}
                 <div className="grid sm:grid-cols-2 gap-3">
                   <Select
                     label="Bill Cycle"
-                    required
+                    disabled
                     value={String(billCycleDay)}
-                    onChange={(e) => setNewAccount({ billCycleDay: Number(e.target.value) })}
-                    helperText="Next cycle by default rule; VIP = 7th"
-                    options={[...new Set([...BILL_CYCLE_DAYS, defaultBillCycleDay, billCycleDay])].sort((a, b) => a - b).map((d) => ({
-                      value: String(d),
-                      label: `${ordinal(d)} of every month${d === defaultBillCycleDay ? (customerSegment === 'VIP' ? ' (VIP default)' : ' (Default)') : ''}`,
-                    }))}
+                    options={[{ value: String(billCycleDay), label: `${ordinal(billCycleDay)} of every month` }]}
                   />
-                  <Select
-                    label="Billing Mode"
-                    value={newAccount.billingMode ?? DEFAULT_BILLING_MODE}
-                    onChange={(e) => setNewAccount({ billingMode: e.target.value })}
-                    options={BILLING_MODES}
-                  />
+                  {!editing && (
+                    <>
+                      <Select
+                        label="Bill Type"
+                        value={newAccount.billType ?? DEFAULT_BILL_TYPE}
+                        onChange={(e) => setNewAccount({ billType: e.target.value })}
+                        options={BILL_TYPES}
+                      />
+                      <Select
+                        label="Bill Language"
+                        value={newAccount.billLanguage ?? DEFAULT_BILL_LANGUAGE}
+                        onChange={(e) => setNewAccount({ billLanguage: e.target.value })}
+                        options={BILL_LANGUAGES}
+                      />
+                    </>
+                  )}
                 </div>
                 {!editing && (
-                <>
-                <Input
-                  label="Card Number"
-                  required
-                  ref={cardInputRef}
-                  inputMode="numeric"
-                  autoComplete="cc-number"
-                  placeholder="•••• •••• •••• ••••"
-                  value={formatCardNumber(cardNumber)}
-                  onChange={(e) => {
-                    const el = e.target;
-                    // Keep the caret next to the same digit after the spaces are re-inserted.
-                    const digitsBeforeCaret = cardDigits(el.value.slice(0, el.selectionStart ?? el.value.length)).length;
-                    const digits = cardDigits(el.value);
-                    setCardNumber(digits);
-                    setCardError(null);
-                    setNewAccount({ cardLast4: undefined, cardToken: undefined });
-                    requestAnimationFrame(() => {
-                      const shown = formatCardNumber(digits);
-                      let pos = 0;
-                      for (let seen = 0; pos < shown.length && seen < digitsBeforeCaret; pos++) if (shown[pos] !== ' ') seen++;
-                      cardInputRef.current?.setSelectionRange(pos, pos);
-                    });
-                  }}
-                  // Copying or cutting gives the digits only, never the display spaces.
-                  onCopy={(e) => {
-                    const el = e.currentTarget;
-                    e.clipboardData.setData('text/plain', cardDigits(el.value.slice(el.selectionStart ?? 0, el.selectionEnd ?? 0)));
-                    e.preventDefault();
-                  }}
-                  onCut={(e) => {
-                    const el = e.currentTarget;
-                    const start = el.selectionStart ?? 0;
-                    const end = el.selectionEnd ?? 0;
-                    e.clipboardData.setData('text/plain', cardDigits(el.value.slice(start, end)));
-                    e.preventDefault();
-                    setCardNumber(cardDigits(el.value.slice(0, start) + el.value.slice(end)));
-                    setCardError(null);
-                    setNewAccount({ cardLast4: undefined, cardToken: undefined });
-                  }}
-                  onBlur={validateCard}
-                  error={cardError ?? undefined}
-                  helperText="Only the last 4 digits and a generated token are stored (Gatan gateway simulation)."
-                />
-                {newAccount.cardToken && (
-                  <p className="text-success text-[length:var(--fs-caption)]">
-                    Card ending {newAccount.cardLast4} tokenized - {newAccount.cardToken}
-                  </p>
+                  <>
+                    {/* VAT Details, optional. A registration number makes the VAT document mandatory in Additional Documents (document-types.json: vat-document). */}
+                    <h4 className={`${SECTION_TITLE} pt-3`}>VAT Details</h4>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      <Input
+                        label="VAT Registration Number"
+                        value={newAccount.vatRegistrationNumber ?? ''}
+                        onChange={(e) => setNewAccount({ vatRegistrationNumber: e.target.value })}
+                        helperText={newAccount.vatRegistrationNumber?.trim() ? 'VAT document upload is required.' : undefined}
+                      />
+                      <Input
+                        label="VAT Expiry Date"
+                        placeholder="DD/MM/YYYY"
+                        inputMode="numeric"
+                        maxLength={10}
+                        value={newAccount.vatExpiryDate ?? ''}
+                        onChange={(e) => setNewAccount({ vatExpiryDate: e.target.value })}
+                        error={isValidVatExpiry(newAccount.vatExpiryDate) ? undefined : 'Enter the date as DD/MM/YYYY.'}
+                      />
+                    </div>
+                  </>
                 )}
-                <label className="flex items-center gap-2 text-[length:var(--fs-body)] text-fg cursor-pointer">
-                  <Checkbox
-                    checked={newAccount.primaryPaymentProfile ?? profiles.length === 0}
-                    onChange={(e) => setNewAccount({ primaryPaymentProfile: e.target.checked })}
-                  />
-                  Set as primary payment profile
-                  {profiles.length === 0 && <span className="text-muted text-[length:var(--fs-caption)]">(the customer's first billing profile)</span>}
-                </label>
+                {!editing && (
+                <>
                 </>
                 )}
               </div>
 
-              {/* Billing Profile Setup */}
-              {!editing && (
-              <div className={`space-y-2 ${SECTION_RULE}`}>
-                <div className="flex items-center justify-between">
-                  <h4 className={SECTION_TITLE}>Billing Profile Setup</h4>
-                  <Button variant="secondary" compact onClick={() => setSetupOpen(true)}>
-                    + Add Profile
-                  </Button>
-                </div>
-                {newAccount.profileName ? (
-                  <dl className="card card-surface p-3 text-[length:var(--fs-caption)]">
-                    <div className="flex justify-between gap-3 py-1">
-                      <dt className="text-fg">Billing Profile Name</dt>
-                      <dd className="text-fg font-medium">{newAccount.profileName}</dd>
-                    </div>
-                    <div className="flex justify-between gap-3 py-1">
-                      <dt className="text-fg">Bill Media</dt>
-                      <dd className="text-fg font-medium">{newAccount.billMedia}</dd>
-                    </div>
-                    <div className="flex justify-between gap-3 py-1">
-                      <dt className="text-fg">Billing Schedule</dt>
-                      <dd className="text-fg font-medium">{newAccount.billingSchedule}</dd>
-                    </div>
-                  </dl>
-                ) : (
-                  <p className="text-muted text-[length:var(--fs-caption)]">Not yet configured – required before this account can be finalised.</p>
-                )}
-              </div>
-              )}
             </div>
         </div>
       )}
-
-      <BillingProfileSetupDrawer
-        open={setupOpen}
-        onClose={() => setSetupOpen(false)}
-        value={newAccount}
-        onSave={(patch) => setNewAccount(patch)}
-      />
     </div>
+  );
+}
+
+/** One contact as a selectable card, in the style of the customer-type cards. */
+function ContactCard({ name, checked, onChoose }: { name: string; checked: boolean; onChoose: () => void }) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={checked}
+      onClick={onChoose}
+      className={`relative flex items-center gap-3 rounded-[var(--radius-card)] border p-4 text-left transition-colors focus:outline-none focus-visible:shadow-[var(--focus-ring)] ${checked ? CARD_SELECTED : CARD_IDLE}`}
+    >
+      {checked && <SelectedTick />}
+      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-button)] transition-colors ${checked ? 'bg-accent text-accent-on' : 'bg-surface-warm text-accent'}`}>
+        <Icon path={PERSON_ICON} className="w-5 h-5" />
+      </span>
+      <span className="min-w-0 flex-1 text-fg font-medium text-[length:var(--fs-body)]">{name}</span>
+    </button>
   );
 }

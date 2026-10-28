@@ -13,7 +13,6 @@ const CONSTANT_ACROSS_THEMES = {
   '--badge-success-solid': 'solid success badge, white label',
   '--success-solid': 'solid green fill under a white label; --success is lightened in dark and would drop to 2.1:1',
   '--danger-solid': 'solid red fill under a white label; --danger is lightened in dark and would drop to 3.4:1',
-  '--brand-ooredoo': 'partner brand colour',
   '--brand-vodafone': 'brand speech-mark red',
   '--brand-qatar': 'Qatar flag maroon',
   '--summary-milestone': 'Step Summary progress fill and milestone disc; same orange in both themes',

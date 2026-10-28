@@ -25,7 +25,7 @@ test('every customer segment in the data: protected ones are locked, no other se
 test('the card disables the limit for a protected segment; account creation ignores a chosen limit for one and records the restriction', () => {
   const card = fs.readFileSync('src/components/patterns/CreditLimitCard.tsx', 'utf8');
   assert.match(card, /creditLimitPolicy\(\{ segment: customerSegment, nationality \}\)/);
-  assert.match(card, /disabled=\{!policy\.editable\}/);
+  assert.match(card, /policy\.editable \?/);
   assert.match(fs.readFileSync('src/capabilities/BillingAccount/step.tsx', 'utf8'), /customerSegment=\{eligibility\?\.segment\}/);
   const persist = fs.readFileSync('src/capabilities/BillingAccount/persistBillingAccount.ts', 'utf8');
   assert.match(persist, /const chosen = policy\.editable && /);

@@ -37,6 +37,8 @@ export interface MoiResult {
   dob: string;
   nationality: string;
   email?: string;
+  /** A new customer's mobile number as the NAS holds it (E.164): offered, masked, as the Personal Mobile. */
+  mobile?: string;
   /** Where `email` came from: Siebel for an existing customer, NAS for a new one. */
   emailSource?: 'Siebel' | 'NAS' | 'Billing Profile';
   /** No customer record exists for this ID - details come from NAS, not Siebel. */
@@ -182,6 +184,7 @@ export interface DemoNasRecord {
   name: string;
   dob: string;
   nationality: string;
+  mobile?: string;
 }
 
 /**
@@ -196,21 +199,19 @@ export function pickHrnDemoNas<R extends DemoNasRecord>(records: readonly R[], d
 
 /**
  * How the ID number and expiry came in at Customer Verification, which decides what the agent may change:
- *   'upload'       a file was uploaded: nothing is read; the agent types the number and the expiry, then Fetch.
- *   'ocr-blurred'  the first reader pass: a blurred capture, number and expiry "extracted" (with errors, for the demo); both locked.
- *   'ocr-clear'    Retake 1: a clear capture, number and expiry extracted correctly; both locked.
- *   'barcode'      Retake 2: the barcode gives the number (locked); the expiry is typed and stays editable.
- *   'manual'       Retake 3 and after: the barcode is not used; both fields are typed and editable.
+ *   'upload'      a file was uploaded: nothing is read; the agent types the number and the expiry, then Fetch.
+ *   'ocr-auto'    the first scan and Retake 1: a clear capture, number and expiry read correctly, MOI called automatically. Nothing to edit.
+ *   'ocr-number'  Retake 2: the number is read (locked); the expiry is typed and stays editable, then Fetch.
+ *   'barcode'     Retake 3 and after: the number comes from the barcode button; the expiry is typed and stays editable, then Fetch.
  */
-export type CaptureMode = 'upload' | 'ocr-blurred' | 'ocr-clear' | 'barcode' | 'manual';
+export type CaptureMode = 'upload' | 'ocr-auto' | 'ocr-number' | 'barcode';
 
 /** The capture mode for a completed capture: an upload, or the number of passes over the reader so far. */
 export function captureModeOf(uploaded: boolean, readerPasses: number): CaptureMode {
   if (uploaded) return 'upload';
-  if (readerPasses <= 1) return 'ocr-blurred';
-  if (readerPasses === 2) return 'ocr-clear';
-  if (readerPasses === 3) return 'barcode';
-  return 'manual';
+  if (readerPasses <= 2) return 'ocr-auto';
+  if (readerPasses === 3) return 'ocr-number';
+  return 'barcode';
 }
 
 /** A DD/MM/YYYY date as a blurred read would get it wrong: the last digit of the year is off. */

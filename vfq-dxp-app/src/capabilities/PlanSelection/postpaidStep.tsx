@@ -1,11 +1,12 @@
-import { SegmentedTabs } from '../../components/primitives/SegmentedTabs';
-import { ADDON_PRICING_FILTERS, DEFAULT_ADDON_PRICING, type AddonPricing } from '../../engines/addonCategories';
 import { PLAN_SELECTION_LABEL, ADDONS_DISCOUNTS_LABEL } from '../../data/stepLabels';
 import type { GuidedContactValue } from '../../components/patterns/guidedContactModel';
 import { planChoiceSummary, planExtrasSummary } from './summary';
 import type { CustomerBenefit } from '../../engines/customerBenefitEngine';
 import type { EligibilityResult } from '../../components/domain/eligibilityTypes';
 import { PlanSelection } from './PlanSelection';
+import { AddDiscountAction } from './AddDiscountAction';
+import { EligibilityChecksList } from '../../components/domain/EligibilityRows';
+import { buildEligibilityRows } from '../../components/domain/eligibilityRowsModel';
 import type { WizardStep } from '../../components/patterns/wizard/guidedWizardTypes';
 import type { CustomerTypeValue } from '../CustomerType/customerTypeModel';
 import { isCustomerTypeValid } from '../CustomerType/customerTypeModel';
@@ -20,6 +21,8 @@ export interface PostpaidPlanContext {
   skipWhen?: (values: Record<string, unknown>) => boolean;
   /** A plan not offered (the line's current plan, when the journey changes it). */
   hiddenProductId?: (values: Record<string, unknown>) => string | undefined;
+  /** The journey identifies the customer before it knows the product, so Customer Verification does not announce the upfront payment (HRN): say it here, once the plan is being chosen. */
+  announceHrn?: boolean;
 }
 
 export function postpaidPlanStep(ctx: PostpaidPlanContext): WizardStep {
@@ -30,6 +33,21 @@ export function postpaidPlanStep(ctx: PostpaidPlanContext): WizardStep {
     label: PLAN_SELECTION_LABEL,
     render: ({ values, setValue }) => renderPlanStep('plan', ctx, values, setValue),
     isValid: (values) => Boolean(values.productId),
+    // Once a plan is chosen on Standard Plans or Special Offers, Add Discount sits just before Continue.
+    primaryAction: ({ values, setValue, defaultButton }) => (
+      <div className="flex items-center gap-3">
+        <AddDiscountAction
+          productId={values.productId as string | undefined}
+          tab={values.planTab as string | undefined}
+          discountId={values.discountId as string | undefined}
+          onSelectDiscount={(id) => setValue('discountId', id)}
+          customerBenefits={ctx.customerBenefits}
+          specialDiscountType={specialTypeOf(values)}
+          customerBenefit={benefitOf(values)}
+        />
+        {defaultButton}
+      </div>
+    ),
     // "For pre-bundled eligible offers, skip add-on selection" - re-evaluates on every value change.
     autoAdvanceWhen: (values) => Boolean(ctx.products.find((p) => p.productId === values.productId)?.preBundledOffer),
   };
@@ -43,16 +61,6 @@ export function postpaidExtrasStep(ctx: PostpaidPlanContext): WizardStep {
     skip: ctx.skipWhen,
     label: ADDONS_DISCOUNTS_LABEL,
     subheading: 'Choose optional services and set the spending limit.',
-    // The Paid / Free add-on filter sits in the page's top row, right-aligned, and holds across the category tabs.
-    headerAction: ({ values, setValue }) =>
-      !values.productId || ctx.products.find((p) => p.productId === values.productId)?.preBundledOffer ? null : (
-      <SegmentedTabs
-        label="Paid or Free Add-Ons"
-        items={ADDON_PRICING_FILTERS}
-        active={(values.addonPricing as AddonPricing | undefined) ?? DEFAULT_ADDON_PRICING}
-        onChange={(p) => setValue('addonPricing', p)}
-      />
-    ),
     render: ({ values, setValue }) => renderPlanStep('extras', ctx, values, setValue),
     // Bill limit is the only gate; add-ons and discounts never block.
     isValid: (values) => {
@@ -63,17 +71,27 @@ export function postpaidExtrasStep(ctx: PostpaidPlanContext): WizardStep {
   };
 }
 
+/** A Special Discount counts once validated: its details given and, for Retiree and MADA, the supporting document scanned and accepted. */
+const specialTypeOf = (values: Record<string, unknown>) =>
+  ((v) => (v ? (v.type && v.type !== 'none' && !v.rejected && isCustomerTypeValid(v) ? v.type : 'none') : undefined))(values.customerType as CustomerTypeValue | undefined);
+const benefitOf = (values: Record<string, unknown>) => {
+  const v = values.customerType as CustomerTypeValue | undefined;
+  return v?.officeAccepted || (isCustomerTypeValid(v) && v?.type === 'b2b2c') ? v?.type : undefined;
+};
+
 function renderPlanStep(
   mode: 'plan' | 'extras',
-  { customerBenefits, hiddenProductId }: PostpaidPlanContext,
+  { customerBenefits, hiddenProductId, announceHrn }: PostpaidPlanContext,
   values: Record<string, unknown>,
   setValue: (field: string, value: unknown) => void
 ) {
   {
     {
       const eligibility = values.eligibility as EligibilityResult | undefined;
+      const hrnRows = announceHrn && mode === 'plan' && eligibility?.requiresHrnAdvance ? buildEligibilityRows([], true, eligibility.nationality, 'postpaid', eligibility.isExistingCustomer).filter((r) => r.id === 'hrn') : [];
       return (
         <>
+        {hrnRows.length > 0 && <div className="mb-6"><EligibilityChecksList rows={hrnRows} /></div>}
         <PlanSelection
           kind="postpaid"
           mode={mode}
@@ -84,8 +102,9 @@ function renderPlanStep(
             idType: (values.contact as GuidedContactValue | undefined)?.idType,
           }}
           customerBenefits={customerBenefits}
-          specialDiscountType={((v) => (v ? (v.type && v.type !== 'none' && !v.rejected ? v.type : 'none') : undefined))(values.customerType as CustomerTypeValue | undefined)}
-          customerBenefit={((values.customerType as CustomerTypeValue | undefined)?.officeAccepted || isCustomerTypeValid(values.customerType as CustomerTypeValue | undefined) && (values.customerType as CustomerTypeValue | undefined)?.type === 'b2b2c') ? (values.customerType as CustomerTypeValue).type : undefined}
+          // A Special Discount counts once validated: its details given and, for Retiree and MADA, the supporting document scanned and accepted.
+          specialDiscountType={specialTypeOf(values)}
+          customerBenefit={benefitOf(values)}
           selectedProductId={values.productId as string | undefined}
           onSelectProduct={(id) => setValue('productId', id)}
           onPlanTabChange={(tab) => setValue('planTab', tab)}
@@ -101,8 +120,6 @@ function renderPlanStep(
           }}
           billLimit={values.billLimit as number | undefined}
           billLimitMax={eligibility?.defaultCreditLimitQar}
-          addonPricing={(values.addonPricing as AddonPricing | undefined) ?? DEFAULT_ADDON_PRICING}
-          onAddonPricingChange={(p) => setValue('addonPricing', p)}
           onBillLimitChange={(amount, pass) => {
             setValue('billLimit', amount);
             setValue('billLimitPass', pass);

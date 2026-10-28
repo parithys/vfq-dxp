@@ -6,7 +6,7 @@
     "donorId": "28912345678",
     "donorIdType": "QID",
     "donorType": "Individual",
-    "donorOperator": "Ooredoo Qatar",
+    "donorOperator": "Other Operator Qatar",
     "subscriptionType": "Postpaid"
   },
   {
@@ -16,7 +16,7 @@
     "donorId": "28956781234",
     "donorIdType": "Passport",
     "donorType": "Individual",
-    "donorOperator": "Ooredoo Qatar",
+    "donorOperator": "Other Operator Qatar",
     "subscriptionType": "Prepaid"
   }
 ]

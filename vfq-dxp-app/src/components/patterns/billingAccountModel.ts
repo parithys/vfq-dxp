@@ -24,6 +24,10 @@ export interface ContactRecord {
   firstName: string;
   middleName?: string;
   lastName: string;
+  /** What the contact's record holds to reach them: filled into the billing details when they are chosen. */
+  cellNumber?: string | null;
+  workPhone?: string | null;
+  employerEmail?: string | null;
 }
 
 export interface CustomerRecord {
@@ -35,14 +39,15 @@ export interface NewBillingAccountValue {
   /** A new account's credit limit, chosen by the agent from the options for the customer's segment (blank: the default applies). */
   creditLimitQar?: number;
   primaryContactId?: string;
+  /** The primary contact's own details from their record - set only for a contact who is not the customer (the customer's come from Customer Verification). */
+  primaryContactPhone?: string;
+  primaryContactEmail?: string;
+  /** The optional secondary contact, picked from the account's other contacts; their details are read from their record. */
+  secondaryContactId?: string;
   hasSecondaryContact?: boolean;
   secondaryContactName?: string;
-  useSameAddress?: boolean;
-  newStreet?: string;
-  newArea?: string;
-  newBuilding?: string;
-  newUnit?: string;
-  newFloor?: string;
+  secondaryContactPhone?: string;
+  secondaryContactEmail?: string;
   preferredInvoiceRecipient?: string;
   /** The day of the month the bill cycle starts on. Defaults to computeBillCycleDay() (see that function's note on the
    * evidenced vs. assumed halves of the rule) and is editable by the agent. */
@@ -63,6 +68,14 @@ export interface NewBillingAccountValue {
   profileName?: string;
   billMedia?: string;
   billingSchedule?: string;
+  /** How detailed the bill is: BILL_TYPES, Detailed by default. */
+  billType?: string;
+  /** The language the bill is printed in: BILL_LANGUAGES, English by default. */
+  billLanguage?: string;
+  /** Optional VAT details. A VAT registration number makes the VAT document mandatory in Additional Documents. */
+  vatRegistrationNumber?: string;
+  /** The VAT registration's expiry, DD/MM/YYYY. */
+  vatExpiryDate?: string;
 }
 
 export interface BillingAccountValue {
@@ -150,6 +163,28 @@ export const INVOICE_RECIPIENTS = [
   { value: 'Secondary Contact', label: 'Secondary Contact' },
 ];
 
+/** The bill's level of detail and language: the options, and what a new account starts on. */
+export const BILL_TYPES = [
+  { value: 'Detailed', label: 'Detailed' },
+  { value: 'Summary', label: 'Summary' },
+];
+export const DEFAULT_BILL_TYPE = 'Detailed';
+export const BILL_LANGUAGES = [
+  { value: 'English', label: 'English' },
+  { value: 'Arabic', label: 'Arabic' },
+];
+export const DEFAULT_BILL_LANGUAGE = 'English';
+
+/** A VAT expiry date is DD/MM/YYYY and a real calendar date. Empty is fine (the field is optional); the caller decides what to do with a bad one. */
+export function isValidVatExpiry(text: string | undefined): boolean {
+  const t = text?.trim();
+  if (!t) return true;
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(t);
+  if (!m) return false;
+  const d = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+  return d.getFullYear() === Number(m[3]) && d.getMonth() === Number(m[2]) - 1 && d.getDate() === Number(m[1]);
+}
+
 export const BILL_MEDIA_OPTIONS = [
   { value: 'Email', label: 'Email' },
   { value: 'Paper Bill', label: 'Paper Bill' },
@@ -183,11 +218,8 @@ export function isBillingAccountValid(value: BillingAccountValue): boolean {
   const a = value.newAccount ?? {};
   if (!a.primaryContactId) return false;
   if (a.hasSecondaryContact && !a.secondaryContactName?.trim()) return false;
-  if (!(a.useSameAddress ?? true)) {
-    if (!a.newStreet?.trim() || !a.newArea?.trim() || !a.newBuilding?.trim()) return false;
-  }
   if (!a.preferredInvoiceRecipient) return false;
-  if (!a.cardToken) return false;
+  if (!isValidVatExpiry(a.vatExpiryDate)) return false;
   if (!a.profileName?.trim()) return false;
   return true;
 }

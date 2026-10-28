@@ -7,6 +7,7 @@ import * as mockDataEngine from '../../../engines/mockDataEngine';
 import { logActivity, newActivityId } from '../../../engines/activityEngine';
 import type { ActivityInput } from '../../../engines/activityEngine';
 import { allLines, cartTotals, emailVerification, maskEmail, priceLine, COLLECTION_TEAM_ROLE, STORE_MANAGER_ROLE } from '../../../capabilities';
+import { orderTerms } from '../../../capabilities';
 import { approvalMessages, decisionRecord, needsCreditControl } from '../../../engines/connectionEligibility';
 import type { GuidedContactValue, CrossSalesValue, ConfirmedOrder, PrepaidLine, PricingExtra, PricingProduct } from '../../../capabilities';
 import { assertEligibilityChecked } from '../../../engines/eligibilityGuard';
@@ -114,7 +115,7 @@ export async function submitPrepaidOrder(
   // The signed CAF, the ID scans and the agent's additional documents travel with the order.
   const caf = values.caf as { cafType?: CafType; signatureDataUrl?: string; additionalDocuments?: AdditionalDocument[] } | undefined;
   const attachments = [
-    ...idScanAttachments(contact?.idType, contact?.qidScans),
+    ...idScanAttachments(contact?.idType, contact?.qidScans, { idNumber: contact?.idNumber }),
     ...(caf?.signatureDataUrl ? [{ label: 'Signed CAF', detail: `${caf.cafType ?? 'Digital'} signature`, previewUrl: caf.signatureDataUrl }] : []),
     ...(caf?.additionalDocuments ?? []).map((d) => ({ label: d.label, detail: d.fileName })),
   ];
@@ -298,6 +299,7 @@ export async function submitPrepaidOrder(
     customerEmail: contact?.email,
     customerEmailDisplay: contact?.moiResult?.isNewCustomer && !contact?.moiResult?.createdByAgent && contact.email ? maskEmail(contact.email) : contact?.email,
     customerEmailVerified: emailVerification(contact?.email, contact?.moiResult?.email).verified,
+    terms: orderTerms(values, 'prepaid'),
     service: 'mobile',
   };
 }

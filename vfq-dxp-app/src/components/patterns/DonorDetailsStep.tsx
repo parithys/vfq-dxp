@@ -48,7 +48,7 @@ const optionsOf = (list: readonly string[]) => list.map((v) => ({ value: v, labe
 const IN_FLIGHT = new Set(['Pending NPAS Approval', 'Submitted', 'Pending Payment', 'NPAS Approved']);
 
 // SCR-126 / MNP BRSD V1.1 (MNP_PI_001_QPC_03, DF-MNP-009..015): the Port-In number and the donor customer ID, ID type, customer
-// type and subscription type are captured by the agent from the customer; the operator (Ooredoo, the only one) is set. The number is checked before submission:
+// type and subscription type are captured by the agent from the customer; the operator (Other Operator, the only one) is set. The number is checked before submission:
 // Qatar mobile format, not already on Vodafone's own inventory, no other request for it awaiting NPAS. Whether it is an active,
 // portable subscription at the donor is NPAS's to say (OI-MNP-003, open); a "no" arrives as a rejection reason, not as a check here.
 export function DonorDetailsStep({ value, onChange }: DonorDetailsStepProps) {
@@ -74,7 +74,7 @@ export function DonorDetailsStep({ value, onChange }: DonorDetailsStepProps) {
   const blocked = !formatOnly && numberError ? numberError : undefined;
 
   // The check that needs the stores is kept on the value, so the step's Continue gate (a pure function of the values) can read it.
-  // The donor operator (Ooredoo is the only one) is set here, not asked for.
+  // The donor operator (Other Operator is the only one) is set here, not asked for.
   useEffect(() => {
     const patch: DonorDetailsValue = {};
     if ((value.portInNumberBlocked ?? undefined) !== blocked) patch.portInNumberBlocked = blocked;
@@ -96,7 +96,7 @@ export function DonorDetailsStep({ value, onChange }: DonorDetailsStepProps) {
           fixedIso="QA"
           maxNationalDigits={8}
           value={number}
-          placeholder="6600 0666"
+          placeholder="66000666"
           error={number ? numberError : undefined}
           helperText={normalised && !numberError ? `Ported as ${normalised}. This is the number on the order; it cannot be changed in the journey.` : 'The number the customer is bringing to Vodafone.'}
           onChange={(e) => onChange({ ...value, portInNumber: e.target.value })}

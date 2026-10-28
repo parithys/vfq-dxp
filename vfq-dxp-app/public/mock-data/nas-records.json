@@ -19,7 +19,8 @@
       "buildingNo": "12",
       "area": "Al Waab",
       "city": "Doha"
-    }
+    },
+    "mobile": "+97455512345"
   },
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
@@ -41,7 +42,8 @@
       "buildingNo": "7",
       "area": "Al Sadd",
       "city": "Doha"
-    }
+    },
+    "mobile": "+97466234567"
   },
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
@@ -64,7 +66,8 @@
       "buildingNo": "31",
       "area": "Al Mansoura",
       "city": "Doha"
-    }
+    },
+    "mobile": "+97477345678"
   },
   {
     "_note": "Customer-Inventory seed (2026-10-02)",
@@ -86,7 +89,8 @@
       "buildingNo": "22",
       "area": "Al Rayyan",
       "city": "Al Rayyan"
-    }
+    },
+    "mobile": "+97433456789"
   },
   {
     "_note": "Demo seed (2026-10-22) - QID to Passport mapping: this QID is the SAME PERSON as CUST-1002 (Passport P0998812), who is already a customer. Customer Identification links to that customer and adds this QID to their record instead of creating a duplicate.",
@@ -109,7 +113,8 @@
       "buildingNo": "7",
       "area": "Al Sadd",
       "city": "Doha"
-    }
+    },
+    "mobile": "+97455567890"
   },
   {
     "_note": "Demo seed (2026-10-25). An HRN-nationality (Pakistani) person who is NOT yet a Vodafone customer. The New Customer journey's demo scan resolves to the first HRN record here (see pickHrnDemoNas), so a demo New Customer is always HRN-category: HRN advance, default credit limit and fee rules apply.",
@@ -131,6 +136,7 @@
       "buildingNo": "18",
       "area": "Al Sadd",
       "city": "Doha"
-    }
+    },
+    "mobile": "+97455678901"
   }
 ]

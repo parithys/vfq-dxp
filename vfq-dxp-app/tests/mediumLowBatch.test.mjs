@@ -74,7 +74,7 @@ test('the SIM step names approval or submission for the eSIM QR code by context,
   const clean = { checks: [], hardStop: false, softStop: false };
   assert.equal(expectsApproval({ contact, eligibility: clean }), false);
   assert.equal(expectsApproval({ contact, eligibility: { ...clean, requiresHrnAdvance: true } }), true, 'HRN advance routes the order');
-  assert.equal(expectsApproval({ contact, eligibility: clean, numberWaiver: 'partial' }), true, 'a Waive Off routes the order');
+  assert.equal(expectsApproval({ contact, eligibility: clean, numberWaiver: 2000 }), true, 'a Waive Off routes the order');
   assert.equal(expectsApproval({ contact: { ...contact, manualEntry: true }, eligibility: clean }), true);
   assert.equal(expectsApproval({}), false);
   const sim = read('src/components/domain/SimTypeStep.tsx');
@@ -86,8 +86,8 @@ test('the SIM step names approval or submission for the eSIM QR code by context,
 test('the selected number is shown without the +974 country code in the Summary and at Checkout', async () => {
   const { numberSummary } = await load('/src/capabilities/NumberSelection/summary.ts');
   const row = numberSummary().find((r) => r.key === 'msisdn');
-  assert.equal(row.value({ msisdn: '+97431552654' }), '3155 2654');
-  assert.equal(row.value({ msisdn: '+974 3155 2654' }), '3155 2654');
+  assert.equal(row.value({ msisdn: '+97431552654' }), '31552654');
+  assert.equal(row.value({ msisdn: '+974 3155 2654' }), '31552654');
   assert.equal(row.value({ prePaired: true }), 'Pre-Paired SIM');
   assert.equal(row.value({}), undefined);
   for (const f of ['src/components/patterns/checkoutSummaryRows.ts', 'src/components/patterns/checkoutDetailedTables.ts']) assert.match(read(f), /toLocalMsisdn\(msisdn\)/, f);
@@ -96,8 +96,8 @@ test('the selected number is shown without the +974 country code in the Summary 
 test('the Work Number is shown without +974 in the Summary, the actual user and Checkout', async () => {
   const q = await load('/src/capabilities/CustomerQualification/summary.ts');
   const row = (q.customerQualificationSummary ?? Object.values(q).find((v) => Array.isArray(v))).find((r) => r.key === 'altPhone');
-  assert.equal(row.value({ contact: { altPhone: '+97455667766' } }), '5566 7766');
-  assert.equal(row.value({ contact: { altPhone: '55667766' } }), '5566 7766');
+  assert.equal(row.value({ contact: { altPhone: '+97455667766' } }), '55667766');
+  assert.equal(row.value({ contact: { altPhone: '55667766' } }), '55667766');
   assert.equal(row.value({ contact: {} }), undefined);
   for (const f of ['src/components/patterns/wizard/commonSummaries.ts', 'src/capabilities/ActualUser/summary.ts', 'src/capabilities/ActualUser/actualUserModel.ts', 'src/components/patterns/CheckoutDefaultLayout.tsx']) assert.match(read(f), /toLocalMsisdn\(/, f);
 });
