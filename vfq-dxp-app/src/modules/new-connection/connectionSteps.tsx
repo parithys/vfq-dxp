@@ -12,7 +12,7 @@ import { billingStepActive, forProduct } from './products';
 
 /** Step keys New Connection collects once, before Recommended Offers. */
 const SHARED_KEYS = ['address', 'billingAccount'];
-import { productStep } from './steps/productStep';
+import { productCardsStep, productStep } from './steps/productStep';
 import { homeKindStep } from './steps/HomeKindStep';
 import type { ProductStepContext } from './steps/ProductSelection';
 
@@ -37,13 +37,22 @@ export function buildConnectionSteps(ctx: ConnectionStepContext): WizardStep[] {
   const shared = (steps: WizardStep[]) => steps.filter((s) => !SHARED_KEYS.includes(s.key));
   // Fixed Line keeps its Installation Address: it needs the connection type chosen after this point, and has its own mandatory fields.
   const installation = fixedLineSteps().filter((s) => s.key !== 'billingAccount').map((s) => (s.key === 'address' ? { ...s, key: 'installation' } : s));
-  const billingStep: WizardStep = { ...billingAccountStep({ journey: (values) => (values.product === 'fixed-line' ? 'fixed-line' : 'postpaid') }), skip: (values) => !billingStepActive(values) };
+  const billingJourney = (values: Record<string, unknown>): 'fixed-line' | 'postpaid' => (values.product === 'fixed-line' ? 'fixed-line' : 'postpaid');
+  // New Postpaid takes its Billing right after SIM Selection (before the Order Summary), so the early copy is out of the way while the product is
+  // undecided or Postpaid; every other product keeps Billing where it was, after Address.
+  const billingStep: WizardStep = { ...billingAccountStep({ journey: billingJourney }), skip: (values) => !billingStepActive(values) || values.product === undefined || values.product === 'postpaid' };
+  const postpaidBilling: WizardStep = { ...billingAccountStep({ journey: () => 'postpaid' }), skip: (values) => values.product !== 'postpaid' };
+  const postpaid = shared(postpaidSteps(ctx));
+  const atCheckout = postpaid.findIndex((s) => s.key === 'checkout');
+  const postpaidInOrder = atCheckout === -1 ? postpaid : [...postpaid.slice(0, atCheckout), postpaidBilling, ...postpaid.slice(atCheckout)];
   return [
     // Identification is the same for every product: scan, MOI, the eligibility checks common to all, special discounts.
     customerQualificationStep({ ...ctx, productAgnostic: true }),
     serviceAddressStep({
       mode: 'structured',
       autoPass: true,
+      // Every product this page serves is a mobile line (Fixed Line has its own Installation Address): no serviceable premises, so no Kahramaa / Vodafone ID.
+      serviceIds: false,
       billing: billingStepActive,
       // Continue passes over this step: the address is filled from the billing profile (or "-" when there is none) and stays editable from the rail. It is
       // never the NAS National Address, which is kept apart, unchanged, and not shown to the agent.
@@ -54,7 +63,8 @@ export function buildConnectionSteps(ctx: ConnectionStepContext): WizardStep[] {
     }),
     billingStep,
     productStep(ctx),
-    ...forProduct('postpaid', shared(postpaidSteps(ctx))),
+    productCardsStep(ctx),
+    ...forProduct('postpaid', postpaidInOrder),
     ...forProduct('prepaid', shared(prepaidSteps(ctx))),
     ...forProduct('fixed-line', [homeKindStep(ctx), ...installation]),
     ...forProduct('mnp', shared(mnpSteps(ctx))),

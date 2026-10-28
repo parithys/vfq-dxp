@@ -32,9 +32,7 @@ export function EsimActivationPanel({ activationCode, emailSent }: EsimActivatio
           {activationCode}
         </code>
       </div>
-      {emailSent ? (
-        <p className="text-success text-[length:var(--fs-body)] mt-auto">Your order details and eSIM details have been sent to your email.</p>
-      ) : (
+      {emailSent ? null : (
         <p className="text-[var(--warn-text)] text-[length:var(--fs-caption)] mt-auto">
           The order details and eSIM details could not be sent: there is no verified email address for this customer.
         </p>

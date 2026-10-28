@@ -61,12 +61,12 @@ test('Continue never lands on a step that is passed over, and Back never lands o
 });
 
 // ---- one wizard, four products ----------------------------------------------------------------------------------------
-test('before a product is chosen the journey is Customer Verification, Address, Billing Profile and Product Selection', () => {
-  assert.deepEqual(activeKeys({}), ['contact', 'address', 'billingAccount', 'product']);
+test('before a product is chosen the journey is Customer Verification, Address and Product Selection (Billing comes later)', () => {
+  assert.deepEqual(activeKeys({}), ['contact', 'address', 'product']);
 });
 
 test('every product continues the same wizard: identification, address, billing profile (where the product has one), product selection, then that product\'s own steps', () => {
-  assert.deepEqual(activeKeys({ product: 'postpaid' }), ['contact', 'address', 'billingAccount', 'product', 'plan', 'planExtras', 'number', 'simType', 'checkout', 'caf', 'payment']);
+  assert.deepEqual(activeKeys({ product: 'postpaid' }), ['contact', 'address', 'product', 'plan', 'planExtras', 'number', 'simType', 'billingAccount', 'checkout', 'caf', 'payment'], 'New Postpaid: SIM Selection -> Billing -> Order Summary');
   assert.deepEqual(activeKeys({ product: 'prepaid' }), ['contact', 'address', 'product', 'plan', 'planExtras', 'number', 'simType', 'cart', 'checkout', 'caf', 'payment']);
   assert.deepEqual(activeKeys({ product: 'fixed-line' }), ['contact', 'address', 'billingAccount', 'product', 'homeKind', 'installation', 'plan', 'number', 'checkout', 'caf', 'payment', 'appointment']);
   assert.deepEqual(activeKeys({ product: 'mnp', mnpType: 'postpaid' }), ['contact', 'address', 'billingAccount', 'product', 'mnpType', 'sim', 'plan', 'planExtras', 'donor-details', 'checkout', 'donor-attachment', 'caf', 'payment']);
@@ -264,9 +264,9 @@ test('Fixed Line\'s connection type is asked on its own step, not on Recommended
   assert.ok(products.PRODUCT_OWNED_KEYS.includes('homeProduct'));
 });
 
-test('Product Selection\'s position follows the steps before it: after Address and Billing, or just Address when the product has no billing profile', async () => {
+test('Product Selection\'s position follows the steps before it: after Address and Billing, or just Address when the product has no billing profile or (New Postpaid) takes it later', async () => {
   const pc = await load('/src/modules/new-connection/steps/productChoice.ts');
-  assert.equal(pc.productStepIndex('connection', { product: 'postpaid' }), 3);
+  assert.equal(pc.productStepIndex('connection', { product: 'postpaid' }), 2, 'New Postpaid takes its Billing after SIM Selection');
   assert.equal(pc.productStepIndex('connection', { product: 'prepaid' }), 2);
   assert.equal(pc.productStepIndex('connection', { product: 'mnp', mnpType: 'prepaid' }), 2);
   assert.equal(pc.productStepIndex('connection', { product: 'mnp', mnpType: 'postpaid' }), 3);
@@ -292,4 +292,16 @@ test('Recommended Offers for an existing customer: every offer type has three sa
       assert.deepEqual(o.linkedProductIds, [], 'a sample links to no plan');
     }
   }
+});
+
+test('a customer known to be new has no cross-sales offer: the Recommended Offers page gives way to the five start cards (New Postpaid first); everyone else keeps Recommended Offers', async () => {
+  const active = activeKeys;
+  assert.ok(active({ eligibility: { isExistingCustomer: false } }).includes('productCards'));
+  assert.ok(!active({ eligibility: { isExistingCustomer: false } }).includes('product'));
+  assert.ok(active({ eligibility: { isExistingCustomer: true } }).includes('product'));
+  assert.ok(!active({ eligibility: { isExistingCustomer: true } }).includes('productCards'));
+  assert.ok(active({}).includes('product') && !active({}).includes('productCards'), 'unknown stays on the original page');
+  const src = (await import('node:fs')).readFileSync('src/modules/new-connection/steps/StartCards.tsx', 'utf8');
+  const order = ['New Postpaid', 'New Home Connection', 'New Fixed Line', 'New MNP', 'New Prepaid'].map((t) => src.indexOf(`title: '${t}'`));
+  assert.deepEqual([...order].sort((a, b) => a - b), order, 'cards in the requested order');
 });

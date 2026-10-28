@@ -1,4 +1,5 @@
 import { CustomerIdentification } from '../CustomerIdentification';
+import { Button } from '../../components/primitives/Button';
 import { CARD_SELECTED, SelectedTick, CARD_IDLE } from '../../components/primitives/offerCardParts';
 import { Icon } from '../../components/primitives/Icon';
 import { CARD_SELECTABLE } from '../stepStyles';
@@ -29,6 +30,8 @@ export function ActualUser({
   onChange,
   primaryIdNumber,
   primaryCustomerId,
+  hideChoice = false,
+  onRemove,
 }: {
   value: ActualUserValue;
   onChange: (value: ActualUserValue) => void;
@@ -36,6 +39,9 @@ export function ActualUser({
   primaryIdNumber?: string;
   /** The primary customer's id, so the demo reader presents someone else. */
   primaryCustomerId?: string;
+  /** The journey has already chosen "someone else" (from its own button): the two choice cards are not shown, and `onRemove` is the way back. */
+  hideChoice?: boolean;
+  onRemove?: () => void;
 }) {
   const readerCustomerId = useDemoReaderCustomer(primaryCustomerId);
   const choice = value.choice ?? 'primary';
@@ -44,6 +50,7 @@ export function ActualUser({
   const samePerson = isOtherUser(value) && sameId(identity?.idNumber, primaryIdNumber);
   return (
     <div className="space-y-4">
+      {!hideChoice && (
       <div role="radiogroup" aria-label="Actual User" className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))]">
         {OPTIONS.map((o) => {
           const checked = choice === o.key;
@@ -76,6 +83,7 @@ export function ActualUser({
           );
         })}
       </div>
+      )}
       {choice === 'other' && (
         <div className="space-y-4">
           <CustomerIdentification
@@ -97,8 +105,13 @@ export function ActualUser({
           )}
           {samePerson && (
             <p role="alert" className="text-danger text-[length:var(--fs-caption)]">
-              This is the primary customer's own ID. Choose "Same as primary customer", or identify a different person.
+              {hideChoice ? "This is the primary customer's own ID. Identify a different person." : 'This is the primary customer\'s own ID. Choose "Same as primary customer", or identify a different person.'}
             </p>
+          )}
+          {hideChoice && onRemove && (
+            <Button variant="tertiary" compact onClick={onRemove}>
+              Remove Secondary Contact
+            </Button>
           )}
         </div>
       )}

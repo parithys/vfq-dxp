@@ -180,7 +180,7 @@ export function SimTypeStep({ value, customerEmail, onChange, device, prePaired,
                 <dd className="text-fg font-medium">eSIM</dd>
               </div>
               <div className="flex justify-between gap-3">
-                <dt className="text-fg">ICCID</dt>
+                <dt className="text-fg">SIM Serial Number</dt>
                 <dd className="text-fg font-medium">{value.simIccid ?? '-'}</dd>
               </div>
             </dl>

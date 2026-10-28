@@ -23,6 +23,8 @@ export interface JourneyDocument {
   dataUrl?: string;
   /** For an upload held in the session file store rather than in the values. */
   fileId?: string;
+  /** For a scanned document the reader kept no image of: what was drawn on screen at the scan, so the same card can be shown again. */
+  scan?: { side: 'front' | 'back'; documentType?: string; variant?: 'b2b2c' | 'retired' | 'mada' };
 }
 
 import { getDocumentTypes } from './configEngine';
@@ -102,6 +104,12 @@ export function requiredDocumentsFor(ctx: DocumentContext): DocumentRequirement[
     .map((t) => ({ id: t.id, label: t.label, reason: t.reason ?? 'Required for this order.' }));
 }
 
+/** The configured document type a condition makes required (the Additional Discount's supporting document is the one asked for when `number-waiver` holds), or undefined when none is. */
+export function requirementForCondition(condition: string): { id: string; label: string } | undefined {
+  const t = getDocumentTypes().find((x) => x.requiredWhen?.includes(condition));
+  return t ? { id: t.id, label: t.label } : undefined;
+}
+
 /** The labels offered in the Document Type list: every configured type that applies here, except those already asked for as a required card. */
 export function documentTypeOptionsFor(ctx: DocumentContext): string[] {
   const required = new Set(requiredDocumentsFor(ctx).map((r) => r.id));
@@ -150,12 +158,12 @@ export function idScanDisplayName(idType: string | undefined, idNumber: string |
   return `${digitsOnly(idNumber) || (idType ?? 'ID').replace(/\s+/g, '-')}-${side}-${at.toISOString().slice(0, 10)}.${extensionOfDataUrl(dataUrl)}`;
 }
 
-function scanDocuments(prefix: string, label: string, source: string, scan: Scan | undefined, name: (side: 'Front' | 'Back' | 'Both-Sides', uploaded: string | undefined, dataUrl: string | undefined) => string): JourneyDocument[] {
+function scanDocuments(prefix: string, label: string, source: string, scan: Scan | undefined, name: (side: 'Front' | 'Back' | 'Both-Sides', uploaded: string | undefined, dataUrl: string | undefined) => string, drawn?: { documentType?: string; variant?: 'b2b2c' | 'retired' | 'mada' }): JourneyDocument[] {
   if (!scan) return [];
   const how = scan.source === 'upload' ? 'Uploaded' : 'Scanned';
   const out: JourneyDocument[] = [];
-  if (scan.frontScanned) out.push({ id: `${prefix}-front`, label: `${label}${scan.combined ? ' (Both Sides)' : ' (Front)'}`, source: `${source} · ${how}`, fileName: name(scan.combined ? 'Both-Sides' : 'Front', scan.frontFile, scan.frontImage), dataUrl: scan.frontImage });
-  if (scan.backScanned && !scan.combined) out.push({ id: `${prefix}-back`, label: `${label} (Back)`, source: `${source} · ${how}`, fileName: name('Back', scan.backFile, scan.backImage), dataUrl: scan.backImage });
+  if (scan.frontScanned) out.push({ id: `${prefix}-front`, label: `${label}${scan.combined ? ' (Both Sides)' : ' (Front)'}`, source: `${source} · ${how}`, fileName: name(scan.combined ? 'Both-Sides' : 'Front', scan.frontFile, scan.frontImage), dataUrl: scan.frontImage, ...(drawn && how === 'Scanned' ? { scan: { side: 'front' as const, ...drawn } } : {}) });
+  if (scan.backScanned && !scan.combined) out.push({ id: `${prefix}-back`, label: `${label} (Back)`, source: `${source} · ${how}`, fileName: name('Back', scan.backFile, scan.backImage), dataUrl: scan.backImage, ...(drawn && how === 'Scanned' ? { scan: { side: 'back' as const, ...drawn } } : {}) });
   return out;
 }
 
@@ -163,12 +171,12 @@ function scanDocuments(prefix: string, label: string, source: string, scan: Scan
 export function consolidatedDocuments(values: Record<string, unknown>, uploaded: { id: string; label: string; fileName: string }[] = []): JourneyDocument[] {
   const contact = values.contact as { idType?: string; idNumber?: string; qidScans?: Scan } | undefined;
   const type = values.customerType as { type?: string; officeId?: Scan; rejected?: boolean } | undefined;
-  const caf = values.caf as { signatureDataUrl?: string; secondarySignatureDataUrl?: string } | undefined;
+  const caf = values.caf as { signatureDataUrl?: string; signedCafDataUrl?: string; secondarySignatureDataUrl?: string } | undefined;
   const officeLabel = specialDiscountDocumentLabel(type?.type);
   return [
-    ...scanDocuments('id', contact?.idType ? `${contact.idType} ID Document`.replace('ID ID', 'ID') : 'ID Document', 'Customer Verification', contact?.qidScans, (side, uploaded, dataUrl) => idScanDisplayName(contact?.idType, contact?.idNumber, side.toLowerCase() as 'front' | 'back' | 'both-sides', uploaded, new Date(), dataUrl)),
-    ...(type && type.type && type.type !== 'none' && !type.rejected ? scanDocuments('special', officeLabel, 'Special Discounts', type.officeId, (side, uploaded) => scanFileName(officeLabel, side, uploaded, new Date(), contact?.idNumber)) : []),
-    ...(caf?.signatureDataUrl ? [{ id: 'caf-signature', label: 'Signed CAF', source: 'CAF & Signature', fileName: 'signed-caf.png', dataUrl: caf.signatureDataUrl }] : []),
+    ...scanDocuments('id', contact?.idType ? `${contact.idType} ID Document`.replace('ID ID', 'ID') : 'ID Document', 'Customer Verification', contact?.qidScans, (side, uploaded, dataUrl) => idScanDisplayName(contact?.idType, contact?.idNumber, side.toLowerCase() as 'front' | 'back' | 'both-sides', uploaded, new Date(), dataUrl), { documentType: contact?.idType }),
+    ...(type && type.type && type.type !== 'none' && !type.rejected ? scanDocuments('special', officeLabel, 'Special Discounts', type.officeId, (side, uploaded) => scanFileName(officeLabel, side, uploaded, new Date(), contact?.idNumber), { variant: type.type as 'b2b2c' | 'retired' | 'mada' }) : []),
+    ...(caf?.signatureDataUrl ? [{ id: 'caf-signature', label: 'Signed CAF', source: 'CAF & Signature', fileName: 'signed-caf.png', dataUrl: caf.signedCafDataUrl ?? caf.signatureDataUrl }] : []),
     ...(caf?.secondarySignatureDataUrl ? [{ id: 'caf-secondary', label: 'Supplementary Form Signature', source: 'CAF & Signature', fileName: 'supplementary-signature.png', dataUrl: caf.secondarySignatureDataUrl }] : []),
     ...uploaded.map((u) => ({ id: `upload-${u.id}`, label: u.label, source: 'Additional Documents · Uploaded', fileName: u.fileName, fileId: u.id })),
   ];

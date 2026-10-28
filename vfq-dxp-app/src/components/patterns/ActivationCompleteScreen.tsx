@@ -216,7 +216,7 @@ export function ActivationCompleteScreen({
     setLeadId(id);
     pushToast('success', `Lead ${id} created`, { key: `lead-${id}` });
   };
-  const heading = order.heading ?? (order.pendingApproval ? 'Order submitted for approval' : 'Activation complete');
+  const heading = order.heading ?? (order.pendingApproval ? 'Order submitted successfully' : 'Activation complete');
   return (
     <div className="p-8">
       <OrderConfirmationScreen
@@ -227,11 +227,9 @@ export function ActivationCompleteScreen({
         // header, not in a second column.
         headerNote={
           order.esimActivationCode ? (
-            order.pendingApproval ? (
-              <p className="rounded-[var(--radius-card)] border border-border-soft bg-surface px-4 py-3 text-fg-2 text-[length:var(--fs-body)]">
-                The eSIM QR code and activation code are released once the order is approved.
-              </p>
-            ) : undefined
+            <p className="rounded-[var(--radius-card)] border border-border-soft bg-surface px-4 py-3 text-fg-2 text-[length:var(--fs-body)]">
+              Your order details and eSIM QR code will be sent only to your verified email address.
+            </p>
           ) : emailStatus === 'sent' ? (
             <p className="text-success text-[length:var(--fs-body)]">Your order details have been sent to your email.</p>
           ) : (
@@ -243,7 +241,7 @@ export function ActivationCompleteScreen({
           )
         }
         handoverPanel={
-          order.esimActivationCode && !order.pendingApproval ? (
+          order.esimActivationCode ? (
             <EsimActivationPanel activationCode={order.esimActivationCode} emailSent={emailStatus === 'sent'} />
           ) : undefined
         }
@@ -253,8 +251,7 @@ export function ActivationCompleteScreen({
           { label: 'Plan', value: order.planName },
           ...(order.activeAddons ? [{ label: 'Active Add-Ons', value: order.activeAddons.length ? order.activeAddons.join(', ') : 'None' }] : []),
           ...(order.billingCycle ? [{ label: 'Billing Cycle', value: order.billingCycle }] : []),
-          ...(order.monthlyRecurringQar !== undefined ? [{ label: 'Monthly Rental', value: `${formatQar(order.monthlyRecurringQar)}/mo` }] : []),
-          ...(hideSimType ? [] : [{ label: 'SIM Type', value: order.simType ?? '-' }]),
+                    ...(hideSimType ? [] : [{ label: 'SIM Type', value: order.simType ?? '-' }]),
           // A port-in request's own references (NPAS reference, form number, response deadline).
           ...(order.extraLines ?? []),
         ]}
@@ -267,7 +264,7 @@ export function ActivationCompleteScreen({
           // location is read) records the fibre interest as a lead straight away and confirms it with a toast.
           ...(fibre === 'rfs' ? [{ label: 'Continue with Fibre', onClick: () => navigate(FIBRE_ACTIVATION_ROUTE) }] : []),
           ...(fibre !== undefined ? [{ label: leadId ? `Lead ${leadId} created` : 'Create Lead', onClick: () => void createLead() }] : []),
-          { label: 'Additional Notes', onClick: () => setActivityOpen(true) },
+          { label: 'Additional Comments', onClick: () => setActivityOpen(true) },
         ]}
         // Print, then the terms the customer signed; the Supplementary Form only for a line with an actual user other than the customer.
         printActions={[
@@ -279,14 +276,14 @@ export function ActivationCompleteScreen({
       <Modal
         open={activityOpen}
         onClose={() => setActivityOpen(false)}
-        title="Create Activity"
+        title="Add Comments"
         footer={
           <>
             <Button variant="secondary" onClick={() => setActivityOpen(false)}>
               Cancel
             </Button>
             <Button variant="primary" disabled={savingActivity || !activityComments.trim()} onClick={() => void createManualActivity()}>
-              {savingActivity ? 'Creating…' : 'Create Activity'}
+              {savingActivity ? 'Saving…' : 'Add Comments'}
             </Button>
           </>
         }

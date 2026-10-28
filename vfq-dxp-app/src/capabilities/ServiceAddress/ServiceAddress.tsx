@@ -18,6 +18,8 @@ export interface ServiceAddressProps {
   /** From Customer Verification: a Qatari national's registered address is prefilled. */
   idNumber?: string;
   nationality?: string;
+  /** Show the Kahramaa Meter ID / Vodafone Premise ID card (default yes). A mobile line's journey leaves it out. */
+  showServiceIds?: boolean;
 }
 
 export function ServiceAddress({ mode: _mode, ...rest }: ServiceAddressProps) {

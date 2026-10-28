@@ -53,15 +53,19 @@ export const FREE_NUMBER_PRICE_CEILING_QAR = 1500;
  */
 export const STAR_NUMBER_ENTITLEMENT_MULTIPLIER = 25;
 
+/** The free-number entitlement is quoted as a round figure: to the nearest QAR 500 (QAR 2,875 reads QAR 3,000). One rule for the stated limit and for the charge above it. */
+export const roundedEntitlementQar = (qar: number): number => Math.round(qar / 500) * 500;
+
 /** The one-time charge for a star number after BR-115's entitlement is
  * applied - zero if the number is within what the plan already entitles,
  * otherwise only the amount above it. Never negative. */
 export function starNumberOverageQar(
   planMrcQar: number,
   numberPriceQar: number,
-  entitlementQar: number = planMrcQar * STAR_NUMBER_ENTITLEMENT_MULTIPLIER
+  entitlementQar: number = roundedEntitlementQar(planMrcQar * STAR_NUMBER_ENTITLEMENT_MULTIPLIER)
 ): number {
-  return Math.max(0, round2(numberPriceQar - entitlementQar));
+  // Demo: the upfront charge is always a whole QAR amount (no fils).
+  return Math.max(0, Math.round(numberPriceQar - entitlementQar));
 }
 
 /**
@@ -72,7 +76,7 @@ export function starNumberOverageQar(
  * extra; above it the customer pays the difference (starNumberOverageQar).
  */
 export function starEntitlementQar(plan: { mrcQAR: number; starNumberEntitlementQar?: number }): number {
-  return plan.starNumberEntitlementQar ?? plan.mrcQAR * STAR_NUMBER_ENTITLEMENT_MULTIPLIER;
+  return roundedEntitlementQar(plan.starNumberEntitlementQar ?? plan.mrcQAR * STAR_NUMBER_ENTITLEMENT_MULTIPLIER);
 }
 
 export interface MonthlyChargeInput {

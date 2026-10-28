@@ -144,6 +144,8 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
                   mobileNumber: v.moiResult?.phone,
                 }
               : {}),
+            // A person identified apart from the customer (a Secondary Contact): the registry's mobile is their Mobile Number, shown masked and read-only like the email.
+            ...(unbound && v.moiResult && !v.moiResult.isNewCustomer && isValidAltPhone(v.moiResult.phone) ? { personalMobile: v.moiResult.phone } : {}),
           })
         }
       />
@@ -197,16 +199,16 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
                   sits with it. Only the VERIFIED state gets a mark - see
                   emailVerification. */}
               <Input
-                label="Personal Email ID"
+                label="Email ID"
                 type="email"
                 required
                 // New customer: the address comes from NAS and is shown masked. The field is editable: focusing it selects the masked text,
                 // so typing replaces it, and what the agent types is shown as typed (the stored value stays the real address until then).
-                value={displayedEmail(value)}
+                value={displayedEmail(value, { registry: unbound })}
                 onFocus={(e) => {
-                  if (displayedEmail(value) !== (value.email ?? '')) e.currentTarget.select();
+                  if (displayedEmail(value, { registry: unbound }) !== (value.email ?? '')) e.currentTarget.select();
                 }}
-                placeholder="customer@example.qa"
+                // The email from the NAS is shown masked but the agent may replace it: focusing selects the masked text, so typing overwrites it.
                 error={value.email && !isValidEmail(value.email) ? 'Please enter a valid email address.' : undefined}
                 helperText={emailVerification(value.email, value.moiResult?.email).hint}
                 trailingAddon={
@@ -218,12 +220,12 @@ export function GuidedContactStep({ value, onChange, showIptvToggle = true, allo
               />
               {/* Personal Mobile: optional, a Qatar mobile; validated when entered. */}
               <PhoneNumberInput
-                label="Personal Mobile"
+                label="Mobile Number"
                 noAutoFocus
                 fixedIso="QA"
                 maxNationalDigits={8}
                 value={value.personalMobile ?? ''}
-                maskedDisplay={displayedMobile(value)}
+                maskedDisplay={displayedMobile(value, { registry: unbound })}
                 placeholder="55667766"
                 error={value.personalMobile && !isValidAltPhone(value.personalMobile) ? 'Enter a valid Qatar mobile number.' : undefined}
                 onChange={(e) => onChange({ ...value, personalMobile: e.target.value || undefined })}

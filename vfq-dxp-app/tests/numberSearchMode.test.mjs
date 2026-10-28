@@ -13,7 +13,7 @@ const nums = JSON.parse(fs.readFileSync('public/mock-data/numbers.json', 'utf8')
 const local = (n) => n.msisdn.replace(/[\s+-]/g, '').replace(/^974/, '');
 
 test('the dropdown offers All, XXYY, Contains, Starts With, Ends With in that order, and opens on All', () => {
-  assert.deepEqual(m.SEARCH_MODE_OPTIONS.map((o) => o.label), ['All', 'XXYY', 'Contains', 'Starts With', 'Ends With']);
+  assert.deepEqual(m.SEARCH_MODE_OPTIONS.map((o) => o.label), ['All', 'Price', 'Starts With', 'Ends With', 'Contains', 'Pattern']);
   assert.equal(m.DEFAULT_SEARCH_MODE, 'any');
   assert.equal(m.SEARCH_MODE_OPTIONS[0].value, m.DEFAULT_SEARCH_MODE);
 });
@@ -98,4 +98,23 @@ test('the checkbox appears only under XXYY, disables the search box while checke
   assert.match(src, /const showingAllPatterns = searchMode === 'xxyy' && allPatterns/);
   assert.match(src, /setAllPatterns\(false\);\s*setPage\(0\);/, 'changing the mode drops the checkbox');
   assert.match(src, /if \(showingAllPatterns\) return hasRepeatingPairPattern\(n\.msisdn\)/);
+});
+
+test('Price is filtered by Min Price and Max Price, both ends included, an empty box leaving that end open', () => {
+  assert.equal(m.priceBound('25,000'), 25000);
+  assert.equal(m.priceBound(' 250 '), 250);
+  assert.equal(m.priceBound(''), undefined);
+  assert.equal(m.priceBound('25k'), undefined, 'not a figure: the box is treated as empty');
+  const nums = [{ priceQAR: 0 }, { priceQAR: 4999 }, { priceQAR: 5000 }, { priceQAR: 25000 }, { priceQAR: 41250 }, { priceQAR: 50000 }];
+  const within = (min, max) => nums.filter((n) => m.matchesPriceRange(n.priceQAR, min, max)).map((n) => n.priceQAR);
+  assert.deepEqual(within('', ''), nums.map((n) => n.priceQAR), 'both empty is no filter (conservation)');
+  assert.deepEqual(within('5000', '25000'), [5000, 25000], 'inclusive at both ends');
+  assert.deepEqual(within('25000', ''), [25000, 41250, 50000], 'Min only');
+  assert.deepEqual(within('', '4999'), [0, 4999], 'Max only');
+  assert.deepEqual(within('30000', '20000'), [], 'Min above Max matches nothing');
+  assert.equal(m.matchesPriceRange(undefined, '1', ''), false, 'a number with no price matches nothing once a bound is set');
+  assert.equal(m.matchesPriceRange(undefined, '', ''), true);
+  // the mode itself takes no text: Price never rejects a number on the search text
+  assert.equal(m.matchesNumberSearch({ msisdn: '+97433333333', priceQAR: 25000 }, 'abc', 'price'), true);
+  assert.equal(m.searchError('anything', 'price'), undefined, 'the search box is not shown in this mode');
 });

@@ -61,7 +61,7 @@ test('Billing auto-resolver selects only an account of the journey\'s type', () 
 test('Handing an existing customer over to New Home Connection stays in the existing flow', () => {
   const c = read('src/modules/new-connection/steps/productChoice.ts');
   assert.match(c, /ctx\.flow === 'existing' && ctx\.existingCustomerId \? `\$\{HOME_WIZARD_ID_BY_FLOW\.existing\}-\$\{ctx\.existingCustomerId\}`/);
-  assert.match(read('src/modules/new-connection/steps/productStep.tsx'), /\/fibre-home\/start-connection\/existing\//);
+  assert.match(read('src/modules/new-connection/steps/homeConnectionRoute.ts'), /\/fibre-home\/start-connection\/existing\//);
 });
 
 test('Bill limit cannot exceed the credit limit', () => {

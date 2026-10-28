@@ -34,7 +34,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 // Field chrome (border/radius/state colors) per the light-mode textbox
 // reference supplied 2026-09-15 - see the --field-* tokens in tokens.css.
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { label, error, helperText, leadingAddon, trailingAddon, className = '', id, 'aria-describedby': ariaDescribedby, ...rest },
+  { label, error, helperText, leadingAddon, trailingAddon, className = '', id, 'aria-describedby': ariaDescribedby, placeholder: _noPlaceholder, ...rest },
   ref
 ) {
   const autoId = useId();
@@ -124,11 +124,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           // matches the element it is written on, and `disabled` sits on the
           // <input> inside this wrapper, not on this div.
           className={`relative flex items-center min-h-[var(--control-h-md)] rounded-[var(--field-radius)] border
-            ${rest.disabled ? 'bg-[var(--field-bg-disabled)]' : 'bg-bg'}
+            ${rest.disabled ? 'bg-[var(--field-bg-disabled)]' : isReadOnly ? 'bg-surface cursor-default' : 'bg-bg'}
             ${/* `enabled:` matches form controls only, so on this wrapper <div> the
                  hover border never fired - use plain hover (and none when disabled). */ ''}
             ${rest.disabled ? borderClass.replace(' enabled:hover:border-[var(--field-hover-border)]', '') : borderClass.replace('enabled:hover:', 'hover:')}
-            focus-within:border-[var(--field-focus-border)]! focus-within:bg-[var(--field-focus-bg)] focus-within:shadow-[var(--field-focus-ring)]
+            ${isReadOnly ? '' : 'focus-within:border-[var(--field-focus-border)]! focus-within:bg-[var(--field-focus-bg)] focus-within:shadow-[var(--field-focus-ring)]'}
             ${rest.disabled ? 'border-[var(--field-border-disabled)]' : ''}`}
         >
           {leadingAddon && (

@@ -56,6 +56,8 @@ interface PhoneNumberInputProps {
   noAutoFocus?: boolean;
   /** Text shown in the field instead of the digits (a masked number); focusing selects it, so typing replaces it. */
   maskedDisplay?: string;
+  /** Shown, not editable. */
+  readOnly?: boolean;
 }
 
 // Shared phone-number field: a country-code dropdown locked inside the field's
@@ -78,7 +80,7 @@ export function PhoneNumberInput({
   label,
   error,
   value,
-  placeholder,
+  placeholder: _noPlaceholder,
   onChange,
   maxNationalDigits,
   className,
@@ -87,6 +89,7 @@ export function PhoneNumberInput({
   fixedIso,
   noAutoFocus,
   maskedDisplay,
+  readOnly,
 }: PhoneNumberInputProps) {
   const [iso, setIso] = useState(() => fixedIso ?? countryFromNumber(value)?.iso ?? DEFAULT_COUNTRY_ISO);
   const [open, setOpen] = useState(false);
@@ -286,8 +289,8 @@ export function PhoneNumberInput({
         </span>
       }
       value={maskedDisplay ?? groupDigits(nationalDigits)}
+      readOnly={readOnly}
       onFocus={maskedDisplay ? (e) => e.currentTarget.select() : undefined}
-      placeholder={placeholder}
       className={className}
       onChange={handleDigits}
     />

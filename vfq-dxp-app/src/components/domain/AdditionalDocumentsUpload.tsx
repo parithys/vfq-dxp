@@ -1,41 +1,14 @@
 import { formatBytes as formatSize } from '../../lib/format';
-import { Tooltip } from '../primitives/Tooltip';
-import { IconButton } from '../primitives/IconButton';
 import { useEffect, useRef, useState } from 'react';
 import { Input } from '../primitives/Input';
 import { Select } from '../primitives/Select';
 import { Button } from '../primitives/Button';
+import { Drawer } from '../primitives/Drawer';
+import { ScannedIdPreview } from './ScannedIdPreview';
 import { Icon } from '../primitives/Icon';
 import { UPLOAD_RULES, uploadFileProblem } from './documentUploadRules';
 import { documentFileOf, forgetDocumentFile, readFileAsDataUrl, rememberDocumentFile } from '../../lib/documentFileStore';
 import type { DocumentRequirement, JourneyDocument } from '../../engines/journeyDocuments';
-
-type FileType = 'PDF' | 'PNG' | 'JPG' | 'IMG' | 'DOC';
-/** The kind of file, from its name or, when it has none, from the content held. */
-function fileTypeOf(fileName: string | undefined, dataUrl: string | undefined): FileType {
-  const ext = fileName?.split('.').pop()?.toLowerCase();
-  if (ext === 'pdf') return 'PDF';
-  if (ext === 'png') return 'PNG';
-  if (ext === 'jpg' || ext === 'jpeg') return 'JPG';
-  const mime = /^data:([^;,]*)/.exec(dataUrl ?? '')?.[1] ?? '';
-  if (mime === 'application/pdf') return 'PDF';
-  if (mime.startsWith('image/')) return mime === 'image/png' ? 'PNG' : mime === 'image/jpeg' ? 'JPG' : 'IMG';
-  return 'DOC';
-}
-
-/** A page with a folded corner and the file type on it - PDFs in the brand red, images in blue, anything else neutral. */
-function FileTypeIcon({ type }: { type: FileType }) {
-  const tone = type === 'PDF' ? 'text-[var(--tag-primary-fg)]' : type === 'DOC' ? 'text-muted' : 'text-[var(--tag-blue-fg)]';
-  return (
-    <span aria-hidden className={`relative flex h-14 w-11 shrink-0 items-end justify-center pb-3 ${tone}`}>
-      <svg viewBox="0 0 44 56" fill="none" className="absolute inset-0 h-full w-full">
-        <path d="M6 1.5h22l14.5 14.5V50a4.5 4.5 0 0 1-4.5 4.5H6A4.5 4.5 0 0 1 1.5 50V6A4.5 4.5 0 0 1 6 1.5z" className="fill-[var(--bg)] stroke-[var(--field-card-border)]" strokeWidth="1.5" strokeLinejoin="round" />
-        <path d="M28 1.5V12a4 4 0 0 0 4 4h10.5" className="fill-[var(--surface)] stroke-[var(--field-card-border)]" strokeWidth="1.5" strokeLinejoin="round" />
-      </svg>
-      <span className="relative font-bold text-[length:var(--fs-caption)] leading-none tracking-wide">{type}</span>
-    </span>
-  );
-}
 
 const escapeXml = (t: string) => t.replace(/[<>&"']/g, '');
 /** Stand-in for a scan whose image was not kept: says what it is and that it is a specimen. */
@@ -83,10 +56,7 @@ interface AdditionalDocumentsUploadProps {
 const MAX_DOCUMENTS = 10;
 const RULES = UPLOAD_RULES.supporting;
 
-const TRASH = 'M3 6h18 M8 6V4h8v2 M19 6l-1 14H6L5 6 M10 11v6 M14 11v6';
 const DOC = 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6';
-const EYE = 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z';
-const UPLOAD = 'M12 16V4 M7 9l5-5 5 5 M4 20h16';
 
 /** A data URL as an object URL: browsers will not open a data: URL as a page, but they open a blob. */
 function blobUrlOf(dataUrl: string): string | undefined {
@@ -95,13 +65,6 @@ function blobUrlOf(dataUrl: string): string | undefined {
   const bytes = m[2] ? Uint8Array.from(atob(m[3]), (c) => c.charCodeAt(0)) : new TextEncoder().encode(decodeURIComponent(m[3]));
   return URL.createObjectURL(new Blob([bytes], { type: m[1] || 'application/octet-stream' }));
 }
-
-function openDocument(dataUrl: string): void {
-  const url = blobUrlOf(dataUrl);
-  if (url) window.open(url, '_blank', 'noopener');
-}
-
-const fileNameOf = (d: JourneyDocument): string => d.fileName ?? `${d.label.replace(/[^\w]+/g, '-').toLowerCase()}.${/^data:image\/png/.test(d.dataUrl ?? '') ? 'png' : /^data:image\/jpe?g/.test(d.dataUrl ?? '') ? 'jpg' : /^data:application\/pdf/.test(d.dataUrl ?? '') ? 'pdf' : 'svg'}`;
 
 // Additional Documents: the end of the journey, after the CAF is signed. It holds (1) what this order requires the agent to attach, decided by
 // its scenario and the role - asked for here and nowhere earlier; (2) every document the journey holds, consolidated, each one viewable; and (3) anything else the agent wants to attach, labelled by type. No signature is needed for any of it.
@@ -119,7 +82,11 @@ export function AdditionalDocumentsUpload({
   const [label, setLabel] = useState('');
   // The file chosen or dropped but not uploaded yet.
   const [staged, setStaged] = useState<File | null>(null);
-  const [dragging, setDragging] = useState(false);
+  // The document opened from Journey Documents, shown in the side drawer.
+  const [journeyOpen, setJourneyOpen] = useState(false);
+  // 0-100 while a document is being uploaded; undefined when none is.
+  const [progress, setProgress] = useState<number | undefined>();
+  const [viewing, setViewing] = useState<{ title: string; dataUrl?: string; scan?: JourneyDocument['scan'] } | undefined>();
   // A type picked with no file yet is an unfinished upload: the caller blocks Continue until it is uploaded.
   useEffect(() => {
     onPendingChange?.(Boolean(label.trim() || staged));
@@ -183,11 +150,22 @@ export function AdditionalDocumentsUpload({
       setError('Choose a file to upload.');
       return;
     }
-    if (await add(staged, { label: trimmed })) {
-      setLabel('');
-      setStaged(null);
-      if (fileRef.current) fileRef.current.value = '';
+    // The bar climbs while the file is read and attached (never past 90 until it is done), then fills and clears. A larger file takes visibly longer.
+    setProgress(0);
+    const step = Math.max(2, Math.round(60000 / Math.max(staged.size, 60000) * 6));
+    const timer = window.setInterval(() => setProgress((p) => (p === undefined ? p : Math.min(90, p + step))), 80);
+    const ok = await add(staged, { label: trimmed });
+    window.clearInterval(timer);
+    if (!ok) {
+      setProgress(undefined);
+      return;
     }
+    setProgress(100);
+    await new Promise((r) => window.setTimeout(r, 350));
+    setProgress(undefined);
+    setLabel('');
+    setStaged(null);
+    if (fileRef.current) fileRef.current.value = '';
   };
 
   const handleRequiredFile = async (file: File | undefined) => {
@@ -261,109 +239,124 @@ export function AdditionalDocumentsUpload({
       )}
 
       <div className="@container">
-        <div className="grid grid-cols-1 items-start gap-4 @2xl:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
+        <div className="grid grid-cols-1 items-start gap-4">
         {noTypesToOffer ? null : !atLimit ? (
-          <section aria-label="Upload new documents" className="card overflow-hidden">
-            <header className="flex items-center gap-3 border-b border-border-soft px-4 py-3">
-              <span aria-hidden className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-circle)] bg-accent text-accent-on font-bold text-[length:var(--fs-caption)]">01</span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-fg font-semibold text-[length:var(--fs-body)]">Upload New Documents</span>
-                <span className="block text-muted text-[length:var(--fs-caption)]">Add Optional Supporting Files</span>
-              </span>
-            </header>
-            <div className="space-y-4 p-4">
-              {labelOptions ? (
-                <Select
-                  label="Document Type"
-                  // A type already uploaded is not offered again.
-                  options={[
-                    { value: '', label: 'Choose Document Type' },
-                    ...labelOptions.filter((o) => !documents.some((d) => d.label === o)).map((o) => ({ value: o, label: o })),
-                  ]}
-                  value={label}
-                  onChange={(e) => {
-                    setLabel(e.target.value);
-                    setError(null);
-                  }}
-                />
-              ) : (
-                <Input
-                  label="Document Label"
-                  placeholder="e.g. Employer Letter"
-                  value={label}
-                  onChange={(e) => {
-                    setLabel(e.target.value);
-                    setError(null);
-                  }}
-                />
-              )}
-              <input ref={fileRef} type="file" accept={RULES.accept} className="sr-only" aria-label="Choose a document to upload" onChange={(e) => stageFile(e.target.files?.[0])} />
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragging(true);
-                }}
-                onDragLeave={() => setDragging(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setDragging(false);
-                  stageFile(e.dataTransfer.files?.[0]);
-                }}
-                className={`flex flex-col items-center gap-2 rounded-[var(--radius-card)] border border-dashed px-4 py-6 text-center transition-colors ${dragging ? 'border-[var(--field-card-selected)] bg-tone-accent' : 'border-[var(--field-card-border)] bg-bg'}`}
-              >
-                <span aria-hidden className="flex h-12 w-12 items-center justify-center rounded-[var(--radius-circle)] border border-[var(--danger-border)] bg-tone-accent text-accent">
-                  <Icon path={UPLOAD} className="w-5 h-5" />
-                </span>
-                {staged ? (
-                  <>
-                    <p className="text-fg font-semibold text-[length:var(--fs-body)] break-all">{staged.name}</p>
-                    <p className="text-muted text-[length:var(--fs-caption)]">{formatSize(staged.size)}</p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-fg font-semibold text-[length:var(--fs-body)]">Drop Documents Here</p>
-                    <p className="text-fg-2 text-[length:var(--fs-caption)]">or choose files from your device</p>
-                  </>
-                )}
-                <Button variant="secondary" onClick={() => fileRef.current?.click()}>
+          <section aria-label="Upload new documents" className="space-y-4">
+              {/* Row 1: the Document Type (or label) beside Browse files, the button on the field's baseline. Row 2: the helper, or the chosen file. */}
+              <div className="flex items-end gap-3">
+                <div className="min-w-0 flex-1">
+                  {labelOptions ? (
+                    <Select
+                      label="Document Type"
+                      // A type already uploaded is not offered again.
+                      options={[
+                        { value: '', label: 'Choose Document Type' },
+                        ...labelOptions.filter((o) => !documents.some((d) => d.label === o)).map((o) => ({ value: o, label: o })),
+                      ]}
+                      value={label}
+                      onChange={(e) => {
+                        setLabel(e.target.value);
+                        setError(null);
+                      }}
+                    />
+                  ) : (
+                    <Input
+                      label="Document Label"
+                      placeholder="e.g. Employer Letter"
+                      value={label}
+                      onChange={(e) => {
+                        setLabel(e.target.value);
+                        setError(null);
+                      }}
+                    />
+                  )}
+                </div>
+                <input ref={fileRef} type="file" accept={RULES.accept} className="sr-only" aria-label="Choose a document to upload" onChange={(e) => stageFile(e.target.files?.[0])} />
+                <Button variant="secondary" onClick={() => fileRef.current?.click()} disabled={!label.trim()} title={label.trim() ? undefined : labelOptions ? 'Choose a Document Type first' : 'Enter a Document Label first'}>
                   {staged ? 'Choose another file' : 'Browse files'}
                 </Button>
-                <p className="text-muted text-[length:var(--fs-caption)]">{RULES.formatsLabel}, up to {RULES.maxLabel} per file</p>
               </div>
-              <Button variant="primary" className="w-full" onClick={() => void uploadStaged()} disabled={!label.trim() || !staged}>
-                Upload Documents
+              <div className="flex flex-wrap items-center gap-3">
+                {staged ? (
+                  <span className="min-w-0 truncate text-fg text-[length:var(--fs-caption)]">
+                    {staged.name} <span className="text-muted">({formatSize(staged.size)})</span>
+                  </span>
+                ) : (
+                  <span className="text-muted text-[length:var(--fs-caption)]">{RULES.formatsLabel}, up to {RULES.maxLabel}</span>
+                )}
+                {staged && (
+                  <Button
+                    variant="tertiary"
+                    compact
+                    onClick={() => {
+                      setStaged(null);
+                      setError(null);
+                      if (fileRef.current) fileRef.current.value = '';
+                    }}
+                  >
+                    Remove
+                  </Button>
+                )}
+              </div>
+              {progress !== undefined && (
+                <div className="space-y-1">
+                  <div role="progressbar" aria-label="Upload progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} className="h-2 w-full overflow-hidden rounded-[var(--radius-pill)] bg-surface">
+                    <div className="h-full rounded-[var(--radius-pill)] bg-accent transition-[width] duration-[var(--motion-base)] ease-out" style={{ width: `${progress}%` }} />
+                  </div>
+                  <p className="text-muted text-[length:var(--fs-caption)]">Uploading {staged?.name} - {progress}%</p>
+                </div>
+              )}
+              <Button variant="primary" className="w-full" onClick={() => void uploadStaged()} disabled={!label.trim() || !staged || progress !== undefined}>
+                Upload Document
               </Button>
-            </div>
           </section>
         ) : (
           <p className="text-muted text-[length:var(--fs-caption)]">Maximum of {maxDocuments} documents reached. Remove one to upload another.</p>
         )}
         {rows.length > 0 && (
           // One flat list of every document scanned or uploaded earlier in the journey: no container per document or per group.
-          <section aria-label="Journey documents" className="space-y-1">
-            <h5 className="text-fg font-semibold text-[length:var(--fs-body)]">Journey Documents <span className="text-muted font-normal text-[length:var(--fs-caption)]">({rows.length})</span></h5>
-            <ul className="divide-y divide-border-soft">
+          <section aria-label="Journey documents" className="space-y-2">
+            {/* Collapsed until asked for: one toggle under the upload, then the list of everything the journey scanned or uploaded. */}
+            <button
+              type="button"
+              aria-expanded={journeyOpen}
+              aria-controls="journey-documents-list"
+              onClick={() => setJourneyOpen((o) => !o)}
+              className="inline-flex items-center gap-1 text-link font-medium text-[length:var(--fs-body)] hover:underline focus:outline-none focus-visible:shadow-[var(--focus-ring)] rounded-[var(--radius-sm)]"
+            >
+              View All Journey Documents <span className="text-muted font-normal text-[length:var(--fs-caption)]">({rows.length})</span>
+              <Icon path={journeyOpen ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6'} className="w-4 h-4" />
+            </button>
+            <ul id="journey-documents-list" hidden={!journeyOpen} className="space-y-1.5">
               {sections.flatMap((g) =>
                 g.items.map((d) => {
                   const held = d.dataUrl ?? (d.fileId ? documentFileOf(d.fileId)?.dataUrl : undefined);
                   // A capture the reader kept no image of (the demo scanner) opens as a labelled specimen, never as someone's document.
-                  const dataUrl = held ?? (d.source.endsWith('Scanned') ? scanSpecimen(d.label) : undefined);
-                  const name = d.fileName ?? fileNameOf(d);
+                  // (it is drawn again from what the reader showed - see `scan` - rather than a grey specimen note.)
+                  const dataUrl = held ?? (d.source.endsWith('Scanned') && !d.scan ? scanSpecimen(d.label) : undefined);
+                  const viewable = Boolean(dataUrl) || Boolean(d.scan);
                   // The document, then which side when the group holds several.
                   // Only the document, not the journey step it came from ("QID Document - Front", not "Customer Verification: QID Document - Front").
                   const docTitle = g.title.includes(': ') ? g.title.slice(g.title.indexOf(': ') + 2) : g.title;
                   const title = g.items.length > 1 || g.kind !== d.label ? `${docTitle} - ${sideOf(d.label)}` : docTitle;
                   return (
-                    <li key={d.id} className="flex items-center gap-3 py-3">
-                      <FileTypeIcon type={fileTypeOf(d.fileName, dataUrl)} />
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-fg font-semibold text-[length:var(--fs-body)] truncate">{title}</span>
-                        <span className="block text-muted text-[length:var(--fs-caption)] truncate">{name}</span>
-                      </span>
-                      <Tooltip content={dataUrl ? `View ${d.label}` : 'No copy of this document is held'} placement="bottom">
-                        <IconButton bordered icon={EYE} label={`View ${d.label}`} className="rounded-[var(--radius-pill)] border-border-soft! text-fg-2! enabled:hover:bg-surface" disabled={!dataUrl} onClick={() => dataUrl && openDocument(dataUrl)} />
-                      </Tooltip>
-                      {d.removable && d.fileId && <IconButton tone="danger" icon={TRASH} label={`Remove ${d.fileName ?? d.label}`} onClick={() => remove(d.fileId!)} />}
+                    // A plain text link that opens the document; a document no copy is held of is just its name.
+                    <li key={d.id} className="text-[length:var(--fs-body)]">
+                      {viewable ? (
+                        <button type="button" className="text-link underline text-left" onClick={() => setViewing({ title, dataUrl, scan: dataUrl ? undefined : d.scan })}>
+                          {title}
+                        </button>
+                      ) : (
+                        <span className="text-fg-2">{title}</span>
+                      )}
+                      {d.removable && d.fileId && (
+                        <>
+                          {' '}
+                          <button type="button" className="text-[length:var(--fs-caption)] text-fg-2 underline hover:text-fg" aria-label={`Remove ${d.fileName ?? d.label}`} onClick={() => remove(d.fileId!)}>
+                            Remove
+                          </button>
+                        </>
+                      )}
                     </li>
                   );
                 })
@@ -373,6 +366,19 @@ export function AdditionalDocumentsUpload({
         )}
         </div>
       </div>
+
+      <Drawer open={Boolean(viewing)} onClose={() => setViewing(undefined)} title={viewing?.title ?? 'Document'}>
+        {viewing &&
+          (viewing.scan ? (
+            <div className="mx-auto max-w-md">
+              <ScannedIdPreview side={viewing.scan.side} documentType={viewing.scan.documentType} variant={viewing.scan.variant} clear />
+            </div>
+          ) : viewing.dataUrl && /^data:application\/pdf/.test(viewing.dataUrl) ? (
+            <iframe title={viewing.title} src={blobUrlOf(viewing.dataUrl)} className="h-[70vh] w-full rounded-[var(--radius-card)] border border-border-soft bg-bg" />
+          ) : viewing.dataUrl ? (
+            <img src={viewing.dataUrl} alt={viewing.title} className="mx-auto max-h-[75vh] max-w-full rounded-[var(--radius-card)] border border-border-soft bg-bg" />
+          ) : null)}
+      </Drawer>
 
       {error && (
         <p role="alert" className="text-danger text-[length:var(--fs-caption)]">

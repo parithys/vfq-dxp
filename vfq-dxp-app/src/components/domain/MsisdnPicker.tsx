@@ -2,19 +2,21 @@ import { formatDateTime, formatQar } from '../../lib/format';
 import { EmptyState } from '../primitives/EmptyState';
 import { TabStrip } from '../primitives/TabStrip';
 import { Pagination, pageWindow } from '../primitives/Pagination';
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { Button } from '../primitives/Button';
 import { Badge } from '../primitives/Badge';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { Icon } from '../primitives/Icon';
+import { IconButton } from '../primitives/IconButton';
+import { Tooltip } from '../primitives/Tooltip';
 import { CARD_IDLE, CARD_SELECTED, SelectedTick, SelectedCardTexture } from '../primitives/offerCardParts';
 import { Select } from '../primitives/Select';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { usePersonaStore } from '../../stores/personaStore';
 import { Checkbox } from '../primitives/Checkbox';
 import { SearchField } from '../primitives/SearchField';
-import { FREE_NUMBER_PRICE_CEILING_QAR, STAR_NUMBER_ENTITLEMENT_MULTIPLIER, starNumberOverageQar } from '../../engines/postpaidPricing';
-import { TAB_LABELS, TAB_ORDER, PORTAL_TAB_ORDER, RETAIL_SALES_PERSONA_ID, toLocalMsisdn, MAX_RESERVATIONS_PER_AGENT, PAGE_SIZE, FREE_PAGE_SIZE, STAR_SORT_OPTIONS, FREE_SORT_OPTIONS, PRICE_RANGES, inPriceRange, SEARCH_MODE_OPTIONS, DEFAULT_SEARCH_MODE, matchesNumberSearch, hasRepeatingPairPattern, searchError, SORTERS, STAT_ICONS } from './msisdnPickerModel';
+import { FREE_NUMBER_PRICE_CEILING_QAR, STAR_NUMBER_ENTITLEMENT_MULTIPLIER, roundedEntitlementQar, starNumberOverageQar } from '../../engines/postpaidPricing';
+import { TAB_LABELS, TAB_ORDER, PORTAL_TAB_ORDER, RETAIL_SALES_PERSONA_ID, toLocalMsisdn, MAX_RESERVATIONS_PER_AGENT, PAGE_SIZE, FREE_PAGE_SIZE, FREE_SORT_OPTIONS, SEARCH_MODE_OPTIONS, DEFAULT_SEARCH_MODE, matchesNumberSearch, matchesPriceRange, priceBound, hasRepeatingPairPattern, searchError, SORTERS, STAT_ICONS } from './msisdnPickerModel';
 import type { MsisdnRecord, NumberTab, SearchMode, SortKey } from './msisdnPickerModel';
 import { StarStat } from './StarStat';
 
@@ -60,10 +62,11 @@ interface MsisdnPickerProps {
   hideReservedBadge?: boolean;
 }
 
-// The chips abbreviate (QAR 5K); the tooltip spells the range out.
-const money0 = (v: number) => formatQar(v);
-const rangeTitle = (r: { min: number; max: number }) =>
-  r.min === 0 ? `Under ${money0(r.max + 1)}` : Number.isFinite(r.max) ? `${money0(r.min)} \u2013 ${money0(r.max)}` : `Above ${money0(r.min - 1)}`;
+// The price sort as icons: bars shortening with a down arrow = High to Low, bars lengthening with an up arrow = Low to High.
+const PRICE_SORT_BUTTONS: { key: SortKey; label: string; icon: string }[] = [
+  { key: 'price-desc', label: 'Price: High to Low', icon: 'M3 6h10 M3 12h7 M3 18h4 M17 5v14 M14 16l3 3 3-3' },
+  { key: 'price-asc', label: 'Price: Low to High', icon: 'M3 6h4 M3 12h7 M3 18h10 M17 19V5 M14 8l3-3 3 3' },
+];
 
 const SEARCH_MIN = 2;
 const SEARCH_MAX = 8;
@@ -76,11 +79,10 @@ const SEARCH_DEBOUNCE_MS = 300;
 const chargeFor = (priceQar: number) => (priceQar >= FREE_NUMBER_PRICE_CEILING_QAR ? priceQar : 0);
 
 export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, planMrcQar, starEntitlementQar: starEntitlementProp, inlineToolbar = false, portalMode = false, reservedHere = [], onUnreserve, customerIdNumber }: MsisdnPickerProps) {
-  const entitlementQar = starEntitlementProp ?? (planMrcQar !== undefined ? planMrcQar * STAR_NUMBER_ENTITLEMENT_MULTIPLIER : undefined);
+  const entitlementQar = starEntitlementProp ?? (planMrcQar !== undefined ? roundedEntitlementQar(planMrcQar * STAR_NUMBER_ENTITLEMENT_MULTIPLIER) : undefined);
   // Star tab filter: only numbers priced within the customer's entitlement (no extra charge).
   const [withinEntitlementOnly, setWithinEntitlementOnly] = useState(false);
   // Star tab price-range filter: none selected = "All".
-  const [priceRanges, setPriceRanges] = useState<string[]>([]);
   const [numbers, setNumbers] = useState<MsisdnRecord[]>([]);
   const [numbersLoaded, setNumbersLoaded] = useState(false);
   const [tab, setTab] = useState<NumberTab>(portalMode ? 'Star' : 'Free');
@@ -104,6 +106,9 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
   const [search, setSearch] = useState('');
   // How the box matches (the dropdown before it): Any is what the box always did.
   const [searchMode, setSearchMode] = useState<SearchMode>(DEFAULT_SEARCH_MODE);
+  // Price only: the two boxes (Min Price, Max Price) the list is held between, both ends included.
+  const [priceMin, setPriceMin] = useState('');
+  const [priceMax, setPriceMax] = useState('');
   // XXYY only: list every number that has a repeating-pair pattern, with no pattern typed (the search box is disabled meanwhile).
   const [allPatterns, setAllPatterns] = useState(false);
   const showingAllPatterns = searchMode === 'xxyy' && allPatterns;
@@ -249,12 +254,10 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
       // Matches the stored E.164 OR the displayed local form, so typing the 8 digits on screen finds the row.
       if (tab === 'Star' && withinEntitlementOnly && entitlementQar !== undefined && n.priceQAR > entitlementQar) return false;
       if (showingAllPatterns) return hasRepeatingPairPattern(n.msisdn);
+      if (searchMode === 'price') return matchesPriceRange(n.priceQAR, priceMin, priceMax);
       return matchesNumberSearch(n, search, searchMode);
   };
-  const activeRanges = PRICE_RANGES.filter((r) => priceRanges.includes(r.key));
-  const rangeCounts = Object.fromEntries(PRICE_RANGES.map((r) => [r.key, inTab.filter((n) => passesOtherFilters(n) && inPriceRange(n.priceQAR, r)).length]));
   const filtered = inTab
-    .filter((n) => tab !== 'Star' || activeRanges.length === 0 || activeRanges.some((r) => inPriceRange(n.priceQAR, r)))
     .filter(passesOtherFilters)
     // Reserved: most recently reserved first. Free and Star keep their chosen sort.
     .sort(tab === 'Reserved' ? (a, b) => String(b.reservedAt ?? '').localeCompare(String(a.reservedAt ?? '')) : SORTERS[effectiveSort]);
@@ -279,10 +282,42 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
           onChange={(e) => {
             setSearchMode(e.target.value as SearchMode);
             setAllPatterns(false);
+            setPriceMin('');
+            setPriceMax('');
             setPage(0);
           }}
         />
       </div>
+      {searchMode === 'price' ? (
+        // Price: two compact boxes instead of the search box - Min Price, a dash, Max Price.
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            {([['Min Price', priceMin, setPriceMin], ['Max Price', priceMax, setPriceMax]] as const).map(([label, val, set], i) => (
+              <Fragment key={label}>
+                {i === 1 && <span aria-hidden="true" className="text-fg-2">-</span>}
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  aria-label={label}
+                  placeholder={label}
+                  value={val}
+                  maxLength={9}
+                  onChange={(e) => {
+                    set(e.target.value.replace(/[^0-9,]/g, ''));
+                    setPage(0);
+                  }}
+                  className="w-32 h-[var(--field-height)] rounded-[var(--field-radius)] border border-[var(--field-border)] bg-bg px-3 text-center text-[length:var(--fs-body)] text-[var(--color-field-text-filled)] placeholder:text-muted enabled:hover:border-[var(--field-hover-border)] focus:outline-none focus-visible:border-[var(--field-focus-border)]! focus-visible:bg-[var(--field-focus-bg)] focus-visible:shadow-[var(--field-focus-ring)]"
+                />
+              </Fragment>
+            ))}
+          </div>
+          {priceBound(priceMin) !== undefined && priceBound(priceMax) !== undefined && priceBound(priceMin)! > priceBound(priceMax)! && (
+            <p role="alert" className="text-danger text-[length:var(--fs-caption)]">
+              Min Price is higher than Max Price.
+            </p>
+          )}
+        </div>
+      ) : (
       <div className="flex-1 min-w-0 space-y-1">
       <SearchField
         aria-label="Search numbers"
@@ -290,7 +325,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
         value={searchInput}
         maxLength={SEARCH_MAX}
         disabled={showingAllPatterns}
-        className="pr-24 h-[var(--field-height)] py-0!"
+        className="h-[var(--field-height)] py-0!"
         aria-describedby="msisdn-search-hint"
         onChange={(e) => setSearchInput(e.target.value)}
         onClear={() => {
@@ -298,12 +333,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
           setSearch('');
           setPage(0);
         }}
-      >
-        {/* Typed length (raw, as the field counts it) against the 8-character limit. */}
-        <span aria-hidden="true" className={`absolute right-10 top-1/2 -translate-y-1/2 text-[length:var(--fs-caption)] ${showingAllPatterns ? 'text-[var(--field-label-disabled)]' : 'text-muted'}`}>
-          {searchInput.length}/{SEARCH_MAX}
-        </span>
-      </SearchField>
+      />
       <p
         id="msisdn-search-hint"
         role={searchProblem ? 'alert' : 'status'}
@@ -318,6 +348,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
               : ''}
       </p>
       </div>
+      )}
     </div>
     {searchMode === 'xxyy' && (
       <label className="flex h-[var(--field-height)] shrink-0 items-center gap-2 whitespace-nowrap cursor-pointer text-fg text-[length:var(--fs-body)]">
@@ -337,20 +368,27 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
   // default order still applies meanwhile), and the separate SORT caption goes.
   const sortPlaceholder = inlineToolbar && !sortChosen[tab === 'Star' ? 'Star' : 'Free'];
   const sortNode = (
-        <div className={`flex items-center gap-2 ${inlineToolbar ? 'w-full [&>div]:w-full' : 'justify-end'}`}>
+        <div className={`flex items-center gap-2 ${tab !== 'Star' && inlineToolbar ? 'w-full [&>div]:w-full' : 'justify-end'}`}>
           {!inlineToolbar && <span className="text-muted text-[length:var(--fs-caption)] uppercase tracking-wide">Sort</span>}
           {tab === 'Star' ? (
-            <Select
-              aria-label="Sort numbers"
-              options={STAR_SORT_OPTIONS}
-              placeholder="Sort by"
-              className="h-[var(--field-height)] py-0!"
-              value={sortPlaceholder ? '' : sort}
-              onChange={(e) => {
-                setSortChosen((c) => ({ ...c, Star: true }));
-                setSort(e.target.value as SortKey);
-              }}
-            />
+            // Price sort as ONE toggle: it shows the order the list is in (High to Low until the agent changes it) and a click flips to the other. The tooltip is the header's (Tooltip, bottom).
+            (() => {
+              const current = PRICE_SORT_BUTTONS.find((b) => b.key === (sort === 'price-asc' ? 'price-asc' : 'price-desc')) ?? PRICE_SORT_BUTTONS[0];
+              const next = PRICE_SORT_BUTTONS.find((b) => b.key !== current.key)!;
+              return (
+                <Tooltip content={current.label} placement="bottom">
+                  <IconButton
+                    icon={current.icon}
+                    label={`${current.label}. Switch to ${next.label}`}
+                    onClick={() => {
+                      setSortChosen((c) => ({ ...c, Star: true }));
+                      setSort(next.key);
+                    }}
+                    className="!h-[var(--field-height)] !w-[var(--field-height)] border border-[var(--field-border)] bg-bg"
+                  />
+                </Tooltip>
+              );
+            })()
           ) : (
             <Select
               aria-label="Sort numbers"
@@ -373,8 +411,8 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
           exceeds it - the agent should know the cap before scanning individual prices. */}
       {entitlementQar !== undefined && (
         <p className="text-muted text-[length:var(--fs-caption)]">
-            Your selected plan entitles a Star Number up to <strong className="text-accent font-bold text-[length:var(--fs-body)]">{`QAR\u00a0${entitlementQar.toLocaleString('en-US')}`}</strong> at no extra charge.
-            Anything above that is billed the difference.
+            Your selected plan includes a Star Number worth up to <strong className="text-accent font-bold text-[length:var(--fs-body)]">{`QAR\u00a0${entitlementQar.toLocaleString('en-US')}`}</strong> at no extra charge.
+            If you choose a higher-value number, you only pay the difference.
         </p>
       )}
       {/* The tabs switch which list is shown, so they are the underline tab strip (navigation / content tabs), not the pill filter switch. */}
@@ -392,8 +430,13 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
           shown on both Free and Star still, since search narrows by number
           regardless of whether that tab also offers a price sort. */}
       {inlineToolbar ? (
-        // The search takes the whole row; the sort sits at the right end of the Price Range row below, in both layouts.
-        tab !== 'Reserved' && <div className="min-w-0">{searchNode}</div>
+        // One row: the "search by" dropdown, the search box and the sort.
+        tab !== 'Reserved' && (
+          <div className="flex items-start gap-3">
+            <div className="min-w-0 flex-1">{searchNode}</div>
+            {showSort && <div className="shrink-0">{sortNode}</div>}
+          </div>
+        )
       ) : (
         <>
           {tab !== 'Reserved' && searchNode}
@@ -410,8 +453,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
           something having failed to load. */}
       {/* Tier chips (Platinum / Gold / Silver) and the TIER filter were removed
           on 2026-09-27 per the annotated walkthrough. */}
-          {/* On the Star tab the sort shares the price-range row below (the portal layout); elsewhere it keeps its own row. */}
-          {showSort && tab !== 'Star' && sortNode}
+          {showSort && sortNode}
         </>
       )}
       {/* Star tab: "Show within my entitlement" filter, with the other Star-tab filters. */}
@@ -427,80 +469,26 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
           Show within my entitlement
         </label>
       )}
-      {/* Star tab: price-range filter. One range at a time (picking another replaces it; picking the active one again, or All, clears it); "All" (the default) means none. Counts
-          ignore the range filter itself but follow search and the entitlement filter, and a range with no
-          matches is disabled. */}
-      {tab === 'Star' && (
-        <div className="space-y-2" role="group" aria-label="Price range">
-          <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-            <span className="text-fg-2 text-[length:var(--fs-caption)]">Price Range</span>
-            {[{ key: 'all', label: 'All' }, ...PRICE_RANGES].map((r) => {
-              const isAll = r.key === 'all';
-              const on = isAll ? priceRanges.length === 0 : priceRanges.includes(r.key);
-              const count = isAll ? undefined : rangeCounts[r.key];
-              const disabled = !isAll && count === 0 && !on;
-              return (
-                <button
-                  key={r.key}
-                  type="button"
-                  aria-pressed={on}
-                  title={isAll ? undefined : rangeTitle(r as (typeof PRICE_RANGES)[number])}
-                  disabled={disabled}
-                  onClick={() => {
-                    setPage(0);
-                    setPriceRanges((cur) => (isAll || cur.includes(r.key) ? [] : [r.key]));
-                  }}
-                  className={`rounded-[var(--radius-pill)] border px-3 py-1 text-[length:var(--fs-caption)] focus:outline-none focus-visible:shadow-[var(--focus-ring)] disabled:opacity-40 disabled:cursor-not-allowed ${
-                    on
-                      ? 'border-[var(--field-card-selected)] bg-[var(--field-card-selected-bg)] text-[var(--field-card-selected)] font-medium'
-                      : 'border-[var(--field-card-border)] bg-bg text-fg-2 enabled:hover:bg-surface'
-                  }`}
-                >
-                  {on && !isAll ? '\u2713 ' : ''}
-                  {r.label}
-                  {count !== undefined ? ` (${count})` : ''}
-                </button>
-              );
-            })}
-          </div>
-          {/* Sort stays at the right end of the Price Range row (the chips wrap among themselves, not under it), in the portal and in the inline toolbar. */}
-          {showSort && <div className={inlineToolbar ? 'w-56 shrink-0' : 'shrink-0'}>{sortNode}</div>}
-          </div>
-          {(activeRanges.length > 0 || withinEntitlementOnly || search || showingAllPatterns) && (
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-fg-2 text-[length:var(--fs-caption)]">Active Filters</span>
-              {showingAllPatterns && (
-                <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] bg-surface px-2.5 py-0.5 text-[length:var(--fs-caption)] text-fg">
-                  All XXYY Patterns
-                  <button
-                    type="button"
-                    aria-label="Remove filter All XXYY Patterns"
-                    onClick={() => { setAllPatterns(false); setPage(0); }}
-                    className="text-fg-2 hover:text-fg focus:outline-none focus-visible:shadow-[var(--focus-ring)] rounded-[var(--radius-pill)]"
-                  >
-                    <Icon path="M18 6L6 18 M6 6l12 12" className="w-3.5 h-3.5" />
-                  </button>
-                </span>
-              )}
-              {activeRanges.map((r) => (
-                <span key={r.key} className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] bg-surface px-2.5 py-0.5 text-[length:var(--fs-caption)] text-fg">
-                  {r.label}
-                  <button
-                    type="button"
-                    aria-label={`Remove filter ${r.label}`}
-                    onClick={() => setPriceRanges((cur) => cur.filter((k) => k !== r.key))}
-                    className="text-fg-2 hover:text-fg focus:outline-none focus-visible:shadow-[var(--focus-ring)] rounded-[var(--radius-pill)]"
-                  >
-                    <Icon path="M18 6L6 18 M6 6l12 12" className="w-3.5 h-3.5" />
-                  </button>
-                </span>
-              ))}
-              <Button variant="tertiary" compact onClick={() => { setPriceRanges([]); setWithinEntitlementOnly(false); setSearch(''); setSearchInput(''); setSearchMode(DEFAULT_SEARCH_MODE); setAllPatterns(false); setPage(0); }}>
-                Clear filters
-              </Button>
-            </div>
+      {/* Active filters (an entitlement limit, a typed search, the all-patterns list), each removable, with one Clear filters. */}
+      {tab === 'Star' && (withinEntitlementOnly || search || showingAllPatterns) && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-fg-2 text-[length:var(--fs-caption)]">Active Filters</span>
+          {showingAllPatterns && (
+            <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] bg-surface px-2.5 py-0.5 text-[length:var(--fs-caption)] text-fg">
+              All Patterns
+              <button
+                type="button"
+                aria-label="Remove filter All Patterns"
+                onClick={() => { setAllPatterns(false); setPage(0); }}
+                className="text-fg-2 hover:text-fg focus:outline-none focus-visible:shadow-[var(--focus-ring)] rounded-[var(--radius-pill)]"
+              >
+                <Icon path="M18 6L6 18 M6 6l12 12" className="w-3.5 h-3.5" />
+              </button>
+            </span>
           )}
+          <Button variant="tertiary" compact onClick={() => { setWithinEntitlementOnly(false); setSearch(''); setSearchInput(''); setSearchMode(DEFAULT_SEARCH_MODE); setAllPatterns(false); setPriceMin(''); setPriceMax(''); setPage(0); }}>
+            Clear filters
+          </Button>
         </div>
       )}
       {/* Capped and scrollable as of 2026-09-25, when the Free inventory went
@@ -568,8 +556,9 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
           // Upfront charge is what is actually billed today: for a Star number
           // only the amount above the plan's entitlement (BR-115); anything
           // below the Star band is billed at its catalogue price.
-          const upfront =
+          const upfrontFull =
             isStar && planMrcQar !== undefined ? starNumberOverageQar(planMrcQar, n.priceQAR, entitlementQar) : chargeFor(n.priceQAR);
+          const upfront = upfrontFull;
           const lockIn = isStar
             ? starTiers.find((t) => n.priceQAR >= t.valueRangeMin && n.priceQAR <= t.valueRangeMax)?.lockInDurationMonths
             : undefined;
@@ -585,7 +574,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
             const facts = [
               { icon: STAT_ICONS.wallet, label: 'Price', value: money(n.priceQAR), alert: false },
               ...(lockIn !== undefined ? [{ icon: STAT_ICONS.lock, label: 'Lock-In Period', value: `${lockIn}\u00a0months`, alert: false }] : []),
-              ...(planMrcQar !== undefined && upfront > 0
+              ...(planMrcQar !== undefined && upfrontFull > 0
                 ? [{ icon: STAT_ICONS.tag, label: 'Upfront Charge', value: money(upfront), alert: true }]
                 : []),
             ];
@@ -656,7 +645,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
               )}
               {isStar ? (
                 <>
-                  {planMrcQar !== undefined && upfront > 0 && (
+                  {planMrcQar !== undefined && upfrontFull > 0 && (
                     <p className="font-semibold text-accent text-[length:var(--fs-caption)]">Upfront charge: {formatQar(upfront)}</p>
                   )}
                   {planMrcQar !== undefined && entitlementQar !== undefined && (
@@ -679,9 +668,7 @@ export function MsisdnPicker({ refreshKey = 0, selected, onSelect, onDeselect, p
               ? portalMode
                 ? 'No numbers reserved yet. Numbers you reserve here appear in this tab.'
                 : 'No numbers have been reserved for this customer.'
-              : activeRanges.length > 0 && tab === 'Star'
-                ? 'No Star Numbers match the selected price range and filters. Clear the filters to see all.'
-                : showingAllPatterns
+              : showingAllPatterns
                   ? 'No available numbers have an XXYY pattern.'
                   : search
                   ? `No available numbers match \u201c${search}\u201d.`

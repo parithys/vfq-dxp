@@ -277,10 +277,11 @@ export function emailVerification(email: string | undefined, registryEmail: stri
  * The personal email as the screen shows it. A new customer's NAS address is masked while it is the address NAS returned;
  * once the agent types a different one (the field is editable) that address is shown as typed.
  */
-export function displayedEmail(contact: { email?: string; moiResult?: { isNewCustomer?: boolean; createdByAgent?: boolean; email?: string } } | undefined): string {
+export function displayedEmail(contact: { email?: string; moiResult?: { isNewCustomer?: boolean; createdByAgent?: boolean; email?: string } } | undefined, opts: { registry?: boolean } = {}): string {
   const email = contact?.email ?? '';
   const moi = contact?.moiResult;
-  const fromNas = Boolean(moi?.isNewCustomer && !moi.createdByAgent && email && moi.email && email.trim().toLowerCase() === moi.email.trim().toLowerCase());
+  // `registry`: a person identified apart from the customer (a Secondary Contact) - whoever the registry returned, an existing customer included, is shown masked.
+  const fromNas = Boolean((opts.registry || moi?.isNewCustomer) && !moi?.createdByAgent && email && moi?.email && email.trim().toLowerCase() === moi.email.trim().toLowerCase());
   return fromNas ? maskEmail(email) : email;
 }
 
@@ -306,10 +307,11 @@ export function maskMobile(mobile: string | undefined): string {
  * The personal mobile as the screen shows it: a new customer's NAS number is masked while it is still the number NAS returned; once the agent types
  * a different one (the field is editable) it is shown as typed. Undefined: show the field's own value.
  */
-export function displayedMobile(contact: { personalMobile?: string; moiResult?: { isNewCustomer?: boolean; createdByAgent?: boolean; mobile?: string } } | undefined): string | undefined {
+export function displayedMobile(contact: { personalMobile?: string; moiResult?: { isNewCustomer?: boolean; createdByAgent?: boolean; mobile?: string; phone?: string } } | undefined, opts: { registry?: boolean } = {}): string | undefined {
   const moi = contact?.moiResult;
   const mobile = contact?.personalMobile;
-  const fromNas = Boolean(moi?.isNewCustomer && !moi.createdByAgent && mobile && moi.mobile && mobile === moi.mobile);
+  const registryMobile = opts.registry ? moi?.mobile ?? moi?.phone : moi?.mobile;
+  const fromNas = Boolean((opts.registry || moi?.isNewCustomer) && !moi?.createdByAgent && mobile && registryMobile && mobile === registryMobile);
   return fromNas ? maskMobile(mobile) : undefined;
 }
 

@@ -314,705 +314,705 @@
     "valueTier": "Platinum"
   },
   {
-    "msisdn": "+97476669999",
+    "msisdn": "+97477776666",
     "category": "Star",
     "status": "AVAILABLE",
-    "priceQAR": 4500,
+    "priceQAR": 32000,
     "valueTier": "Platinum",
-    "_note": "App-level demo addition (2026-10-25) - 100 more Star numbers (Vodafone Qatar mobile numbers start 3, 5, 6 or 7: 25 of each), priced by pattern strength (repeating digits, XXYY pairs, sequences, palindromes, round endings), QAR 1,500-50,000 so every price range on the Star tab has stock."
+    "_note": "App-level demo addition (2026-10-25), revised 2026-10-28 - 100 Star numbers in the 7 range (Vodafone Qatar's own mobile range; numbers starting 3, 5 and 6 belong to the other Qatar operator), in patterns a premium inventory is actually sold by: repeated runs, XXYY pairs, ascending and descending sequences, palindromes, round endings and repeating pairs. Priced by pattern strength, QAR 1,500-50,000, so every price range on the Star tab has stock. The number ranges are an assumption to confirm with VFQ Business."
   },
   {
-    "msisdn": "+97433336677",
+    "msisdn": "+97477779999",
     "category": "Star",
     "status": "AVAILABLE",
-    "priceQAR": 3800,
+    "priceQAR": 48000,
     "valueTier": "Platinum"
   },
   {
-    "msisdn": "+97455999922",
+    "msisdn": "+97472228888",
     "category": "Star",
     "status": "AVAILABLE",
-    "priceQAR": 3500,
+    "priceQAR": 30000,
     "valueTier": "Platinum"
   },
   {
-    "msisdn": "+97452888884",
+    "msisdn": "+97471119999",
     "category": "Star",
     "status": "AVAILABLE",
-    "priceQAR": 5500,
+    "priceQAR": 34000,
     "valueTier": "Platinum"
   },
   {
-    "msisdn": "+97458886666",
+    "msisdn": "+97470005555",
     "category": "Star",
     "status": "AVAILABLE",
-    "priceQAR": 6000,
+    "priceQAR": 22000,
     "valueTier": "Platinum"
   },
   {
-    "msisdn": "+97461000088",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 2200,
-    "valueTier": "Gold"
-  },
-  {
-    "msisdn": "+97466664477",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 3200,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97468555555",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 10000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97462999994",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 4800,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97430000000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 50000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97436700000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 40000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97437888882",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 7000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97437555557",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 6500,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97438885555",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 6500,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97432690000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 14000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97467776666",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 4800,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97461111111",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 25000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97471115555",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 4200,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97477221111",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 2800,
-    "valueTier": "Gold"
-  },
-  {
-    "msisdn": "+97458885555",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 5500,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97479500000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 28000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97475500000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 45000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97458777743",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 1800,
-    "valueTier": "Gold"
-  },
-  {
-    "msisdn": "+97473339999",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 4000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97470000000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 45000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97466669966",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 3200,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97475999968",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 1500,
-    "valueTier": "Gold"
-  },
-  {
-    "msisdn": "+97436666631",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 7000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97477555500",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 4200,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97450660000",
+    "msisdn": "+97474446666",
     "category": "Star",
     "status": "AVAILABLE",
     "priceQAR": 18000,
     "valueTier": "Platinum"
   },
   {
-    "msisdn": "+97433666657",
+    "msisdn": "+97477777000",
     "category": "Star",
     "status": "AVAILABLE",
-    "priceQAR": 2800,
-    "valueTier": "Gold"
-  },
-  {
-    "msisdn": "+97463332222",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 5000,
+    "priceQAR": 26000,
     "valueTier": "Platinum"
   },
   {
-    "msisdn": "+97459995555",
+    "msisdn": "+97477001001",
     "category": "Star",
     "status": "AVAILABLE",
-    "priceQAR": 5000,
+    "priceQAR": 24000,
     "valueTier": "Platinum"
   },
   {
-    "msisdn": "+97458999960",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 1800,
-    "valueTier": "Gold"
-  },
-  {
-    "msisdn": "+97433850000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 18000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97479150000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 9500,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97464490000",
+    "msisdn": "+97471111222",
     "category": "Star",
     "status": "AVAILABLE",
     "priceQAR": 15000,
     "valueTier": "Platinum"
   },
   {
-    "msisdn": "+97466333358",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 2200,
-    "valueTier": "Gold"
-  },
-  {
-    "msisdn": "+97433332299",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 3800,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97455996666",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 3500,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97477000078",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 2000,
-    "valueTier": "Gold"
-  },
-  {
-    "msisdn": "+97439870000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 20000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97430007777",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 7000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97477444444",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 15000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97434444444",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 25000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97436430000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 12000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97455599555",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 1800,
-    "valueTier": "Gold"
-  },
-  {
-    "msisdn": "+97437777764",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 7500,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97466666688",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 15000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97450800000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 35000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97459200000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 35000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97478777799",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 2200,
-    "valueTier": "Gold"
-  },
-  {
-    "msisdn": "+97433339955",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 3800,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97438800000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 45000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97461900000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 30000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97470200000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 30000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97455000070",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 2500,
-    "valueTier": "Gold"
-  },
-  {
-    "msisdn": "+97454444499",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 8500,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97434080000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 12000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97439400000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 40000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97461110000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 20000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97478887777",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 4200,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97463331111",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 4500,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97478740000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 9500,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97463888834",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 1500,
-    "valueTier": "Gold"
-  },
-  {
-    "msisdn": "+97478640000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 9000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97431222213",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 9000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97450000000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 50000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97439555599",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 2500,
-    "valueTier": "Gold"
-  },
-  {
-    "msisdn": "+97432666634",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 2000,
-    "valueTier": "Gold"
-  },
-  {
-    "msisdn": "+97466999966",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 10000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97453950000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 12000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97455553333",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 11000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97472111110",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 4000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97457000075",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 9000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97456663333",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 6000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97465555549",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 5000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97453333335",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 25000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97476700000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 28000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97432229999",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 7500,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97469333321",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 3200,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97464250000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 11000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97459222226",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 6500,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97477333399",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 3000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97464999946",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 8500,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97469000096",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 8000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97465010000",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 9500,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97459999993",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 11000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97464444407",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 4500,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97478333387",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 8000,
-    "valueTier": "Platinum"
-  },
-  {
-    "msisdn": "+97455557781",
-    "category": "Star",
-    "status": "AVAILABLE",
-    "priceQAR": 2500,
-    "valueTier": "Gold"
-  },
-  {
-    "msisdn": "+97437050000",
+    "msisdn": "+97472222333",
     "category": "Star",
     "status": "AVAILABLE",
     "priceQAR": 14000,
     "valueTier": "Platinum"
   },
   {
-    "msisdn": "+97453900000",
+    "msisdn": "+97477444455",
     "category": "Star",
     "status": "AVAILABLE",
-    "priceQAR": 35000,
+    "priceQAR": 9500,
     "valueTier": "Platinum"
   },
   {
-    "msisdn": "+97463100000",
+    "msisdn": "+97477333355",
     "category": "Star",
     "status": "AVAILABLE",
-    "priceQAR": 30000,
+    "priceQAR": 9000,
     "valueTier": "Platinum"
   },
   {
-    "msisdn": "+97477776622",
+    "msisdn": "+97479999000",
     "category": "Star",
     "status": "AVAILABLE",
-    "priceQAR": 3000,
+    "priceQAR": 16000,
     "valueTier": "Platinum"
   },
   {
-    "msisdn": "+97477112222",
+    "msisdn": "+97477112233",
     "category": "Star",
     "status": "AVAILABLE",
-    "priceQAR": 3000,
+    "priceQAR": 21000,
     "valueTier": "Platinum"
   },
   {
-    "msisdn": "+97478880000",
+    "msisdn": "+97477223344",
     "category": "Star",
     "status": "AVAILABLE",
     "priceQAR": 20000,
     "valueTier": "Platinum"
   },
   {
-    "msisdn": "+97471888817",
+    "msisdn": "+97477445566",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 19000,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477889900",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 17000,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477001122",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 16500,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97471122334",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 6500,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97472233445",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 6000,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97474455667",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 5800,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477335577",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 5200,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477662288",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 5000,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97470778899",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 4800,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97471886677",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 4500,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97472997755",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 4200,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97471234567",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 38000,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477123456",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 34000,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477234567",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 29000,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477765432",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 33000,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477876543",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 27000,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97472345678",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 31000,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97474567890",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 12500,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477890123",
     "category": "Star",
     "status": "AVAILABLE",
     "priceQAR": 8000,
     "valueTier": "Platinum"
   },
   {
-    "msisdn": "+97460000000",
+    "msisdn": "+97477543210",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 7800,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97471357900",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 3600,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477246810",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 3400,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477111234",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 3200,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477555678",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 3000,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477122177",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 14500,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477344377",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 13500,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477566577",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 12800,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477788777",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 22000,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97472455442",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 7600,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97471677617",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 7200,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97474899847",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 6800,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477018810",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 6400,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97470233207",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 3500,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97471544517",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 3300,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97472877827",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 3100,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97474199147",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 2900,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477922977",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 2800,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477000000",
     "category": "Star",
     "status": "AVAILABLE",
     "priceQAR": 50000,
     "valueTier": "Platinum"
   },
   {
-    "msisdn": "+97454333344",
+    "msisdn": "+97477100000",
     "category": "Star",
     "status": "AVAILABLE",
-    "priceQAR": 5500,
+    "priceQAR": 46000,
     "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477200000",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 42000,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477500000",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 40000,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477900000",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 36000,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477010000",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 28000,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477020000",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 24500,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477030000",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 23000,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477770000",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 35000,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477880000",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 25000,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477990000",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 22500,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97472500000",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 11500,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97474100000",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 10800,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97470050000",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 8800,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477201111",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 9800,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477310000",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 8400,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477418888",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 9200,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477529999",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 9600,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477630000",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 7400,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477744444",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 17500,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477855555",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 16800,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477966666",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 18500,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97472403333",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 5400,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97471652222",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 5100,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97474078888",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 6200,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97470419999",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 6600,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477214455",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 2600,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477316677",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 2500,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477428899",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 2400,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477871787",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 4400,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477177177",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 4600,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477787778",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 5600,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97471787178",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 3900,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477808808",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 4100,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477878787",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 7900,
+    "valueTier": "Platinum"
+  },
+  {
+    "msisdn": "+97477797979",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 3800,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477898989",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 3700,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477686868",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 4300,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97472686868",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 2300,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97474686868",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 2200,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477707070",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 2150,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477727272",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 2050,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477737373",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 1950,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477747474",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 1850,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477757575",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 1750,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477767676",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 1650,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477787878",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 1550,
+    "valueTier": "Gold"
+  },
+  {
+    "msisdn": "+97477818181",
+    "category": "Star",
+    "status": "AVAILABLE",
+    "priceQAR": 1500,
+    "valueTier": "Gold"
   },
   {
     "msisdn": "+97464386654",

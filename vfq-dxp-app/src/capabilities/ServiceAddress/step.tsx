@@ -6,6 +6,7 @@ import type { ZsbAddressValue } from '../../components/patterns/ZsbAddressStep';
 import type { BillingAccountValue } from '../../components/patterns/billingAccountModel';
 import type { PrefilledAddress } from '../../components/patterns/addressFromBilling';
 import { AddressPrefill } from './AddressPrefill';
+import { DemoAddressSeed } from './DemoAddressSeed';
 
 /**
  * Service address: stores a ZSB address under `address`. `identity` reads the customer's ID number / nationality from the
@@ -20,6 +21,8 @@ export function serviceAddressStep(
     /** Continue passes over the step (it stays in the rail so the agent can come back and edit it). The address is then filled for the agent from the
      *  billing profile, or with placeholders when there is none (AddressPrefill). */
     autoPass?: boolean;
+    /** Show the Kahramaa Meter ID / Vodafone Premise ID card (default yes). A mobile line needs no serviceable premises, so its journey passes false. */
+    serviceIds?: boolean;
     /** Whether the journey has a billing profile (default yes; a prepaid line has none, so its address is the placeholder). */
     billing?: (values: Record<string, unknown>) => boolean;
  }
@@ -44,13 +47,17 @@ export function serviceAddressStep(
     render: ({ values, setValue }) => {
       const who = opts.identity?.(values);
       return (
+        <>
+        <DemoAddressSeed address={values.address as PrefilledAddress | undefined} onChange={(v) => setValue('address', v)} />
         <ServiceAddress
           value={(values.address as ZsbAddressValue) ?? {}}
           // An agent's edit makes the address theirs: the prefill marker goes, so it is never overwritten.
           onChange={(v) => setValue('address', { ...v, prefilledKey: undefined })}
           idNumber={who?.idNumber}
           nationality={who?.nationality}
+          showServiceIds={opts.serviceIds}
         />
+        </>
       );
     },
     isValid: () => true,

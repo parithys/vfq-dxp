@@ -1,6 +1,6 @@
 import { Button } from '../primitives/Button';
 import { EmptyState } from '../primitives/EmptyState';
-import { SPECIAL_DISCOUNT_ADDON_TYPES, SPECIAL_DISCOUNT_CARD_TITLE, type Discount } from './postpaidPlanModel';
+import { SPECIAL_DISCOUNT_ADDON_TYPES, SPECIAL_DISCOUNT_CARD_TITLE, discountDescription, discountsAscending, type Discount } from './postpaidPlanModel';
 import { DiscountCard } from './DiscountCard';
 
 interface PostpaidDiscountsPanelProps {
@@ -68,11 +68,11 @@ export function PostpaidDiscountsPanel({
               selected={!discountId}
               onToggle={() => onSelectDiscount(undefined)}
             />
-            {discounts.map((d) => (
+            {discountsAscending(discounts).map((d) => (
               <DiscountCard
                 key={d.addonDiscountId}
                 title={SPECIAL_DISCOUNT_ADDON_TYPES.has(d.addonType) ? SPECIAL_DISCOUNT_CARD_TITLE : d.name}
-                description={d.description}
+                description={discountDescription(d)}
                 value={`${Math.round(d.price * 100)}%`}
                 selected={discountId === d.addonDiscountId}
                 onToggle={() => onSelectDiscount(d.addonDiscountId)}

@@ -11,6 +11,7 @@ import { AdditionalDocumentsUpload } from '../domain/AdditionalDocumentsUpload';
 import type { AdditionalDocument } from '../domain/AdditionalDocumentsUpload';
 import type { DocumentRequirement, JourneyDocument } from '../../engines/journeyDocuments';
 import * as mockDataEngine from '../../engines/mockDataEngine';
+import { composeSignedCafImage } from '../../lib/signedCafImage';
 import type { TncLegalFacts } from './checkoutSummaryModel';
 import { buildTncBullets } from './cafTermsModel';
 import type { TncBulletTemplate } from './cafTermsModel';
@@ -23,10 +24,14 @@ interface CafSignatureCaptureProps {
   value: {
     cafType?: CafType;
     signatureDataUrl?: string;
+    /** Full variant: the signed form as one image (key terms, agreements, signature, who signed), for Journey Documents. */
+    signedCafDataUrl?: string;
     /** The customer has ticked "I have read and agree to the full Terms and Conditions." */
     termsAccepted?: boolean;
     /** With a Supplementary Form: the primary customer has read it and agrees (the one signature then covers both forms). */
     supplementaryAgreed?: boolean;
+    /** Full variant: the customer agrees to marketing communications and special offers (Campaigns). Ticked unless the agent unticks it. */
+    marketingConsent?: boolean;
     /** With a Supplementary Form: the secondary contact has read it and agrees, and signs it on its own (the Supplementary Form only). */
     secondaryAgreed?: boolean;
     secondarySignatureDataUrl?: string;
@@ -267,8 +272,28 @@ export function CafSignatureCapture({
           </>
         )}
 
-        <FullTerms termsUrl={termsUrl} enabled={fullTerms} signed={signed} scrollMode={termsScrollMode} journey={journey}>
-        <div className={`${fullTerms ? 'py-4 pr-4' : 'card p-4'} ${inlineSignaturePad ? '' : 'bg-surface'}`}>
+        <FullTerms
+          termsUrl={termsUrl}
+          enabled={fullTerms}
+          signed={signed}
+          scrollMode={termsScrollMode}
+          journey={journey}
+          closingHeader={
+            signed ? (
+              // Signed: the same heading row as the secondary contact's form (the name is on the Signed by line below).
+              <div className="flex items-center justify-between gap-3 text-[length:var(--fs-caption)] text-muted">
+                <h3 className="text-fg font-semibold text-[length:var(--fs-body)]">Key Terms &amp; Conditions: Primary Contact</h3>
+                {customerName && <p className="text-fg font-medium text-right">{customerName}</p>}
+              </div>
+            ) : (
+              <div className="mt-2 flex items-center justify-between gap-3 border-t border-border-soft pt-4 text-[length:var(--fs-caption)] text-muted">
+                <h3 className="text-fg font-semibold text-[length:var(--fs-body)]">Terms &amp; Conditions: Primary Contact</h3>
+                {customerName && <p className="text-fg font-medium text-right">{customerName}</p>}
+              </div>
+            )
+          }
+        >
+        <div className={`${fullTerms ? (signed ? '' : 'py-4 pr-4') : 'card p-4'} ${inlineSignaturePad ? '' : 'bg-surface'}`}>
           {formDetails && formDetails.length > 0 && (
             <dl className="mb-2">
               {formDetails.map((row) => (
@@ -284,7 +309,7 @@ export function CafSignatureCapture({
               {idLabel}: <span className="font-medium">{idValue ?? '-'}</span>
             </p>
           )}
-          {supplementaryForm && (
+          {supplementaryForm && !fullTerms && (
             <div id="supplementary-form-primary" className="mt-3 rounded-[var(--radius-card)] border border-border-soft p-3 space-y-2" aria-label="Supplementary Form">
               <dl>
                 <div className="flex justify-between gap-4 py-1 border-b border-border-soft text-[length:var(--fs-caption)]">
@@ -305,12 +330,24 @@ export function CafSignatureCapture({
           )}
 
           {signed ? (
-            <div className="mt-3 flex items-center gap-3">
-              <Badge variant="success">{supplementaryForm ? 'Signed: CAF and Supplementary Form' : 'Signed'}</Badge>
+            <div className={`${fullTerms ? '' : 'mt-3 '}flex items-center gap-3`}>
+              <Badge variant="success">{fullTerms ? `Signed by ${customerName ?? 'the primary customer'}` : supplementaryForm ? 'Signed: CAF and Supplementary Form' : 'Signed'}</Badge>
               <img src={value.signatureDataUrl} alt="Signature" className="h-10 border border-border-soft rounded-[var(--radius-sm)]" />
             </div>
           ) : (
             <>
+              {/* Full variant: marketing consent (ticked by default), then the terms, then the supplementary terms. */}
+              {fullTerms && (
+                <p className="text-fg text-[length:var(--fs-body)]">
+                  I understand that a copy of the Terms and Conditions will be delivered to the email I provided and verified.
+                </p>
+              )}
+              {fullTerms && (
+                <label className="mt-3 flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={value.marketingConsent !== false} onChange={(e) => onChange({ ...value, marketingConsent: e.target.checked })} />
+                  <span className="text-fg text-[length:var(--fs-body)]">I agree to receive marketing communications and special offers (Campaigns).</span>
+                </label>
+              )}
               {requireTermsAgreement && (
                 <label className="mt-3 flex items-center gap-2 cursor-pointer">
                   <Checkbox
@@ -318,7 +355,7 @@ export function CafSignatureCapture({
                     onChange={(e) => onChange({ ...value, termsAccepted: e.target.checked })}
                   />
                   <span className="text-fg text-[length:var(--fs-body)]">
-                    I have read and agree to the full{' '}
+                    {fullTerms ? 'I have read and agreed to the full' : 'I have read and agree to the full'}{' '}
                     {termsUrl ? (
                       <a href={termsUrl} target="_blank" rel="noreferrer" className="text-link underline">
                         Terms and Conditions
@@ -330,19 +367,56 @@ export function CafSignatureCapture({
                   </span>
                 </label>
               )}
-              {supplementaryForm && (
+              {(supplementaryForm || fullTerms) && (
                 <label className="mt-3 flex items-center gap-2 cursor-pointer">
                   <Checkbox checked={Boolean(value.supplementaryAgreed)} onChange={(e) => onChange({ ...value, supplementaryAgreed: e.target.checked })} />
-                  <span className="text-fg text-[length:var(--fs-body)]">I have read and agree to the{' '}
-                    <button type="button" className="text-link underline" onClick={() => document.getElementById('supplementary-form-primary')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>
-                      Supplementary Form
-                    </button>
-                    .</span>
+                  {fullTerms ? (
+                    <span className="text-fg text-[length:var(--fs-body)]">
+                      I have read and agreed to the applicable{' '}
+                      {termsUrl ? (
+                        <a href={termsUrl} target="_blank" rel="noreferrer" className="text-link underline">
+                          Supplementary Terms
+                        </a>
+                      ) : (
+                        'Supplementary Terms'
+                      )}
+                      .
+
+                    </span>
+                  ) : (
+                    <span className="text-fg text-[length:var(--fs-body)]">I have read and agree to the{' '}
+                      <button type="button" className="text-link underline" onClick={() => document.getElementById('supplementary-form-primary')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>
+                        Supplementary Form
+                      </button>
+                      .</span>
+                  )}
                 </label>
               )}
               <SignatureCapture
-                disabled={(requireTermsAgreement && !value.termsAccepted) || (Boolean(supplementaryForm) && !value.supplementaryAgreed)}
-                onSave={(dataUrl) => onChange({ ...value, signatureDataUrl: dataUrl })}
+                // The full Terms and the supplementary terms are both mandatory before signing; marketing consent is optional.
+                disabled={((requireTermsAgreement || fullTerms) && !value.termsAccepted) || ((fullTerms || Boolean(supplementaryForm)) && !value.supplementaryAgreed)}
+                onSave={(dataUrl) => {
+                  onChange({ ...value, signatureDataUrl: dataUrl });
+                  if (!fullTerms) return;
+                  // The signed CAF the journey keeps carries what the customer saw and agreed to, not only the pen stroke.
+                  void mockDataEngine
+                    .list<{ title: string; body: string; journey?: string }>('tnc-full-text')
+                    .then((all) =>
+                      composeSignedCafImage({
+                        heading: 'Key Terms & Conditions: Primary Contact',
+                        customerName,
+                        sections: all.filter((x) => !x.journey || x.journey === journey),
+                        agreements: [
+                          { text: 'I agree to receive marketing communications and special offers (Campaigns).', agreed: value.marketingConsent !== false },
+                          { text: 'I have read and agreed to the full Terms and Conditions.', agreed: Boolean(value.termsAccepted) },
+                          { text: 'I have read and agreed to the applicable Supplementary Terms.', agreed: Boolean(value.supplementaryAgreed) },
+                        ],
+                        signatureDataUrl: dataUrl,
+                      })
+                    )
+                    .then((signedCafDataUrl) => onChange({ ...value, signatureDataUrl: dataUrl, signedCafDataUrl }))
+                    .catch(() => undefined);
+                }}
               />
             </>
           )}
@@ -354,21 +428,12 @@ export function CafSignatureCapture({
         {signed && supplementaryForm && (
           <section id="supplementary-form-secondary" aria-label="Supplementary Form - secondary contact" className="card p-4 space-y-3">
             <div className="flex items-center justify-between text-[length:var(--fs-caption)] text-muted">
-              <h3 className="text-fg font-semibold text-[length:var(--fs-body)]">Vodafone Supplementary Form: Secondary Contact</h3>
-              <span dir="rtl">النموذج التكميلي</span>
-            </div>
-            <dl>
-              <div className="flex justify-between gap-4 py-1 border-b border-border-soft text-[length:var(--fs-caption)]">
-                <dt className="text-fg">Primary Customer</dt>
-                <dd className="text-fg text-right">{customerName ?? '-'}</dd>
+              <h3 className="text-fg font-semibold text-[length:var(--fs-body)]">Supplementary Form: Secondary Contact</h3>
+              <div className="text-right">
+                {supplementaryForm.actualUserName && <p className="text-fg font-medium">{supplementaryForm.actualUserName}</p>}
+                <span dir="rtl">النموذج التكميلي</span>
               </div>
-              {supplementaryForm.rows.map((row) => (
-                <div key={row.label} className="flex justify-between gap-4 py-1 border-b border-border-soft last:border-0 text-[length:var(--fs-caption)]">
-                  <dt className="text-fg">{row.label}</dt>
-                  <dd className="text-fg text-right">{row.value}</dd>
-                </div>
-              ))}
-            </dl>
+            </div>
             {/* The terms the secondary contact agrees to by signing. */}
             <ul className="space-y-2 text-[length:var(--fs-caption)]">
               {SECONDARY_CONTACT_TERMS.map((t) => (
@@ -393,7 +458,6 @@ export function CafSignatureCapture({
                     </button>
                     .</span>
                 </label>
-                <p className="text-fg text-[length:var(--fs-body)] font-semibold">Secondary Contact: Please Sign</p>
                 <SignatureCapture disabled={!value.secondaryAgreed} onSave={(dataUrl) => onChange({ ...value, secondarySignatureDataUrl: dataUrl })} />
               </>
             )}

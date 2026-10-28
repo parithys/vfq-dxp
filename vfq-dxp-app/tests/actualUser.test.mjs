@@ -191,3 +191,18 @@ test('submitting the order writes the Secondary Contact\'s changed phone to thei
   const contactsOf = JSON.parse((await import('node:fs')).readFileSync('public/mock-data/customer-contacts.json', 'utf8'));
   assert.equal(contactsOf.find((c) => c.contactRecordId === contactWrites[0].id)?.customerId, 'CUST-1002', 'it is the Secondary Contact\'s own contact record');
 });
+
+test('a Secondary Contact\'s email and mobile from the registry are masked and read-only, an existing customer included; the primary page rule is unchanged', async () => {
+  const cm = await load('/src/components/patterns/guidedContactModel.ts');
+  const existing = { email: 'sophie.laurent@embassy.example', personalMobile: '55512001', moiResult: { customerId: 'CUST-1001', isNewCustomer: false, email: 'sophie.laurent@embassy.example', phone: '55512001' } };
+  // as a Secondary Contact (registry)
+  assert.equal(cm.displayedEmail(existing, { registry: true }), cm.maskEmail(existing.email));
+  assert.equal(cm.displayedMobile(existing, { registry: true }), cm.maskMobile('55512001'));
+  // on the primary page an existing customer's own values are not masked (unchanged)
+  assert.equal(cm.displayedEmail(existing), existing.email);
+  assert.equal(cm.displayedMobile(existing), undefined);
+  // what the agent types instead is shown as typed; a person the registry knows nothing about is never masked
+  assert.equal(cm.displayedEmail({ ...existing, email: 'other@example.qa' }, { registry: true }), 'other@example.qa');
+  assert.equal(cm.displayedEmail({ email: 'x@example.qa', moiResult: {} }, { registry: true }), 'x@example.qa');
+  assert.equal(cm.displayedMobile({ personalMobile: '55512001', moiResult: { customerId: 'C' } }, { registry: true }), undefined);
+});

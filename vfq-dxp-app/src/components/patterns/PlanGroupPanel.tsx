@@ -1,4 +1,4 @@
-import { specialOfferPlanName, type PostpaidPlan, type PlanGroupKey, type TabKey } from './postpaidPlanModel';
+import { SPECIAL_DISCOUNT_RATE, specialOfferPlanName, type PostpaidPlan, type PlanGroupKey, type TabKey } from './postpaidPlanModel';
 import { PostpaidPlanCard } from './PostpaidPlanCard';
 
 interface PlanGroupPanelProps {
@@ -42,7 +42,8 @@ export function PlanGroupPanel({
             onDeselectProduct={onDeselectProduct}
             setDetailPlan={setDetailPlan}
             compact={activeTab === 'specials'}
-            discountPct={p.productId === selectedProductId ? discountPct : 0}
+            // Special Offers are the plans the customer's Special Discount applies to: every card shows its discounted price (the chosen plan, the discount chosen for it).
+            discountPct={p.productId === selectedProductId ? discountPct : activeTab === 'special' ? SPECIAL_DISCOUNT_RATE : 0}
             displayName={activeTab === 'special' ? specialOfferPlanName(p.name, specialDiscountType) : undefined}
           />
         ))}

@@ -18,7 +18,7 @@ export const contactSummary: SummaryField[] = [
   { key: 'salutation', label: 'Salutation', type: 'text', optional: true, value: (v) => at(v, 'contact', 'salutation') },
   { key: 'altPhone', label: 'Work Number', type: 'text', optional: true, value: (v) => { const n = at(v, 'contact', 'altPhone'); return typeof n === 'string' ? toLocalMsisdn(n) : n; } },
   { key: 'workEmail', label: 'Work Email ID', type: 'text', optional: true, value: (v) => at(v, 'contact', 'workEmail') },
-  { key: 'email', label: 'Personal Email ID', type: 'text', optional: true, value: (v) => at(v, 'contact', 'email') },
+  { key: 'email', label: 'Email ID', type: 'text', optional: true, value: (v) => at(v, 'contact', 'email') },
   // The form shows English when none was chosen (it is not stored until changed), so the summary does too.
   { key: 'language', label: 'Preferred Language', type: 'text', value: (v) => at(v, 'contact', 'language') ?? 'English' },
   {

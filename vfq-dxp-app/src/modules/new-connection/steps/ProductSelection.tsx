@@ -10,6 +10,7 @@ import { Radio } from '../../../components/primitives/Radio';
 import { Icon } from '../../../components/primitives/Icon';
 import { clearAndQuiet, selectProduct } from './productChoice';
 import { ProductEligibility } from './ProductEligibility';
+import { StartCards } from './StartCards';
 import { HOME_PRODUCTS, IN_JOURNEY_OFFERS, PRODUCTS, PRODUCT_OF_OFFER_JOURNEY, homeProductOfOffer, mnpTypeOfOffer } from '../products';
 import type { HomeProduct, MnpType, ConnectionProduct } from '../products';
 import type { ConnectionJourney } from '../newConnectionModel';
@@ -58,7 +59,7 @@ export function ProductSelection({
   goNext: () => void;
   ctx: ProductStepContext;
   /** 'buttons': the mobile page, whose products are the footer buttons (New Fixed Line, New MNP, New Prepaid, New Postpaid). 'cards': the home product cards. */
-  variant?: 'cards' | 'buttons';
+  variant?: 'cards' | 'buttons' | 'launch';
 }) {
   const product = values.product as ConnectionProduct | undefined;
   const mnpType = values.mnpType as MnpType | undefined;
@@ -68,7 +69,9 @@ export function ProductSelection({
   const eligibility = values.eligibility as EligibilityResult | undefined;
   const crossSales = values.crossSales as CrossSalesValue | undefined;
 
-  const buttons = variant === 'buttons';
+  // 'launch': a new customer has no cross-sales offer, so there is no Recommended Offers page - the five ways to start are the page itself, as cards.
+  const launch = variant === 'launch';
+  const buttons = variant === 'buttons' || launch;
   // A product chosen by a footer button (or named by the entry point) moves on by itself once its eligibility is judged and
   // quiet. The flag is cleared as it fires, so coming Back to this page later never skips it again.
   const advance = values.productPreselected === true && Boolean(product) && clearAndQuiet(values, { requireHomeKind: homeJourney });
@@ -94,7 +97,9 @@ export function ProductSelection({
       {/* The billing account the product needs is selected or created by its Billing Profile step (billingAccountStep.headless). */}
 
       {/* Recommended offers belong to New Connection; New Home Connection goes straight to the home products. */}
-      {!homeJourney && (
+      {launch && <StartCards values={values} setValue={setValue} goNext={goNext} ctx={ctx} choose={chooseProduct} />}
+
+      {!homeJourney && !launch && (
         <CrossSalesStep
           customerId={eligibility?.customerId}
           value={crossSales ?? {}}

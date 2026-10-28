@@ -10,11 +10,12 @@ import { handOverToHomeConnection, productEligibilityClear, selectProduct } from
 export { productEligibilityClear } from './productChoice';
 import { PRODUCT_OF_OFFER_JOURNEY, homeProductLabel, mnpTypeOfOffer, productLabel } from '../products';
 import type { ConnectionProduct, HomeProduct } from '../products';
+import type { EligibilityResult } from '../../../components/domain/eligibilityTypes';
 
-/** New Home Connection is its own journey: this button continues there with the customer already identified. */
-const HOME_CONNECTION_ROUTE = '/fixed-line-fibre/new-fixed-line-wizard-contact-step';
-const homeConnectionRoute = (ctx: { flow: 'new' | 'existing'; existingCustomerId: string | undefined }) =>
-  ctx.flow === 'existing' && ctx.existingCustomerId ? `/fibre-home/start-connection/existing/${ctx.existingCustomerId}` : HOME_CONNECTION_ROUTE;
+/** A customer who is known to be new has no cross-sales offers: their first page is the five ways to start, not Recommended Offers. */
+export const hasNoCrossSalesOffer = (values: Record<string, unknown>): boolean => (values.eligibility as EligibilityResult | undefined)?.isExistingCustomer === false;
+
+import { homeConnectionRoute } from './homeConnectionRoute';
 
 const productSummary = [
   { key: 'product', label: 'Product', type: 'text' as const, value: (v: Record<string, unknown>) => (v.product === 'fixed-line' && v.homeProduct ? homeProductLabel(v.homeProduct as HomeProduct) : productLabel(v.product as ConnectionProduct | undefined)) },
@@ -45,6 +46,7 @@ export function productStep(ctx: ProductStepContext): WizardStep {
   }
   return {
     key: 'product',
+    skip: hasNoCrossSalesOffer,
     label: 'Recommended Offers',
     heading: 'Recommended Offers',
     subheading: 'Personalised using the customer’s profile and eligibility.',
@@ -90,5 +92,21 @@ export function productStep(ctx: ProductStepContext): WizardStep {
         </div>
       );
     },
+  };
+}
+
+/** The first page for a new customer (no cross-sales offer): the five ways to start as cards. Replaces Recommended Offers for them. */
+export function productCardsStep(ctx: ProductStepContext): WizardStep {
+  return {
+    key: 'productCards',
+    skip: (values) => !hasNoCrossSalesOffer(values),
+    label: 'Offers & Plans',
+    heading: 'Offers & Plans',
+    subheading: 'Select the applicable activation journey to view the relevant plans and offers.',
+    // No Journey Summary entry: this page only starts the journey, and the plan step that follows carries the name "Offers & Plans".
+    render: ({ values, setValue, goNext }) => <ProductSelection values={values} setValue={setValue} goNext={goNext} ctx={ctx} variant="launch" />,
+    isValid: (values) => Boolean(values.product) && productEligibilityClear(values),
+    // The cards are the choice: no Continue.
+    primaryAction: () => <></>,
   };
 }

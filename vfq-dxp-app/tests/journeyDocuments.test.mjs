@@ -64,13 +64,27 @@ test('the requirements are asked for in Additional Documents after signing - not
   const comp = read('src/components/domain/AdditionalDocumentsUpload.tsx');
   assert.match(comp, /aria-label="Required documents"/);
   assert.match(comp, /aria-label="Journey documents"/, 'every document held, in one flat list');
-  assert.match(comp, /openDocument\(dataUrl\)/);
+  assert.match(comp, /setViewing\(\{ title, dataUrl, scan:/, "a document opens in the side drawer");
   assert.doesNotMatch(comp, /downloadDocument/, 'viewing is enough: no download');
   const cap = read('src/components/patterns/CafSignatureCapture.tsx');
   assert.match(cap, /disabled=\{documentsBlock\}/);
   assert.match(read('src/capabilities/CafSignature/step.tsx'), /requiredDocumentsFor\(\{ values, personaId/);
-  assert.doesNotMatch(read('src/capabilities/NumberSelection/WaiveOff.tsx'), /type="file"|Upload/, 'no document is requested on the Waive Off dialog');
-  assert.match(read('src/capabilities/NumberSelection/WaiveOff.tsx'), /asked for at the end of the journey, after the CAF is signed/);
+  // The Additional Discount dialog takes the same document up front, and Apply waits for it.
+  const dialog = read('src/capabilities/NumberSelection/WaiveOff.tsx');
+  assert.match(dialog, /type="file"/);
+  assert.match(dialog, /disabled=\{Boolean\(problem\) \|\| \(onDocumentChange !== undefined && !draftDoc\)\}/, 'Apply needs the amount and the document');
+  assert.match(dialog, /uploadFileProblem\(file, UPLOAD_RULES\.supporting\)/, 'the same rules as every other upload');
+});
+
+test('the document uploaded with the Additional Discount satisfies the requirement Additional Documents would otherwise ask for', () => {
+  const req = jd.requirementForCondition('number-waiver');
+  assert.ok(req, 'a document type is required when there is a waiver');
+  const needed = jd.requiredDocumentsFor({ values: { numberWaiver: 2000 }, journey: 'new-connection', personaId: 'ROLE-01' });
+  assert.deepEqual(needed.map((r) => r.id), [req.id]);
+  assert.equal(jd.requirementForCondition('no-such-condition'), undefined);
+  // the step reads what is attached by requirement id, the key the dialog writes under
+  assert.match(read('src/capabilities/NumberSelection/step.tsx'), /requirementId: requirement\.id|d\.requirementId === requirement\.id/);
+  assert.match(read('src/capabilities/CafSignature/step.tsx'), /attached\.includes\(r\.id\)/);
 });
 
 // ---- configurable document types: public/config/document-types.json ----------------------------------------------------
@@ -110,4 +124,16 @@ test('a required type is asked for as its own card, not repeated in the list; un
   assert.equal(jd.documentTypeApplies({ id: 'x', label: 'X', appliesTo: { conditions: ['no-such-condition'] } }, { values: {} }), false);
   assert.equal(jd.documentTypeApplies({ id: 'x', label: 'X', appliesTo: { personas: ['ROLE-99'] } }, { values: {}, personaId: 'ROLE-01' }), false);
   assert.equal(jd.documentTypeApplies({ id: 'x', label: 'X', appliesTo: { personas: ['ROLE-01'] } }, { values: {}, personaId: 'ROLE-01' }), true);
+});
+
+test('a VAT registration number on a new billing account needs its document before Continue, and the upload is kept under the requirement Additional Documents matches', () => {
+  const req = jd.requirementForCondition('vat-registration');
+  assert.ok(req, 'a document type is required when a VAT number is entered');
+  const needed = (vat) => jd.requiredDocumentsFor({ values: { billingAccount: { creatingNew: true, newAccount: { vatRegistrationNumber: vat } } }, journey: 'new-connection', personaId: 'ROLE-01' }).map((r) => r.id);
+  assert.ok(needed('300123456700003').includes(req.id));
+  assert.ok(!needed('   ').includes(req.id), 'a blank number asks for nothing');
+  const step = read('src/capabilities/BillingAccount/step.tsx');
+  assert.match(step, /vatRegistrationNumber\?\.trim\(\)\) \{\s*const req = requirementForCondition\('vat-registration'\)/, 'Continue is gated on the document');
+  assert.match(step, /requirementId === vatRequirement\.id/);
+  assert.match(read('src/components/patterns/BillingAccountStep.tsx'), /newAccount\.vatRegistrationNumber\?\.trim\(\) &&[\s\S]*SupportingDocumentField/, 'the upload shows once a number is entered');
 });

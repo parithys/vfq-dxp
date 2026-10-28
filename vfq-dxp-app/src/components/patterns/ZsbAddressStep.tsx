@@ -1,3 +1,4 @@
+import { COUNTRY_DIAL_CODES } from '../primitives/countryDialCodes';
 import { useEffect, useState } from 'react';
 import { Input } from '../primitives/Input';
 import { Select } from '../primitives/Select';
@@ -20,6 +21,8 @@ export interface ZsbAddressValue {
    * - displayed as "Area/City" (2026-09-28) since that field is exactly what
    * it holds either way. */
   area?: string;
+  /** The country, chosen from the list: no evidenced source prefills it, so it stays empty until the agent chooses it. */
+  country?: string;
   /** The PO box, free text. Prefilled from the service point a Kahramaa / Vodafone ID lookup names, when it carries one. */
   poBox?: string;
   /**
@@ -55,6 +58,8 @@ export interface ZsbAddressValue {
 interface ZsbAddressStepProps {
   value: ZsbAddressValue;
   onChange: (value: ZsbAddressValue) => void;
+  /** Show the Kahramaa Meter ID / Vodafone Premise ID card above the address. Default yes; a mobile line needs no serviceable premises, so its journey leaves it out. */
+  showServiceIds?: boolean;
   /** When the Contact step's ID lookup resolved a Qatari national, their
    * registered address is looked up and prefilled rather than re-typed by the
    * agent - a Qatari ID is already tied to a Kahramaa-linked address record on
@@ -111,7 +116,7 @@ interface AddressRecord {
 // Plain groups, not bordered cards: everything sits directly inside the step's own Address container.
 const CARD = 'space-y-4';
 
-export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAddressStepProps) {
+export function ZsbAddressStep({ value, onChange, idNumber, nationality, showServiceIds = true }: ZsbAddressStepProps) {
   const [fetching, setFetching] = useState(false);
   // Area / District suggestions (see useAreaOptions).
   const areaOptions = useAreaOptions();
@@ -213,7 +218,7 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAd
 
   return (
     <div className="space-y-6">
-      {serviceInformation}
+      {showServiceIds && serviceInformation}
       {fetching && <p className="text-muted text-[length:var(--fs-body)]">Checking for an address on file…</p>}
       {/* The provenance line ("Retrieved from the customer's Qatar ID. Edit any
           field if the customer confirms a change.") was removed on 2026-09-27
@@ -226,8 +231,8 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAd
           Zone/Street/Building are visual: this step is still Mandatory: No (FLD-523-526) and does
           not gate Continue (see serviceAddressStep.isValid). */}
       <section className={CARD}>
-        {/* One grid, in the order the agent fills it: Zone, Street, Building, Floor, Flat / Unit, Area, PO Number.
-            items-end keeps the inputs level when a long label (Flat / Apartment / Unit Number *) wraps. */}
+        {/* One grid, in the order the agent fills it: Zone, Street, Building, Unit / Apartment / Flat, Floor, PO Number, City, Country, then the Address Description below.
+            items-end keeps the inputs level when a long label (Unit Number / Apartment Number / Flat Number *) wraps. */}
         <div className="grid grid-cols-3 items-end gap-4">
           <Input
             label="Zone Number"
@@ -254,27 +259,17 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAd
             onChange={(e) => onChange({ ...value, buildingNo: e.target.value })}
           />
           <Input
-            label="Floor"
-            placeholder="e.g. 4"
-            value={value.floor ?? ''}
-            onChange={(e) => onChange({ ...value, floor: e.target.value })}
-          />
-          <Input
-            label="Flat / Apartment / Unit Number"
+            label="Unit Number / Apartment Number / Flat Number"
             required
             placeholder="e.g. 4B, 1402"
             value={value.aptFlatUnit ?? ''}
             onChange={(e) => onChange({ ...value, aptFlatUnit: e.target.value })}
           />
-          <Select
-            label="Area / District"
-            placeholder="Select an area"
-            searchable
-            // A dropdown with search. A value already on the address that is not in the list
-            // (typed earlier, or from a lookup) stays selectable so it is never lost.
-            options={[...new Set([...(value.area ? [value.area] : []), ...areaOptions])].map((a) => ({ value: a, label: a }))}
-            value={value.area ?? ''}
-            onChange={(e) => onChange({ ...value, area: e.target.value })}
+          <Input
+            label="Floor"
+            placeholder="e.g. 4"
+            value={value.floor ?? ''}
+            onChange={(e) => onChange({ ...value, floor: e.target.value })}
           />
           <Input
             label="PO Number"
@@ -283,11 +278,31 @@ export function ZsbAddressStep({ value, onChange, idNumber, nationality }: ZsbAd
             value={value.poBox ?? ''}
             onChange={(e) => onChange({ ...value, poBox: e.target.value })}
           />
+          <Select
+            label="City"
+            placeholder="Select a city"
+            searchable
+            // A dropdown with search. A value already on the address that is not in the list
+            // (typed earlier, or from a lookup) stays selectable so it is never lost.
+            options={[...new Set([...(value.area ? [value.area] : []), ...areaOptions])].map((a) => ({ value: a, label: a }))}
+            value={value.area ?? ''}
+            onChange={(e) => onChange({ ...value, area: e.target.value })}
+          />
+          <Select
+            label="Country"
+            placeholder="Select a country"
+            searchable
+            // The countries the app already knows (the phone dial-code list: the GCC and the main source countries first). A value already on the
+            // address that is not in it stays selectable so it is never lost.
+            options={[...new Set([...(value.country ? [value.country] : []), ...COUNTRY_DIAL_CODES.map((c) => c.name)])].map((c) => ({ value: c, label: c }))}
+            value={value.country ?? ''}
+            onChange={(e) => onChange({ ...value, country: e.target.value })}
+          />
         </div>
         {/* Free-text catch-all (addressLine) - see ZsbAddressValue's note on why it sits
             alongside the granular fields rather than instead of them. */}
         <Textarea
-          label="Directions / Landmark"
+          label="Address Description"
           rows={2}
           placeholder="e.g. Near City Center Mall, opposite Al Rayyan Park"
           value={value.addressLine ?? ''}

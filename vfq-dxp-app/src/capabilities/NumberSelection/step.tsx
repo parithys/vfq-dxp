@@ -5,6 +5,8 @@ import { numberSummary } from './summary';
 import { WaiveOff } from './WaiveOff';
 import { FREE_NUMBER_PRICE_CEILING_QAR, starNumberOverageQar } from '../../engines/postpaidPricing';
 import { isNumberWaiver } from '../../engines/numberWaiver';
+import { requirementForCondition } from '../../engines/journeyDocuments';
+import type { AdditionalDocument } from '../DocumentUpload';
 import { Button } from '../../components/primitives/Button';
 import { Icon } from '../../components/primitives/Icon';
 
@@ -65,6 +67,10 @@ export function numberSelectionStep(
         onChange={(msisdn, price) => {
           // A different number has a different charge: a waiver chosen for the old one does not carry over.
           if (msisdn !== values.msisdn) setValue('numberWaiver', undefined);
+          // ... and neither does its supporting document.
+          const req = requirementForCondition('number-waiver');
+          const caf = values.caf as { additionalDocuments?: AdditionalDocument[] } | undefined;
+          if (msisdn !== values.msisdn && req && caf?.additionalDocuments?.some((d) => d.requirementId === req.id)) setValue('caf', { ...caf, additionalDocuments: caf.additionalDocuments.filter((d) => d.requirementId !== req.id) });
           setValue('msisdn', msisdn);
           if (opts.priceField) setValue(opts.priceField, price);
  }}
@@ -78,9 +84,26 @@ export function numberSelectionStep(
             const price = values[opts.priceField ?? 'numberPriceQAR'] as number | undefined;
             const charge =
               plan && price !== undefined && price >= FREE_NUMBER_PRICE_CEILING_QAR ? starNumberOverageQar(plan.mrcQar ?? 0, price, plan.starEntitlementQar) : 0;
+            const requirement = requirementForCondition('number-waiver');
+            const caf = (values.caf as { additionalDocuments?: AdditionalDocument[] } | undefined) ?? {};
+            const attachedDocs = caf.additionalDocuments ?? [];
             return (
               <div className="flex items-center gap-3">
-                <WaiveOff chargeQar={values.msisdn ? charge : 0} numberChosen={Boolean(values.msisdn)} waiver={isNumberWaiver(values.numberWaiver) ? values.numberWaiver : undefined} onChange={(w) => setValue('numberWaiver', w)} />
+                <WaiveOff
+                  chargeQar={values.msisdn ? charge : 0}
+                  numberChosen={Boolean(values.msisdn)}
+                  waiver={isNumberWaiver(values.numberWaiver) ? values.numberWaiver : undefined}
+                  onChange={(w) => setValue('numberWaiver', w)}
+                  // The supporting document is kept with the CAF's additional documents, under the requirement it satisfies: Additional Documents then
+                  // shows it as already attached rather than asking again.
+                  {...(requirement
+                    ? {
+                        documentRequirement: requirement,
+                        document: attachedDocs.find((d) => d.requirementId === requirement.id),
+                        onDocumentChange: (d: AdditionalDocument | undefined) => setValue('caf', { ...caf, additionalDocuments: [...attachedDocs.filter((x) => x.requirementId !== requirement.id), ...(d ? [d] : [])] }),
+                      }
+                    : {})}
+                />
                 {defaultButton}
               </div>
             );

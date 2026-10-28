@@ -51,7 +51,7 @@ const extrasSkip = (products: Product[]) => (values: Record<string, unknown>) =>
 export function postpaidSteps({ products, customerBenefits, device }: PostpaidStepContext): WizardStep[] {
   const planContext = { products, customerBenefits, skipWhen: offerAccepted, announceHrn: true };
   return [
-    serviceAddressStep({ mode: 'structured', autoPass: true }),
+    serviceAddressStep({ mode: 'structured', autoPass: true, serviceIds: false }),
     billingAccountStep(),
     postpaidPlanStep(planContext),
     postpaidExtrasStep({ ...planContext, skipWhen: extrasSkip(products) }),

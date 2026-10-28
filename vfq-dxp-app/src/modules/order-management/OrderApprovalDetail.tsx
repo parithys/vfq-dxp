@@ -544,7 +544,7 @@ function OrderDetailsPanel({ order, lastUpdatedMs }: { order: Order; lastUpdated
             )}
             <dl className="grid grid-cols-1 gap-y-3 text-[length:var(--fs-body)]">
               <DetailRow label="Number Price" value={qar(order.numberPriceQAR)} />
-              {order.numberWaiver && <DetailRow label="Waive Off" value={`${qar(order.numberWaivedQAR) ?? '-'} waived of ${qar(order.numberUpfrontChargeQAR) ?? '-'}`} />}
+              {order.numberWaiver && <DetailRow label="Additional Discount" value={`${qar(order.numberWaivedQAR) ?? '-'} waived of ${qar(order.numberUpfrontChargeQAR) ?? '-'}`} />}
               <DetailRow label="One-Time Charges" value={qar(order.nrcTotalQAR)} />
               <DetailRow label="Order Total" value={qar(order.totalQAR)} />
             </dl>

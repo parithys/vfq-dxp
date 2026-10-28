@@ -252,3 +252,9 @@ test('Tab hierarchy: a page-level TabStrip is the underline; inside a tab panel 
   assert.equal((inTab.match(/role="tablist"/g) ?? []).length, 2);
   assert.equal((inTab.match(/border-b-\[length:var\(--tab-active-w\)\]/g) ?? []).length, 1, 'only the page-level strip is an underline');
 });
+
+test('no field shows placeholder / watermark text: the shared Input, Textarea, PhoneNumberInput and Select drop the prop', () => {
+  for (const f of ['Input', 'Textarea']) assert.match(fs.readFileSync(`src/components/primitives/${f}.tsx`, 'utf8'), /placeholder: _noPlaceholder/, f);
+  assert.doesNotMatch(fs.readFileSync('src/components/primitives/PhoneNumberInput.tsx', 'utf8'), /placeholder=\{/);
+  assert.doesNotMatch(fs.readFileSync('src/components/primitives/Select.tsx', 'utf8'), /placeholder=\{/);
+});

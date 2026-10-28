@@ -53,7 +53,7 @@ export function Select({
   error,
   helperText,
   options,
-  placeholder,
+  placeholder: _noPlaceholder,
   value,
   onChange,
   disabled,
@@ -220,7 +220,6 @@ export function Select({
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
           aria-label={ariaLabel}
-          placeholder={placeholder}
           // Closed: the chosen label. Open and typing: what was typed.
           value={open && typing ? query : (selected?.label ?? '')}
           onFocus={(e) => {

@@ -224,8 +224,9 @@ export function WinCashPaymentStep({ amountDueQAR, value, onChange, onProceedWit
             </div>
           )}
           <div className="flex flex-wrap gap-3">
-            <Button variant="primary" onClick={beginHandoff}>
-              {value.declined || value.errored ? 'Retry in WinCash' : 'Continue in WinCash'}
+            {/* First attempt: Continue in WinCash takes the payment as completed and the journey goes straight on (the order is submitted). Only a retry after a decline or error opens the WinCash hand-off panel. */}
+            <Button variant="primary" onClick={value.declined || value.errored ? beginHandoff : () => void returnFromWinCash('success')} disabled={processing}>
+              {processing ? 'Returning to DXP…' : value.declined || value.errored ? 'Retry in WinCash' : 'Continue in WinCash'}
             </Button>
             {onProceedWithout && (
               <Button variant="secondary" onClick={onProceedWithout}>

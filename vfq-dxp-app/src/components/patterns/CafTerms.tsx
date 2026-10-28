@@ -12,6 +12,7 @@ export function FullTerms({
   signed,
   scrollMode = 'page',
   journey = 'postpaid',
+  closingHeader,
   children,
 }: {
   /** Accepted for callers that still pass it; the panel no longer links out. */
@@ -23,6 +24,8 @@ export function FullTerms({
   scrollMode?: 'container' | 'page';
   /** Which journey's terms to show: a section scoped to the other journey is left out. Postpaid by default. */
   journey?: 'postpaid' | 'prepaid';
+  /** A heading over the closing part of the panel (the customer's details, agreements and signature), above its dividing line. */
+  closingHeader?: ReactNode;
   children: ReactNode;
 }) {
   const [sections, setSections] = useState<TncSection[] | undefined>();
@@ -35,15 +38,25 @@ export function FullTerms({
   // badge and signature) not the whole scrolling document or its link.
   if (signed) {
     return (
-      <section aria-label="Signed application form" className="card ">
-        <div className="px-4 py-3">{children}</div>
+      // The signed primary contact, laid out like the secondary contact's form: heading, the key terms as one line each, then who signed and the signature.
+      <section aria-label="Signed application form" className="card p-4 space-y-3">
+        {closingHeader}
+        <ul className="space-y-2 text-[length:var(--fs-caption)]">
+          {sections.map((s) => (
+            <li key={s.sectionId}>
+              <span className="text-fg font-semibold">{s.title}: </span>
+              <span className="text-fg-2">{s.body}</span>
+            </li>
+          ))}
+        </ul>
+        {children}
       </section>
     );
   }
   return (
     <section aria-label="Full Terms and Conditions" className="card ">
       <div className="flex items-center justify-between gap-3 border-b border-border-soft px-4 py-3">
-        <h3 className="text-fg font-semibold text-[length:var(--fs-body)]">Terms &amp; Conditions</h3>
+        <h3 className="text-fg font-semibold text-[length:var(--fs-body)]">Key Terms &amp; Conditions</h3>
       </div>
       {/* tabIndex so the panel can be scrolled with the keyboard. */}
       <div
@@ -58,6 +71,7 @@ export function FullTerms({
         ))}
         {/* The application form (agreement checkbox and signature) is the LAST thing in the
             scroll area, so the customer has to scroll through every section to reach it. */}
+        {closingHeader}
         <div className="border-t border-border-soft mt-2 pt-2">{children}</div>
       </div>
     </section>

@@ -1,3 +1,5 @@
+import { SupportingDocumentField } from '../domain/SupportingDocumentField';
+import type { AdditionalDocument } from '../domain/AdditionalDocumentsUpload';
 import { isBusinessSegment } from '../../engines/businessSegment';
 import { CARD_SELECTED, SelectedTick, CARD_IDLE } from '../primitives/offerCardParts';
 import { useEffect, useState } from 'react';
@@ -40,6 +42,10 @@ interface BillingAccountStepProps {
   customerMobile?: string;
   /** The credit-limit rows (CreditLimitCard, embedded) listed straight after the billing details, for a new account. */
   creditLimit?: ReactNode;
+  /** The VAT supporting document, attached when a VAT registration number is entered (the journey keeps it with its additional documents and gates Continue on it). */
+  vatDocument?: AdditionalDocument;
+  vatDocumentRequirement?: { id: string; label: string };
+  onVatDocumentChange?: (document: AdditionalDocument | undefined) => void;
 }
 
 // "Billing Profile" (2026-09-28 request) - Step 3 of New Postpaid Activation,
@@ -67,6 +73,9 @@ export function BillingAccountStep({
   customerName,
   customerMobile,
   creditLimit,
+  vatDocument,
+  vatDocumentRequirement,
+  onVatDocumentChange,
 }: BillingAccountStepProps) {
   const cached = customerId ? billingDataCache.get(customerId) : undefined;
   const [profiles, setProfiles] = useState<(BillingProfileRecord & { accountType: string })[]>(cached?.profiles ?? []);
@@ -276,18 +285,10 @@ export function BillingAccountStep({
           <div className="pb-6">
               {editing && <p className="pt-6 text-fg font-semibold text-[length:var(--fs-body-lg)]">Edit billing account ending …{editedProfile?.billingProfileId.slice(-4)}</p>}
               {/* Contact */}
+              {/* The Primary Contact is not asked for here: the account takes the customer's own contact (the default, see needsDefaultPrimary); it is
+                  changed from Customer 360 afterwards. */}
+              {!editing && contactOptions.length > 1 && (
               <div className={`${SECTION} pt-6`}>
-                <h4 className={SECTION_TITLE}>
-                  Primary Contact
-                  <span className="text-[var(--field-border-error)]" aria-hidden="true">{' *'}</span>
-                </h4>
-                <div role="radiogroup" aria-label="Primary Contact" aria-required="true">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {contactOptions.map((o) => (
-                      <ContactCard key={o.id} name={o.name} checked={newAccount.primaryContactId === o.id} onChoose={() => selectPrimary(o)} />
-                    ))}
-                  </div>
-                </div>
                 {/* With more than one contact on the account, a secondary contact can be picked from the others: nothing is typed, their details come from their record. */}
                 {!editing && contactOptions.length > 1 && (
                   <div className="space-y-3 pt-3">
@@ -323,6 +324,15 @@ export function BillingAccountStep({
                   </div>
                 )}
               </div>
+              )}
+
+              {/* Account Credit Limit: Account Type, Customer Segment, Customer Category and the limit (CreditLimitCard, embedded), for a new account. */}
+              {!editing && creditLimit && (
+                <div className={`${SECTION} ${SECTION_RULE}`}>
+                  <h4 className={SECTION_TITLE}>Account Credit Limit</h4>
+                  <dl className="text-[length:var(--fs-body)]">{creditLimit}</dl>
+                </div>
+              )}
 
               {/* Billing Details: filled from the customer's Primary Contact Information and not editable - the bill goes to the customer's own address,
                   email and mobile number. (Editing an existing account still changes its address line.) */}
@@ -348,16 +358,10 @@ export function BillingAccountStep({
                         <dd className="text-fg font-medium text-right break-words min-w-0">{row.value}</dd>
                       </div>
                     ))}
-                    {creditLimit}
                   </dl>
                 )}
-              </div>
-
-              {/* Payment */}
-              <div className={`${SECTION} ${SECTION_RULE}`}>
-                <h4 className={SECTION_TITLE}>Account Credit Limit</h4>
                 {/* Bill cycle: the same field as Bill Type and Bill Language, but disabled - it follows from the activation date and is not the agent's to change. */}
-                <div className="grid sm:grid-cols-2 gap-3">
+                <div className="grid sm:grid-cols-2 gap-3 pt-3">
                   <Select
                     label="Bill Cycle"
                     disabled
@@ -381,34 +385,34 @@ export function BillingAccountStep({
                     </>
                   )}
                 </div>
-                {!editing && (
-                  <>
-                    {/* VAT Details, optional. A registration number makes the VAT document mandatory in Additional Documents (document-types.json: vat-document). */}
-                    <h4 className={`${SECTION_TITLE} pt-3`}>VAT Details</h4>
-                    <div className="grid sm:grid-cols-2 gap-3">
-                      <Input
-                        label="VAT Registration Number"
-                        value={newAccount.vatRegistrationNumber ?? ''}
-                        onChange={(e) => setNewAccount({ vatRegistrationNumber: e.target.value })}
-                        helperText={newAccount.vatRegistrationNumber?.trim() ? 'VAT document upload is required.' : undefined}
-                      />
-                      <Input
-                        label="VAT Expiry Date"
-                        placeholder="DD/MM/YYYY"
-                        inputMode="numeric"
-                        maxLength={10}
-                        value={newAccount.vatExpiryDate ?? ''}
-                        onChange={(e) => setNewAccount({ vatExpiryDate: e.target.value })}
-                        error={isValidVatExpiry(newAccount.vatExpiryDate) ? undefined : 'Enter the date as DD/MM/YYYY.'}
-                      />
-                    </div>
-                  </>
-                )}
-                {!editing && (
-                <>
-                </>
-                )}
               </div>
+
+              {/* VAT Details, optional. A registration number makes the VAT document mandatory in Additional Documents (document-types.json: vat-document). */}
+              {!editing && (
+                <div className={`${SECTION} ${SECTION_RULE}`}>
+                  <h4 className={SECTION_TITLE}>VAT Details</h4>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <Input
+                      label="VAT Registration Number"
+                      value={newAccount.vatRegistrationNumber ?? ''}
+                      onChange={(e) => setNewAccount({ vatRegistrationNumber: e.target.value })}
+                      helperText={newAccount.vatRegistrationNumber?.trim() ? 'VAT document upload is required.' : undefined}
+                    />
+                    <Input
+                      label="VAT Expiry Date"
+                      placeholder="DD/MM/YYYY"
+                      inputMode="numeric"
+                      maxLength={10}
+                      value={newAccount.vatExpiryDate ?? ''}
+                      onChange={(e) => setNewAccount({ vatExpiryDate: e.target.value })}
+                      error={isValidVatExpiry(newAccount.vatExpiryDate) ? undefined : 'Enter the date as DD/MM/YYYY.'}
+                    />
+                  </div>
+                  {onVatDocumentChange && newAccount.vatRegistrationNumber?.trim() && (
+                    <SupportingDocumentField label="VAT Document" requirement={vatDocumentRequirement} document={vatDocument} onChange={onVatDocumentChange} />
+                  )}
+                </div>
+              )}
 
             </div>
         </div>

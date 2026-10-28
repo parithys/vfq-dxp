@@ -454,6 +454,7 @@
     "parts": [
       "components/domain/AdditionalDocumentsUpload.tsx",
       "components/domain/CafDocumentUpload.tsx",
+      "components/domain/SupportingDocumentField.tsx",
       "components/domain/documentUploadRules.ts"
     ],
     "previewable": true,

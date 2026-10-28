@@ -83,6 +83,8 @@ export interface Discount {
   description: string;
   price: number;
   category: string;
+  /** How many months the discount runs; absent or null when the catalogue gives none. */
+  durationMonths?: number | null;
   planId: string;
 }
 
@@ -172,8 +174,11 @@ export function specialOfferPlanName(name: string, discount: 'mada' | 'b2b2c' | 
 /** The addon types that are a Special Discount (MADA / B2B2C / Retired): one is held by the customer, chosen at Customer Verification. */
 export const SPECIAL_DISCOUNT_ADDON_TYPES: ReadonlySet<string> = new Set(Object.values(SPECIAL_DISCOUNT_TYPE).map((t) => t.addonType));
 
-/** The label every Special Discount card carries on the plan step: the customer's own type is not shown, only that they hold one. */
-export const SPECIAL_DISCOUNT_CARD_TITLE = 'Special Discount';
+/** Every Special Discount (Consumer B2B2C, Retiree, MADA) takes this fraction off the plan fee, whichever the type: the catalogue rows all carry it. */
+export const SPECIAL_DISCOUNT_RATE = 0.25;
+
+/** The label every Special Discount card carries on the plan step: the rate, not the customer's own type (only that they hold one). */
+export const SPECIAL_DISCOUNT_CARD_TITLE = `Special Discount ${Math.round(SPECIAL_DISCOUNT_RATE * 100)}%`;
 
 /**
  * The Special Discount to select by itself on the Add-ons and Discounts page: the plan's discount of the type the customer holds, once that type is
@@ -197,6 +202,25 @@ export function discountsForSpecialType<T extends { addonType: string }>(discoun
   const keep = SPECIAL_DISCOUNT_TYPE[chosen].addonType;
   return discounts.filter((d) => !SPECIAL_DISCOUNT_ADDON_TYPES.has(d.addonType) || d.addonType === keep);
 }
+
+/** What a discount card says under its title: the catalogue's own wording, then how long it runs when the catalogue says so. A Special Discount is a fixed rate with no duration shown. */
+export function discountDescription(d: { addonType: string; description: string; durationMonths?: number | null }): string {
+  if (SPECIAL_DISCOUNT_ADDON_TYPES.has(d.addonType) || !d.durationMonths) return d.description;
+  return `${d.description} for ${d.durationMonths} ${d.durationMonths === 1 ? 'month' : 'months'}`;
+}
+
+/**
+ * The mid-priced plan of a list: the median by monthly price (ties and an even count take the lower middle; equal prices keep catalogue order via
+ * the product id). It is the plan Standard Plans and Special Offers mark Popular and show first. Undefined for an empty list.
+ */
+export function midPricedPlan<T extends { productId: string; mrcQAR: number }>(plans: T[]): T | undefined {
+  if (plans.length === 0) return undefined;
+  const sorted = [...plans].sort((a, b) => a.mrcQAR - b.mrcQAR || a.productId.localeCompare(b.productId));
+  return sorted[Math.floor((sorted.length - 1) / 2)];
+}
+
+/** Discounts listed from the smallest to the largest (by the share they take off); equal ones keep their catalogue order. */
+export const discountsAscending = <T extends { price: number }>(discounts: T[]): T[] => [...discounts].sort((x, y) => Math.abs(x.price) - Math.abs(y.price));
 
 /**
  * Whether a plan is offered to a customer of this nationality: a plan that names its eligible nationalities (a nationality promotion) is offered to those

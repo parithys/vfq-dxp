@@ -2,13 +2,15 @@ import type { GuidedContactValue } from '../../components/patterns/guidedContact
 import { accountTypeForJourney } from '../../engines/creditLimit';
 import { CreditLimitCard } from '../../components/patterns/CreditLimitCard';
 import { billingAccountSummary } from './summary';
-import { displayedEmail, primaryContactMobile } from '../../components/patterns/guidedContactModel';
+import { displayedEmail, displayedMobile, primaryContactMobile } from '../../components/patterns/guidedContactModel';
 import type { EligibilityResult } from '../../components/domain/eligibilityTypes';
 import type { ZsbAddressValue } from '../../components/patterns/ZsbAddressStep';
 import { BillingAccount } from './BillingAccount';
 import { toLocalMsisdn } from '../../components/domain/msisdnPickerModel';
 import { BillingAccountAutoResolver } from '../../components/patterns/BillingAccountAutoResolver';
 import { BILLING_PROFILE_LABEL } from '../../data/stepLabels';
+import { requirementForCondition } from '../../engines/journeyDocuments';
+import type { AdditionalDocument } from '../DocumentUpload';
 import { isBillingAccountValid } from '../../components/patterns/billingAccountModel';
 import type { BillingAccountValue } from '../../components/patterns/billingAccountModel';
 import type { WizardStep } from '../../components/patterns/wizard/guidedWizardTypes';
@@ -68,6 +70,12 @@ export function billingAccountStep(
             .filter(Boolean)
             .join(', ') || undefined;
       const billing = (values.billingAccount as BillingAccountValue) ?? {};
+      // The VAT supporting document is kept with the CAF's additional documents, under the requirement it satisfies: Additional Documents then shows it as attached.
+      const vatRequirement = requirementForCondition('vat-registration');
+      const caf = (values.caf as { additionalDocuments?: AdditionalDocument[] } | undefined) ?? {};
+      const attachedDocs = caf.additionalDocuments ?? [];
+      const setVatDocument = (d: AdditionalDocument | undefined) =>
+        vatRequirement && setValue('caf', { ...caf, additionalDocuments: [...attachedDocs.filter((x) => x.requirementId !== vatRequirement.id), ...(d ? [d] : [])] });
       const nationality = eligibility?.nationality ?? (values.contact as GuidedContactValue | undefined)?.moiResult?.nationality;
       return (
         <>
@@ -75,7 +83,14 @@ export function billingAccountStep(
           customerId={eligibility?.customerId}
           defaultAddressLine={defaultAddressLine}
           value={(values.billingAccount as BillingAccountValue) ?? {}}
-          onChange={(v) => setValue('billingAccount', v)}
+          onChange={(v) => {
+            setValue('billingAccount', v);
+            // A VAT number taken out again takes its document with it.
+            if (!v.newAccount?.vatRegistrationNumber?.trim() && billing.newAccount?.vatRegistrationNumber?.trim()) setVatDocument(undefined);
+          }}
+          vatDocumentRequirement={vatRequirement}
+          vatDocument={vatRequirement ? attachedDocs.find((d) => d.requirementId === vatRequirement.id) : undefined}
+          onVatDocumentChange={vatRequirement ? setVatDocument : undefined}
           customerName={(values.contact as GuidedContactValue | undefined)?.moiResult?.name}
           customerEmail={(() => {
             const c = values.contact as GuidedContactValue | undefined;
@@ -96,12 +111,23 @@ export function billingAccountStep(
           }
           customerMobile={(() => {
             const phone = primaryContactMobile(values.contact as GuidedContactValue | undefined);
-            return phone ? toLocalMsisdn(phone) : undefined;
+            // Masked the same way as the email when it came from NAS (the Contact page's rule).
+            return displayedMobile(values.contact as GuidedContactValue | undefined) ?? (phone ? toLocalMsisdn(phone) : undefined);
           })()}
         />
         </>
       );
     },
-    isValid: (values) => isBillingAccountValid((values.billingAccount as BillingAccountValue) ?? {}),
+    isValid: (values) => {
+      const billing = (values.billingAccount as BillingAccountValue) ?? {};
+      if (!isBillingAccountValid(billing)) return false;
+      // A VAT registration number on a new account needs its supporting document before the journey goes on.
+      if (billing.creatingNew && !billing.selectedProfileId && billing.newAccount?.vatRegistrationNumber?.trim()) {
+        const req = requirementForCondition('vat-registration');
+        const docs = (values.caf as { additionalDocuments?: AdditionalDocument[] } | undefined)?.additionalDocuments ?? [];
+        if (req && !docs.some((d) => d.requirementId === req.id)) return false;
+      }
+      return true;
+    },
   };
 }

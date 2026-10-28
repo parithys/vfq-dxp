@@ -34,6 +34,8 @@ export function PostpaidPlanCard({ p, selectedProductId, billLimit, onSelectProd
       const toggle = () => (selected && onDeselectProduct ? onDeselectProduct() : onSelectProduct(p.productId));
       const shownLimit = selected ? billLimit ?? p.mrcQAR : p.mrcQAR;
       const discounted = discountPct > 0 ? Math.round(p.mrcQAR * (1 - discountPct) * 100) / 100 : undefined;
+      // The struck-through price: the plan's own price when a discount applies, else the pre-promotion price.
+      const struckPrice = discounted !== undefined ? p.mrcQAR : p.promoMonths ? p.originalMrcQAR : undefined;
       const headlineBase = p.features?.[0] ?? planFeatureRows(p)[0]?.text;
       const headline = headlineBase ? `${headlineBase}${p.features && p.features.length > 1 ? ' & more' : ''}` : undefined;
   return (
@@ -69,22 +71,20 @@ export function PostpaidPlanCard({ p, selectedProductId, billLimit, onSelectProd
       )}
       <div className="flex-1 flex flex-col gap-2">
         <p className="text-fg font-bold text-[length:var(--fs-h5)] leading-snug">{displayName ?? p.name}</p>
-        {p.promoMonths && (
-          // The short Offers card lists the struck-through price line before the price; every other card keeps it below.
-          <p className={`text-fg-2 text-[length:var(--fs-caption)] ${compact ? '-mb-2' : 'order-2 -mt-1'}`}>
-            {compact && p.originalMrcQAR !== undefined && <span className="line-through mr-2">{formatQar(p.originalMrcQAR)}</span>}for {p.promoMonths} months
+        {/* Same price block on every tab: the struck-through price on its own small line, then "QAR n /month for N months" on one line. */}
+        <div className={`flex flex-col gap-0.5 ${compact ? '' : 'order-1'}`}>
+          {struckPrice !== undefined && (
+            <p className="text-fg-2 text-[length:var(--fs-caption)] line-through">{formatQar(struckPrice)}</p>
+          )}
+          <p className="text-accent flex flex-wrap items-baseline gap-x-1.5">
+            <span>
+              <span className="text-[length:var(--fs-body)] font-semibold">QAR </span>
+              <span className="text-[length:var(--fs-h3)] font-bold">{formatAmount(discounted ?? p.mrcQAR)}</span>
+              <span className="text-fg-2 text-[length:var(--fs-caption)]"> /month</span>
+            </span>
+            {p.promoMonths && <span className="text-fg-2 text-[length:var(--fs-caption)]">for {p.promoMonths} months</span>}
           </p>
-        )}
-        {discounted !== undefined && (
-          <p className={`text-fg-2 text-[length:var(--fs-caption)] -mb-2 ${compact ? '' : 'order-1'}`}>
-            <span className="line-through">{formatQar(p.mrcQAR)}</span>
-          </p>
-        )}
-        <p className={`text-accent ${compact ? '' : 'order-1 pt-1'}`}>
-          <span className="text-[length:var(--fs-body)] font-semibold">QAR </span>
-          <span className="text-[length:var(--fs-h3)] font-bold">{formatAmount(discounted ?? p.mrcQAR)}</span>
-          <span className="text-fg-2 text-[length:var(--fs-caption)]"> /month</span>
-        </p>
+        </div>
         {compact ? (
           /* One headline line, from the plan's own first feature (its data, or its speed) - the rest is in View details. */
           headline && <p className="text-fg font-semibold text-[length:var(--fs-body)] leading-snug">{headline}</p>

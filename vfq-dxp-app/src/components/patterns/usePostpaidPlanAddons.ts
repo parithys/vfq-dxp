@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import * as mockDataEngine from '../../engines/mockDataEngine';
 import { discountsForCustomer, type CustomerBenefit } from '../../engines/customerBenefitEngine';
 import { monthlyCharges } from '../../engines/postpaidPricing';
-import { closestPlans, PLAN_GROUPS, SPECIAL_DISCOUNT_TYPE, discountsForSpecialType, specialDiscountToPreselect, isPlanOfferedTo, SPECIAL_OFFERS_TAB_LABEL, OFFERS_TAB_LIMIT, planGroupOf, matchesPlanType } from './postpaidPlanModel';
+import { closestPlans, PLAN_GROUPS, SPECIAL_DISCOUNT_TYPE, discountsForSpecialType, specialDiscountToPreselect, isPlanOfferedTo, SPECIAL_OFFERS_TAB_LABEL, OFFERS_TAB_LIMIT, planGroupOf, matchesPlanType, midPricedPlan } from './postpaidPlanModel';
 import type { PostpaidPlan, Discount, AddonProduct, PlanGroupKey, TabKey, PlanTypeFilter } from './postpaidPlanModel';
 
 interface UsePostpaidPlanAddonsArgs {
@@ -107,9 +107,9 @@ export function usePostpaidPlanAddons({
       cancelled = true;
     };
   }, [special]);
-  // The plans a Special Discount can actually be taken on: an Offers-tab plan is pre-bundled (its discounts are locked), so it is not listed here.
+  // The plans a Special Discount can actually be taken on: an Offers-tab plan is pre-bundled (its discounts are locked), so it is not listed here; nor is a Family Plan.
   const specialPlanIds = useMemo(
-    () => new Set(specialDiscountRows.filter((d) => { const plan = plans.find((p) => p.productId === d.planId); return plan && planGroupOf(plan) !== 'specials'; }).map((d) => d.planId)),
+    () => new Set(specialDiscountRows.filter((d) => { const plan = plans.find((p) => p.productId === d.planId); return plan && planGroupOf(plan) !== 'specials' && plan.planClass !== 'Postpaid Family Plans'; }).map((d) => d.planId)),
     [specialDiscountRows, plans]
   );
   const hasSpecialTab = Boolean(special) && plans.some((p) => specialPlanIds.has(p.productId));
@@ -118,7 +118,15 @@ export function usePostpaidPlanAddons({
     ...(hasSpecialTab && special ? [{ key: 'special' as PlanGroupKey, label: SPECIAL_OFFERS_TAB_LABEL }] : []),
   ];
   const groupPlans = (key: PlanGroupKey) => {
-    const list = visiblePlans.filter((p) => (key === 'special' ? specialPlanIds.has(p.productId) : planGroupOf(p) === key));
+    const inGroup = (p: PostpaidPlan) => (key === 'special' ? specialPlanIds.has(p.productId) : planGroupOf(p) === key);
+    const list = visiblePlans.filter(inGroup);
+    if (key === 'for-you' || key === 'special') {
+      // Standard Plans and Special Offers: the mid-priced plan of the whole tab (not of what a search or filter leaves) is marked Popular and listed first;
+      // no other plan on these tabs carries the badge. Copies, so the catalogue's own flags (which decide the Offers tab) are untouched.
+      const mid = midPricedPlan(plans.filter(inGroup));
+      const marked = list.map((p) => ({ ...p, popular: p.productId === mid?.productId }));
+      return [...marked.filter((p) => p.popular), ...marked.filter((p) => !p.popular)];
+    }
     return key === 'specials' ? list.slice(0, OFFERS_TAB_LIMIT) : list;
   };
   // The selection was withdrawn while its tab was open: fall back to Offers.

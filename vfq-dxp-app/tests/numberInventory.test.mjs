@@ -17,13 +17,15 @@ test('every number is +974 then 8 digits starting 3, 5, 6 or 7, and none repeats
   }
 });
 
-test('the inventory holds the 100 added Star numbers: 25 per leading digit, all available, priced QAR 1,500 to 50,000, each with a tier', () => {
+test('the inventory holds the 100 added Star numbers: all in the 7 range, all available, priced QAR 1,500 to 50,000, each with a tier', () => {
   const added = nums.filter((n) => n.category === 'Star' && n.status === 'AVAILABLE' && n.priceQAR >= FREE_CEILING);
   assert.ok(added.length >= 100);
   const marked = nums.findIndex((n) => (n._note ?? '').startsWith('App-level demo addition (2026-10-25)'));
   assert.ok(marked >= 0, 'the batch carries its note');
   const batch = nums.slice(marked, marked + 100);
-  for (const d of '3567') assert.equal(batch.filter((n) => n.msisdn[4] === d).length, 25, `leading ${d}`);
+  // Vodafone Qatar's own range is 7 (3, 5 and 6 are the other operator's): the whole batch sits in it. The older hand-picked numbers are left as they were.
+  assert.ok(batch.every((n) => n.msisdn[4] === '7'), 'every added Star number leads 7');
+  assert.equal(new Set(batch.map((n) => n.msisdn)).size, batch.length, 'no repeats');
   for (const n of batch) {
     assert.equal(n.category, 'Star');
     assert.equal(n.status, 'AVAILABLE');
@@ -49,4 +51,24 @@ test('Free Numbers: 60 available (priced under the Free ceiling), which fill 3 p
   assert.equal(m.FREE_PAGE_SIZE, 20);
   assert.equal(Math.ceil(free.length / m.FREE_PAGE_SIZE), 3);
   for (const n of free.filter((x) => x.category === 'Free' && x.priceQAR === 0)) assert.match(n.msisdn, /^\+974[3567]\d{7}$/);
+});
+
+test('every added Star number is a recognisable premium pattern, none is a random run', () => {
+  const marked = nums.findIndex((n) => (n._note ?? '').startsWith('App-level demo addition (2026-10-25)'));
+  const batch = nums.slice(marked, marked + 100);
+  const patterns = {
+    repeatedRun: (d) => /(\d)\1{3,}/.test(d),
+    pairs: (d) => /(\d)\1(\d)\2/.test(d),
+    ascending: (d) => /(?:01234|12345|23456|34567|45678|56789|67890)/.test(d) || /(?:0123|1234|2345|3456|4567|5678|6789)/.test(d),
+    descending: (d) => /(?:9876|8765|7654|6543|5432|4321|3210)/.test(d),
+    palindrome: (d) => d === [...d].reverse().join('') || /(\d)(\d)\2\1/.test(d),
+    roundEnding: (d) => /\d{2}0{4,}$/.test(d) || /\d{3}00{3}$/.test(d),
+    repeatingPairs: (d) => /(\d{2,4})\1/.test(d),
+    mirrorDigits: (d) => /^(\d)\d{6}\1$/.test(d),
+    arithmetic: (d) => /(?:13579|24680|02468|135790|246810|357900)/.test(d) || /(?:1357|2468|3579|4680|0246)/.test(d),
+  };
+  for (const n of batch) {
+    const d = n.msisdn.slice(4);
+    assert.ok(Object.values(patterns).some((f) => f(d)), `${n.msisdn} is not a recognisable pattern`);
+  }
 });

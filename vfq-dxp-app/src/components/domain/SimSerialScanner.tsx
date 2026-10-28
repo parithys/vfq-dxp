@@ -256,10 +256,6 @@ export function SimSerialScanner({ value, onChange, autoFocus, suppressValidatio
             <dt className="text-fg">SIM Serial Number</dt>
             <dd className="text-fg font-medium">{shown.serial}</dd>
           </div>
-          <div className="flex justify-between gap-3">
-            <dt className="text-fg">ICCID</dt>
-            <dd className="text-fg font-medium">{shown.details.iccid}</dd>
-          </div>
         </dl>
       )}
     </div>

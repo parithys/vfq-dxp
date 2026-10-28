@@ -7,7 +7,8 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   helperText?: string;
 }
 
-export function Textarea({ label, error, helperText, className = '', id, 'aria-describedby': ariaDescribedby, ...rest }: TextareaProps) {
+export function Textarea({ label, error, helperText, className = '', id, 'aria-describedby': ariaDescribedby, placeholder: _noPlaceholder, ...rest }: TextareaProps) {
+  // No placeholder / watermark text in any field: the label says what it is. (The prop is accepted so call sites need no change.)
   const autoId = useId();
   const textareaId = id ?? `textarea-${autoId}`;
   const helperId = `${textareaId}-helper`;

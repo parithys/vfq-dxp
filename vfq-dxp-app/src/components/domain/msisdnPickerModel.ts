@@ -74,14 +74,15 @@ export function toLocalMsisdn(msisdn: string): string {
 }
 
 /** How the search box matches a number: All (shown as "All"; value 'any' - no pattern: the number or a value tier), XXYY (repeating pairs), Contains, Starts With, Ends With. */
-export type SearchMode = 'any' | 'xxyy' | 'contains' | 'starts' | 'ends';
+export type SearchMode = 'any' | 'price' | 'starts' | 'ends' | 'contains' | 'xxyy';
 
 export const SEARCH_MODE_OPTIONS: { value: SearchMode; label: string }[] = [
   { value: 'any', label: 'All' },
-  { value: 'xxyy', label: 'XXYY' },
-  { value: 'contains', label: 'Contains' },
+  { value: 'price', label: 'Price' },
   { value: 'starts', label: 'Starts With' },
   { value: 'ends', label: 'Ends With' },
+  { value: 'contains', label: 'Contains' },
+  { value: 'xxyy', label: 'Pattern' },
 ];
 
 /** The mode the box opens in: no pattern filter. */
@@ -109,9 +110,10 @@ export function hasRepeatingPairPattern(msisdn: string): boolean {
  * Contains, Starts With and Ends With take digits only, and XXYY must also be repeating pairs. Never more than 8 characters.
  */
 export function searchError(text: string, mode: SearchMode): string | undefined {
-  const t = text.replace(/\s/g, '');
+  const t = text.replace(/[\s,]/g, '');
   if (!t) return undefined;
-  if (mode === 'any') return undefined;
+  // Any takes letters and digits; Price takes no search text at all (its Min Price / Max Price boxes are their own).
+  if (mode === 'any' || mode === 'price') return undefined;
   if (!/^\d+$/.test(t)) return 'Enter digits only.';
   if (mode === 'xxyy' && !isRepeatingPairs(t)) return 'Enter repeating pairs of digits, such as 3344 or 77224455.';
   return undefined;
@@ -123,11 +125,28 @@ export function searchError(text: string, mode: SearchMode): string | undefined 
  * only that number). Any applies no pattern: typed digits anywhere in the number, or a value-tier name when the text is not digits. Text the mode
  * does not accept matches nothing.
  */
-export function matchesNumberSearch(n: { msisdn: string; valueTier?: string }, text: string, mode: SearchMode): boolean {
+/** The whole figure in a Min Price / Max Price box (digits, a thousands comma allowed), or undefined when the box is empty or not a figure. */
+export function priceBound(text: string | undefined): number | undefined {
+  const t = (text ?? '').replace(/[\s,]/g, '');
+  return /^\d+$/.test(t) ? Number(t) : undefined;
+}
+
+/** Whether a price (QAR) lies within the Min Price / Max Price boxes, both ends included; an empty box leaves that end open. */
+export function matchesPriceRange(priceQar: number | undefined, minText: string | undefined, maxText: string | undefined): boolean {
+  const min = priceBound(minText);
+  const max = priceBound(maxText);
+  if (min === undefined && max === undefined) return true;
+  if (priceQar === undefined) return false;
+  return (min === undefined || priceQar >= min) && (max === undefined || priceQar <= max);
+}
+
+export function matchesNumberSearch(n: { msisdn: string; valueTier?: string; priceQAR?: number }, text: string, mode: SearchMode): boolean {
   const q = text.trim();
   if (!q) return true;
   const digits = q.replace(/\s/g, '');
   if (searchError(text, mode)) return false;
+  // Price has no text: it is filtered by its Min Price / Max Price boxes (matchesPriceRange).
+  if (mode === 'price') return true;
   const local = localDigits(n.msisdn);
   if (mode === 'starts') return local.startsWith(digits);
   if (mode === 'ends') return local.endsWith(digits);

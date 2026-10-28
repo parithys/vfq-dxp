@@ -13,7 +13,7 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 export const isNumberWaiver = (v: unknown): v is NumberWaiver => typeof v === 'number' && Number.isFinite(v) && v > 0;
 
 /** The label the waiver carries wherever it is listed. */
-export const numberWaiverLabel = (_w?: NumberWaiver): string => 'Waive Off';
+export const numberWaiverLabel = (_w?: NumberWaiver): string => 'Additional Discount';
 
 /** Why an amount cannot be applied to this charge, or undefined when it can: a positive amount, not more than the charge. */
 export function waiverAmountProblem(amountQar: number | undefined, chargeQar: number): string | undefined {

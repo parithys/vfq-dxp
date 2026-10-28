@@ -73,7 +73,7 @@ export function SignaturePad({ onDone, doneLabel = 'Done', onCancel, disabled = 
         className={`border border-[var(--grey-form)] rounded-[var(--radius-card)] bg-[var(--paper)] touch-none w-full max-w-[480px] ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-crosshair'}`}
       />
       <div className="flex gap-2 mt-2">
-        <Button variant="secondary" onClick={clear} disabled={disabled}>
+        <Button variant="secondary" onClick={clear} disabled={disabled || !hasDrawn}>
           Clear
         </Button>
         {onCancel && (

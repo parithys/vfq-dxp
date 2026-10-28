@@ -5,6 +5,8 @@ import type { CustomerBenefit } from '../../engines/customerBenefitEngine';
 import type { EligibilityResult } from '../../components/domain/eligibilityTypes';
 import { PlanSelection } from './PlanSelection';
 import { AddDiscountAction } from './AddDiscountAction';
+import { CustomiseAddonsAction } from './CustomiseAddonsAction';
+import { SpendFlag } from './SpendFlag';
 import { EligibilityChecksList } from '../../components/domain/EligibilityRows';
 import { buildEligibilityRows } from '../../components/domain/eligibilityRowsModel';
 import type { WizardStep } from '../../components/patterns/wizard/guidedWizardTypes';
@@ -14,7 +16,7 @@ import { isCustomerTypeValid } from '../CustomerType/customerTypeModel';
 /** What the postpaid plan steps need from their journey. */
 export interface PostpaidPlanContext {
   /** The plan catalogue (fetched once by the journey, shared with Number Selection's Star entitlement). */
-  products: { productId: string; preBundledOffer?: boolean }[];
+  products: { productId: string; preBundledOffer?: boolean; mrcQAR?: number }[];
   /** The benefits the customer holds, for choosing which discounts to offer. */
   customerBenefits: CustomerBenefit[] | undefined;
   /** Leave the Plan and Add-ons steps out of the journey (an accepted offer already fixes the plan). */
@@ -33,9 +35,15 @@ export function postpaidPlanStep(ctx: PostpaidPlanContext): WizardStep {
     label: PLAN_SELECTION_LABEL,
     render: ({ values, setValue }) => renderPlanStep('plan', ctx, values, setValue),
     isValid: (values) => Boolean(values.productId),
-    // Once a plan is chosen on Standard Plans or Special Offers, Add Discount sits just before Continue.
-    primaryAction: ({ values, setValue, defaultButton }) => (
+    // Once a plan is chosen on Standard Plans or Special Offers, Customise Add-ons and Edit Discount sit just before Continue.
+    primaryAction: ({ values, setValue, goNext, defaultButton }) => (
       <div className="flex items-center gap-3">
+        <CustomiseAddonsAction
+          productId={values.productId as string | undefined}
+          preBundled={Boolean(ctx.products.find((p) => p.productId === values.productId)?.preBundledOffer) || values.planTab === 'specials'}
+          setCustomise={() => setValue('customiseAddons', true)}
+          goNext={goNext}
+        />
         <AddDiscountAction
           productId={values.productId as string | undefined}
           tab={values.planTab as string | undefined}
@@ -44,6 +52,7 @@ export function postpaidPlanStep(ctx: PostpaidPlanContext): WizardStep {
           customerBenefits={ctx.customerBenefits}
           specialDiscountType={specialTypeOf(values)}
           customerBenefit={benefitOf(values)}
+          planAmount={ctx.products.find((p) => p.productId === values.productId)?.mrcQAR}
         />
         {defaultButton}
       </div>
@@ -61,7 +70,15 @@ export function postpaidExtrasStep(ctx: PostpaidPlanContext): WizardStep {
     skip: ctx.skipWhen,
     label: ADDONS_DISCOUNTS_LABEL,
     subheading: 'Choose optional services and set the spending limit.',
-    render: ({ values, setValue }) => renderPlanStep('extras', ctx, values, setValue),
+    // Continue from the plan page passes over this step; "Customise Add-ons" on the plan page is the way here. The flag is spent on arrival, so
+    // coming Back and pressing Continue goes straight on again.
+    autoPass: (values) => !values.customiseAddons,
+    render: ({ values, setValue }) => (
+      <>
+        <SpendFlag active={Boolean(values.customiseAddons)} onSpend={() => setValue('customiseAddons', undefined)} />
+        {renderPlanStep('extras', ctx, values, setValue)}
+      </>
+    ),
     // Bill limit is the only gate; add-ons and discounts never block.
     isValid: (values) => {
       const cap = (values.eligibility as EligibilityResult | undefined)?.defaultCreditLimitQar;

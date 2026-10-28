@@ -118,7 +118,7 @@ test('Personal Email ID is mandatory and Work Email ID optional, for every journ
   const fsm = await import('node:fs');
   const read = (f) => fsm.readFileSync(f, 'utf8');
   const step = read('src/components/patterns/GuidedContactStep.tsx');
-  assert.match(step, /label="Personal Email ID"\s+type="email"\s+required/);
+  assert.match(step, /label="Email ID"\s+type="email"\s+required/);
   assert.match(step, /label="Work Email ID"\s+type="email"\s+placeholder/);
   assert.doesNotMatch(step.slice(step.indexOf('label="Work Email ID"'), step.indexOf('label="Work Email ID"') + 200), /required/);
   const q = read('src/capabilities/CustomerQualification/step.tsx');

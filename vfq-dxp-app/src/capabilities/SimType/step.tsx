@@ -7,7 +7,7 @@ import type { WizardStep } from '../../components/patterns/wizard/guidedWizardTy
 import { SimType } from './SimType';
 import { SimSerial } from './SimSerial';
 import { simTypeSummary } from './summary';
-import { Button } from '../../components/primitives/Button';
+import { Checkbox } from '../../components/primitives/Checkbox';
 import { ActualUser } from '../ActualUser/ActualUser';
 import { isActualUserValid } from '../ActualUser/actualUserModel';
 import type { ActualUserValue } from '../ActualUser/actualUserModel';
@@ -31,7 +31,7 @@ export function simTypeStep(
     /** Says the order will be held for approval, so the eSIM message names approval rather than submission. */
     approvalRequired?: (values: Record<string, unknown>) => boolean;
     /**
-     * Offer "Add Actual User" beside Continue: it opens the Actual User section on this same page (stored under `actualUser`), and once it is
+     * Offer an "Add Secondary Contact" checkbox above the Continue row: ticking it opens the Secondary Contact section on this same page (stored under `actualUser`), and once it is
      * open its identification gates Continue. For a journey that names who will use the line without a step of its own for it.
      */
     withActualUser?: boolean;
@@ -54,18 +54,6 @@ export function simTypeStep(
     key: 'simType',
     summary: opts.withActualUser ? [...simTypeSummary, ...actualUserSummary] : simTypeSummary,
     label: SIM_TYPE_LABEL,
-    primaryAction: opts.withActualUser
-      ? ({ values, setValue, defaultButton }) => (
-          <div className="flex items-center gap-3">
-            {!actualUserOpen(values) && simSelected(values) && (
-              <Button variant="secondary" onClick={() => setValue('actualUser', { ...((values.actualUser as ActualUserValue | undefined) ?? {}), choice: 'other' })}>
-                Add Actual User
-              </Button>
-            )}
-            {defaultButton}
-          </div>
-        )
-      : undefined,
     render: ({ values, setValue }) => (
       <>
       <SimType
@@ -80,10 +68,19 @@ export function simTypeStep(
           if (opts.prePaired?.(values)) setValue('msisdn', v.prePairedMsisdn);
         }}
       />
+      {/* "Add Secondary Contact": ticked once a SIM is chosen (or while the section is open); unticking removes the section and everything entered in it. */}
+      {opts.withActualUser && (simSelected(values) || actualUserOpen(values)) && (
+        <label className="mt-8 flex w-fit cursor-pointer items-center gap-2 text-fg text-[length:var(--fs-body)]">
+          <Checkbox
+            checked={actualUserOpen(values)}
+            onChange={(e) => setValue('actualUser', e.target.checked ? { ...((values.actualUser as ActualUserValue | undefined) ?? {}), choice: 'other' } : undefined)}
+          />
+          Add Secondary Contact
+        </label>
+      )}
       {actualUserOpen(values) && (
-        <section aria-label="Actual User" className="mt-8 pt-6 border-t border-border-soft space-y-4">
-          <h3 className="text-fg font-semibold text-[length:var(--fs-body-lg)]">Actual User</h3>
-          <ActualUser value={(values.actualUser as ActualUserValue) ?? {}} onChange={(v) => setValue('actualUser', v)} primaryIdNumber={primaryId(values)} primaryCustomerId={primaryCustomerId(values)} />
+        <section aria-label="Secondary Contact" className="mt-4 pt-6 border-t border-border-soft space-y-4">
+          <ActualUser hideChoice value={(values.actualUser as ActualUserValue) ?? {}} onChange={(v) => setValue('actualUser', v)} primaryIdNumber={primaryId(values)} primaryCustomerId={primaryCustomerId(values)} />
         </section>
       )}
       </>

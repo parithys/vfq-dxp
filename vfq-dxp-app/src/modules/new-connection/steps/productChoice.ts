@@ -18,7 +18,7 @@ export const PRODUCT_STEP_INDEX = 1;
  * New Home Connection has neither: contact, product.
  */
 export function productStepIndex(journey: ProductStepContext['journey'], values: Record<string, unknown>): number {
-  return journey === 'home' ? PRODUCT_STEP_INDEX : 2 + (billingStepActive(values) ? 1 : 0);
+  return journey === 'home' ? PRODUCT_STEP_INDEX : 2 + (billingStepActive(values) && values.product !== 'postpaid' ? 1 : 0);
 }
 
 /**

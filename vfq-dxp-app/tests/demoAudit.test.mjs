@@ -66,12 +66,15 @@ test('the Salutation options come from public/config/lookup-lists.json, in its o
 test('SIM Type and ICCID are shown on SIM Selection for a Physical SIM and an eSIM, and carried to Checkout', () => {
   const sim = read('src/components/domain/SimTypeStep.tsx');
   assert.match(sim, /<dt className="text-fg">SIM Type<\/dt>\s*<dd className="text-fg font-medium">eSIM<\/dd>/);
-  assert.match(sim, /<dt className="text-fg">ICCID<\/dt>\s*<dd className="text-fg font-medium">\{value\.simIccid/);
-  assert.match(read('src/components/domain/SimSerialScanner.tsx'), /<dt className="text-fg">ICCID<\/dt>/, 'a Physical SIM');
+  // The SIM's identifier is called SIM Serial Number: an eSIM's row carries its ICCID under that name, and a Physical SIM's card lists it once (no second ICCID row).
+  assert.match(sim, /<dt className="text-fg">SIM Serial Number<\/dt>\s*<dd className="text-fg font-medium">\{value\.simIccid/);
+  assert.doesNotMatch(read('src/components/domain/SimSerialScanner.tsx'), /<dt className="text-fg">ICCID<\/dt>/, 'a Physical SIM');
   assert.doesNotMatch(read('src/capabilities/SimType/step.tsx'), /autoAdvanceWhen: \(values\) => \{\s*const s = values\.simType/, 'the page stays so the details can be read');
   for (const f of ['checkoutSummaryRows', 'checkoutDetailedTables']) {
     const src = read(`src/components/patterns/${f}.ts`);
-    assert.match(src, /label: 'SIM Type'/, f);
+    // The detailed Order Summary no longer lists the SIM Type (the SIM page shows it); the standard summary rows still do.
+    if (f === 'checkoutSummaryRows') assert.match(src, /label: 'SIM Type'/, f);
+    else assert.doesNotMatch(src, /label: 'SIM Type'/, f);
     assert.doesNotMatch(src, /label: 'ICCID'/, `${f}: the checkout summary no longer lists the ICCID`);
   }
   assert.match(read('src/capabilities/SimType/summary.ts'), /label: 'ICCID'/);
