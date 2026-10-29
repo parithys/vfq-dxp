@@ -430,12 +430,9 @@ export function CafSignatureCapture({
             enabled once that consent is ticked. Shown after the primary customer has signed. */}
         {signed && supplementaryForm && (
           <section id="supplementary-form-secondary" aria-label="Supplementary Form - secondary contact" className="card p-4 space-y-3">
-            <div className="flex items-center justify-between text-[length:var(--fs-caption)] text-muted">
+            <div className="text-[length:var(--fs-caption)] text-muted">
               <h3 className="text-fg font-semibold text-[length:var(--fs-body)]">Supplementary Form: Secondary Contact</h3>
-              <div className="text-right">
-                {supplementaryForm.actualUserName && <p className="text-fg font-medium">{supplementaryForm.actualUserName}</p>}
-                <span dir="rtl">النموذج التكميلي</span>
-              </div>
+              {supplementaryForm.actualUserName && <p className="text-fg font-medium">{supplementaryForm.actualUserName}</p>}
             </div>
             {/* The terms the secondary contact agrees to by signing. */}
             <ul className="space-y-2 text-[length:var(--fs-caption)]">
