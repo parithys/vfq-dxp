@@ -161,8 +161,6 @@ export function NewConnectionWizard({
         }
         onAbandon={() => navigate(POST_EXIT_DESTINATION)}
         hideAbandonFrom="payment"
-        // Save as Draft is offered on the Contact page only.
-        saveDraftOnlyOn="contact"
         onSaveExit={() => navigate(DRAFT_ORDERS_PATH)}
         steps={buildConnectionSteps({
           wizardId: WIZARD_ID,

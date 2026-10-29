@@ -114,10 +114,12 @@ export function TaskListView() {
   // A task about a customer in a protected segment this role may not see is left out (and counted): by the customer of its related order, or
   // a customer named in the task's own name. Nothing is listed until the customers are known.
   const guard = useRestrictedCustomers();
-  const { visible: filtered, hiddenCount } = guard.exclude(unfiltered, (t) => {
+  const { visible: guarded, hiddenCount } = guard.exclude(unfiltered, (t) => {
     const customerId = t.customerId ?? (t.relatedOrderId ? orders.find((o) => o.orderId === t.relatedOrderId)?.customerId : undefined);
     return guard.isRestricted(customerId) || guard.mentionsRestricted(t.taskName);
   });
+  // Most recently updated first. This is the list's default order; a column header still re-sorts it, and a third click returns here.
+  const filtered = [...guarded].sort((a, b) => Date.parse(lastUpdated(b)) - Date.parse(lastUpdated(a)));
 
   return (
     <div className="p-8">

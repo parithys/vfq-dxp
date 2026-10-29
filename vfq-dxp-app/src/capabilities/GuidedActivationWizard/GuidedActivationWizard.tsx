@@ -35,7 +35,6 @@ export function GuidedActivationWizard({
   onSubmit,
   onAbandon,
   hideAbandonFrom,
-  saveDraftOnlyOn,
   onSaveExit,
   hideTitleBand = false,
   confirmLeave = true,
@@ -243,7 +242,7 @@ export function GuidedActivationWizard({
         titleAside={titleAside}
         popupBlocked={popupBlocked}
         onSaveExit={onSaveExit}
-        saveHidden={saveDraftOnlyOn !== undefined && currentStep?.key !== saveDraftOnlyOn ? true : currentStep?.canSaveDraft ? !currentStep.canSaveDraft(draft.values) : false}
+        saveHidden={currentStep?.canSaveDraft ? !currentStep.canSaveDraft(draft.values) : false}
         onAbandon={onAbandon}
         abandonHidden={abandonHidden}
         onRequestSaveExit={() => {

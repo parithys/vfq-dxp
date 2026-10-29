@@ -175,8 +175,6 @@ export interface GuidedActivationWizardProps {
    * have taken money outside this app's own reach.
    */
   hideAbandonFrom?: string;
-  /** Save as Draft is offered only while this step (by key) is the current one; every other step hides it. Absent: each step's own `canSaveDraft` rule applies. */
-  saveDraftOnlyOn?: string;
   /**
    * Where to go after saving the journey as a resumable draft (2026-09-28
    * "Save as Draft"), distinct from onAbandon - that one deletes the draft
